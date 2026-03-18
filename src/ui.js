@@ -1797,6 +1797,7 @@ export function renderApp(initialContainerId) {
       async function openItemModal({ itemId, containerId, tagToken = null }) {
         const existing = itemId ? await api("/api/items/" + itemId) : null;
         const item = existing?.item;
+        const returnToContainerAfterSave = Boolean(item && state.stage === "container" && state.activeContainerId);
         const showLabelButton = item && canShowLabelAction(existing?.tag?.token, existing?.tag?.source);
         const selectedContainerId = item?.container_id || containerId || state.activeContainerId || "";
         const lockContainer = !item && Boolean(selectedContainerId);
@@ -1920,7 +1921,11 @@ export function renderApp(initialContainerId) {
                       ? "Item saved, but the image upload failed."
                       : "Item created, but the image upload failed.", true);
                     if (item) {
-                      await openItem(item.id);
+                      if (returnToContainerAfterSave) {
+                        await openContainer(saved.container_id || form.get("containerId"), false);
+                      } else {
+                        await openItem(item.id);
+                      }
                     } else {
                       await openContainer(saved.container_id || form.get("containerId"), false);
                     }
@@ -1933,7 +1938,11 @@ export function renderApp(initialContainerId) {
                   : (tagToken ? "Item created and tag assigned." : "Item created."));
                 await refreshAll();
                 if (item) {
-                  await openItem(item.id);
+                  if (returnToContainerAfterSave) {
+                    await openContainer(saved.container_id || form.get("containerId"), false);
+                  } else {
+                    await openItem(item.id);
+                  }
                 } else {
                   state.scanToken = null;
                   await openContainer(saved.container_id || form.get("containerId"), false);
