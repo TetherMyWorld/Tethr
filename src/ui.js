@@ -347,6 +347,36 @@ export function renderApp(initialContainerId) {
         });
       }
 
+      async function uploadImage(endpoint, file) {
+        if (!file) {
+          return null;
+        }
+        const provider = state.bootstrap?.storage?.provider || "local";
+        if (provider === "supabase") {
+          const arrayBuffer = await file.arrayBuffer();
+          const bytes = new Uint8Array(arrayBuffer);
+          let binary = "";
+          const chunkSize = 0x8000;
+          for (let index = 0; index < bytes.length; index += chunkSize) {
+            const chunk = bytes.subarray(index, index + chunkSize);
+            binary += String.fromCharCode(...chunk);
+          }
+          return api(endpoint, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              fileName: file.name,
+              mimeType: file.type || "image/jpeg",
+              base64: btoa(binary)
+            })
+          });
+        }
+
+        const photoForm = new FormData();
+        photoForm.append("photo", file);
+        return api(endpoint, { method: "POST", body: photoForm });
+      }
+
       const locationTones = ["location-tone-1", "location-tone-2", "location-tone-3", "location-tone-4"];
       const containerTones = ["container-tone-1", "container-tone-2", "container-tone-3"];
       const itemTones = ["item-tone-1", "item-tone-2", "item-tone-3", "item-tone-4"];
@@ -1684,9 +1714,7 @@ export function renderApp(initialContainerId) {
                 if (selectedPhoto) {
                   try {
                     const optimizedPhoto = await optimizeImageFile(selectedPhoto);
-                    const photoForm = new FormData();
-                    photoForm.append("photo", optimizedPhoto);
-                    await api("/api/containers/" + saved.id + "/photo", { method: "POST", body: photoForm });
+                    await uploadImage("/api/containers/" + saved.id + "/photo", optimizedPhoto);
                     photoSaved = true;
                   } catch (error) {
                     await refreshAll();
@@ -1883,9 +1911,7 @@ export function renderApp(initialContainerId) {
                 if (selectedPhoto) {
                   try {
                     const optimizedPhoto = await optimizeImageFile(selectedPhoto);
-                    const photoForm = new FormData();
-                    photoForm.append("photo", optimizedPhoto);
-                    await api("/api/items/" + saved.id + "/photos", { method: "POST", body: photoForm });
+                    await uploadImage("/api/items/" + saved.id + "/photos", optimizedPhoto);
                     photoSaved = true;
                   } catch (error) {
                     await refreshAll();

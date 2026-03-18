@@ -310,7 +310,7 @@ export async function handleRequest(req, res) {
 
       if (req.method === "POST" && url.pathname.startsWith("/api/containers/") && url.pathname.endsWith("/photo")) {
         const id = url.pathname.split("/")[3];
-        const upload = await readMultipart(req);
+        const upload = await readUploadPayload(req);
         const before = hostedRuntime ? null : getContainerDetail(id);
         const saved = hostedRuntime
           ? await saveHostedContainerPhoto(session, id, upload)
@@ -415,7 +415,7 @@ export async function handleRequest(req, res) {
 
       if (req.method === "POST" && url.pathname.startsWith("/api/items/") && url.pathname.endsWith("/photos")) {
         const id = url.pathname.split("/")[3];
-        const upload = await readMultipart(req);
+        const upload = await readUploadPayload(req);
         const before = hostedRuntime ? null : getItemDetail(id);
         const saved = hostedRuntime
           ? await saveHostedItemPhoto(session, id, upload)
@@ -1490,4 +1490,22 @@ async function readMultipart(req) {
     buffer: Buffer.from(await photo.arrayBuffer()),
     caption: String(form.get("caption") || "")
   };
+}
+
+async function readUploadPayload(req) {
+  const contentType = String(req.headers["content-type"] || "");
+  if (contentType.includes("application/json")) {
+    const body = await readJson(req);
+    const base64 = String(body.base64 || "").trim();
+    if (!base64) {
+      throw new Error("Photo upload requires image data");
+    }
+    return {
+      fileName: String(body.fileName || "upload.jpg"),
+      mimeType: String(body.mimeType || "image/jpeg"),
+      buffer: Buffer.from(base64, "base64"),
+      caption: String(body.caption || "")
+    };
+  }
+  return readMultipart(req);
 }
