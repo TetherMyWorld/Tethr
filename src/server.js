@@ -20,6 +20,8 @@ import {
   getItemDetail,
   getPhotoFile,
   getSessionByToken,
+  hydrateWorkspaceSnapshot,
+  normalizeUserEmail,
   getTag,
   runWithRequestContext,
   signInWithEmail,
@@ -52,17 +54,24 @@ const supabaseConfigured = Boolean(
   process.env.SUPABASE_URL &&
   process.env.SUPABASE_SECRET_KEY
 );
+const hostedRuntime = Boolean(process.env.VERCEL && supabaseConfigured);
 let supabaseBucketEnsured = false;
 
 export async function handleRequest(req, res) {
   const cookies = parseCookies(req.headers.cookie || "");
-  const session = getSessionByToken(cookies[sessionCookieName] || "");
+  const sessionToken = cookies[sessionCookieName] || "";
+  const session = hostedRuntime
+    ? getHostedSessionByToken(sessionToken)
+    : getSessionByToken(sessionToken);
   const context = session
     ? { userId: session.user.id, workspaceId: session.workspace.id, session }
     : {};
 
   runWithRequestContext(context, async () => {
     try {
+      if (hostedRuntime && session) {
+        await hydrateHostedWorkspace(session);
+      }
       const url = new URL(req.url, `http://${req.headers.host}`);
 
       if (req.method === "GET" && url.pathname.startsWith("/uploads/")) {
@@ -74,7 +83,9 @@ export async function handleRequest(req, res) {
       }
 
       if (req.method === "POST" && url.pathname === "/api/auth/sign-in") {
-        const signedIn = signInWithEmail(await readJson(req));
+        const signedIn = hostedRuntime
+          ? await signInWithEmailHosted(await readJson(req))
+          : signInWithEmail(await readJson(req));
         setSessionCookie(res, signedIn.sessionToken);
         return sendJson(res, 200, {
           ok: true,
@@ -160,12 +171,19 @@ export async function handleRequest(req, res) {
         }
 
         const profile = await profileResponse.json();
-        const signedIn = signInWithGoogleProfile({
-          googleId: profile.id,
-          email: profile.email,
-          name: profile.name,
-          avatar: profile.picture
-        });
+        const signedIn = hostedRuntime
+          ? await signInWithGoogleProfileHosted({
+              googleId: profile.id,
+              email: profile.email,
+              name: profile.name,
+              avatar: profile.picture
+            })
+          : signInWithGoogleProfile({
+              googleId: profile.id,
+              email: profile.email,
+              name: profile.name,
+              avatar: profile.picture
+            });
         setSessionCookie(res, signedIn.sessionToken);
         res.writeHead(302, { Location: "/" });
         res.end();
@@ -173,7 +191,7 @@ export async function handleRequest(req, res) {
       }
 
       if (req.method === "POST" && url.pathname === "/api/auth/logout") {
-        if (cookies[sessionCookieName]) {
+        if (!hostedRuntime && cookies[sessionCookieName]) {
           signOutSession(cookies[sessionCookieName]);
         }
         clearSessionCookie(res);
@@ -523,6 +541,223 @@ function parseCookies(headerValue) {
       cookies[key] = decodeURIComponent(value);
       return cookies;
     }, {});
+}
+
+function createHostedSessionToken(payload) {
+  const body = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
+  const signature = crypto
+    .createHmac("sha256", process.env.SUPABASE_SECRET_KEY)
+    .update(body)
+    .digest("base64url");
+  return `${body}.${signature}`;
+}
+
+function getHostedSessionByToken(token) {
+  const value = String(token || "").trim();
+  if (!value || !value.includes(".")) {
+    return null;
+  }
+  const [body, signature] = value.split(".");
+  const expected = crypto
+    .createHmac("sha256", process.env.SUPABASE_SECRET_KEY)
+    .update(body)
+    .digest("base64url");
+  if (!signature || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
+    return null;
+  }
+  try {
+    const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
+    if (!payload?.expiresAt || new Date(payload.expiresAt).getTime() <= Date.now()) {
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+function mapSupabaseUser(row) {
+  return {
+    id: row.id,
+    googleId: row.google_id || "",
+    email: row.email,
+    name: row.name,
+    avatar: row.avatar || "",
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+function mapSupabaseWorkspace(row, role = "owner") {
+  return {
+    id: row.id,
+    name: row.name,
+    ownerUserId: row.owner_user_id || null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    role
+  };
+}
+
+async function supabaseSelect(tableName, query = "") {
+  const response = await supabaseRequest(`/rest/v1/${tableName}${query}`, {
+    method: "GET",
+    headers: {
+      Prefer: "return=representation"
+    }
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json();
+}
+
+async function signInWithEmailHosted(input = {}) {
+  const email = normalizeUserEmail(input.email);
+  const displayName = String(input.name || "").trim() || email.split("@")[0];
+  const timestamp = new Date().toISOString();
+
+  let user = (await supabaseSelect("users", `?email=eq.${encodeURIComponent(email)}&select=*`))[0] || null;
+  if (!user) {
+    user = {
+      id: crypto.randomUUID(),
+      google_id: "",
+      email,
+      name: displayName,
+      avatar: "",
+      created_at: timestamp,
+      updated_at: timestamp
+    };
+    await upsertSupabaseRow("users", user, "id");
+  } else if (displayName && displayName !== user.name) {
+    user = { ...user, name: displayName, updated_at: timestamp };
+    await upsertSupabaseRow("users", user, "id");
+  }
+
+  return createHostedSession(user);
+}
+
+async function signInWithGoogleProfileHosted(input = {}) {
+  const googleId = String(input.googleId || "").trim();
+  if (!googleId) {
+    throw new Error("Google account id is required");
+  }
+  const email = normalizeUserEmail(input.email);
+  const displayName = String(input.name || "").trim() || email.split("@")[0];
+  const avatar = String(input.avatar || "").trim();
+  const timestamp = new Date().toISOString();
+
+  let user = (await supabaseSelect("users", `?google_id=eq.${encodeURIComponent(googleId)}&select=*`))[0] || null;
+  if (!user) {
+    user = (await supabaseSelect("users", `?email=eq.${encodeURIComponent(email)}&select=*`))[0] || null;
+  }
+
+  if (!user) {
+    user = {
+      id: crypto.randomUUID(),
+      google_id: googleId,
+      email,
+      name: displayName,
+      avatar,
+      created_at: timestamp,
+      updated_at: timestamp
+    };
+  } else {
+    user = {
+      ...user,
+      google_id: googleId,
+      email,
+      name: displayName,
+      avatar: avatar || user.avatar || "",
+      updated_at: timestamp
+    };
+  }
+  await upsertSupabaseRow("users", user, "id");
+
+  return createHostedSession(user);
+}
+
+async function createHostedSession(userRow) {
+  const timestamp = new Date().toISOString();
+  let membership = (await supabaseSelect("workspace_members", `?user_id=eq.${encodeURIComponent(userRow.id)}&select=*`))[0] || null;
+  let workspace = null;
+
+  if (!membership) {
+    workspace = {
+      id: crypto.randomUUID(),
+      name: `${String(userRow.name || "My").trim()}'s Tethr`,
+      owner_user_id: userRow.id,
+      created_at: timestamp,
+      updated_at: timestamp
+    };
+    membership = {
+      id: `${workspace.id}:${userRow.id}`,
+      workspace_id: workspace.id,
+      user_id: userRow.id,
+      role: "owner",
+      created_at: timestamp
+    };
+    await upsertSupabaseRow("workspaces", workspace, "id");
+    await upsertSupabaseRow("workspace_members", membership, "workspace_id,user_id");
+  } else {
+    workspace = (await supabaseSelect("workspaces", `?id=eq.${encodeURIComponent(membership.workspace_id)}&select=*`))[0] || null;
+  }
+
+  const user = mapSupabaseUser(userRow);
+  const mappedWorkspace = mapSupabaseWorkspace(workspace, membership.role || "owner");
+  const payload = {
+    user,
+    workspace: mappedWorkspace,
+    workspaces: [mappedWorkspace],
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString()
+  };
+  return {
+    sessionToken: createHostedSessionToken(payload),
+    user,
+    workspace: mappedWorkspace,
+    workspaces: [mappedWorkspace]
+  };
+}
+
+async function hydrateHostedWorkspace(session) {
+  const workspaceId = session.workspace.id;
+  const [
+    locations,
+    containers,
+    items,
+    photos,
+    tags,
+    moveLog,
+    itemHistory,
+    itemEventLog,
+    containerEventLog,
+    containerActivityLog
+  ] = await Promise.all([
+    supabaseSelect("locations", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`),
+    supabaseSelect("containers", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`),
+    supabaseSelect("items", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`),
+    supabaseSelect("photos", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`),
+    supabaseSelect("tags", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`),
+    supabaseSelect("move_log", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`),
+    supabaseSelect("item_history", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`),
+    supabaseSelect("item_event_log", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`),
+    supabaseSelect("container_event_log", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`),
+    supabaseSelect("container_activity_log", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`)
+  ]);
+
+  hydrateWorkspaceSnapshot({
+    session,
+    locations,
+    containers,
+    items,
+    photos,
+    tags,
+    moveLog,
+    itemHistory,
+    itemEventLog,
+    containerEventLog,
+    containerActivityLog
+  });
 }
 
 function ensureAuthenticated(session) {

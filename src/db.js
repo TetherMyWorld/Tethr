@@ -348,6 +348,10 @@ function normalizeEmail(value) {
   return email;
 }
 
+export function normalizeUserEmail(value) {
+  return normalizeEmail(value);
+}
+
 function getUserByEmail(email) {
   return db.prepare(
     `SELECT id, google_id, email, name, avatar, created_at, updated_at
@@ -631,6 +635,276 @@ export function signOutSession(token) {
     return;
   }
   db.prepare("DELETE FROM sessions WHERE token = ?").run(cleanToken);
+}
+
+export function hydrateWorkspaceSnapshot(snapshot = {}) {
+  const session = snapshot.session || null;
+  if (!session?.workspace?.id || !session?.user?.id) {
+    throw new Error("A hosted session is required to hydrate workspace data");
+  }
+
+  const workspace = session.workspace;
+  const user = session.user;
+  const workspaces = Array.isArray(session.workspaces) ? session.workspaces : [workspace];
+  const locations = Array.isArray(snapshot.locations) ? snapshot.locations : [];
+  const containers = Array.isArray(snapshot.containers) ? snapshot.containers : [];
+  const items = Array.isArray(snapshot.items) ? snapshot.items : [];
+  const photos = Array.isArray(snapshot.photos) ? snapshot.photos : [];
+  const tags = Array.isArray(snapshot.tags) ? snapshot.tags : [];
+  const moveLog = Array.isArray(snapshot.moveLog) ? snapshot.moveLog : [];
+  const itemHistory = Array.isArray(snapshot.itemHistory) ? snapshot.itemHistory : [];
+  const itemEventLog = Array.isArray(snapshot.itemEventLog) ? snapshot.itemEventLog : [];
+  const containerEventLog = Array.isArray(snapshot.containerEventLog) ? snapshot.containerEventLog : [];
+  const containerActivityLog = Array.isArray(snapshot.containerActivityLog) ? snapshot.containerActivityLog : [];
+
+  db.exec("BEGIN");
+  try {
+    db.prepare(
+      `INSERT INTO users (id, google_id, email, name, avatar, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         google_id = excluded.google_id,
+         email = excluded.email,
+         name = excluded.name,
+         avatar = excluded.avatar,
+         updated_at = excluded.updated_at`
+    ).run(
+      user.id,
+      user.googleId || "",
+      user.email,
+      user.name,
+      user.avatar || "",
+      user.createdAt || now(),
+      user.updatedAt || now()
+    );
+
+    for (const knownWorkspace of workspaces) {
+      if (!knownWorkspace?.id) {
+        continue;
+      }
+      db.prepare(
+        `INSERT INTO workspaces (id, name, owner_user_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET
+           name = excluded.name,
+           owner_user_id = excluded.owner_user_id,
+           updated_at = excluded.updated_at`
+      ).run(
+        knownWorkspace.id,
+        knownWorkspace.name || "Tethr",
+        knownWorkspace.ownerUserId || user.id,
+        knownWorkspace.createdAt || now(),
+        knownWorkspace.updatedAt || now()
+      );
+
+      db.prepare(
+        `INSERT INTO workspace_members (id, workspace_id, user_id, role, created_at)
+         VALUES (?, ?, ?, ?, ?)
+         ON CONFLICT(workspace_id, user_id) DO UPDATE SET
+           role = excluded.role`
+      ).run(
+        `${knownWorkspace.id}:${user.id}`,
+        knownWorkspace.id,
+        user.id,
+        knownWorkspace.role || "owner",
+        knownWorkspace.createdAt || now()
+      );
+    }
+
+    const workspaceIdValue = workspace.id;
+    db.prepare("DELETE FROM tags WHERE workspace_id = ?").run(workspaceIdValue);
+    db.prepare("DELETE FROM container_activity_log WHERE workspace_id = ?").run(workspaceIdValue);
+    db.prepare("DELETE FROM container_event_log WHERE workspace_id = ?").run(workspaceIdValue);
+    db.prepare("DELETE FROM item_event_log WHERE workspace_id = ?").run(workspaceIdValue);
+    db.prepare("DELETE FROM item_history WHERE workspace_id = ?").run(workspaceIdValue);
+    db.prepare("DELETE FROM move_log WHERE workspace_id = ?").run(workspaceIdValue);
+    db.prepare("DELETE FROM photos WHERE workspace_id = ?").run(workspaceIdValue);
+    db.prepare("DELETE FROM items WHERE workspace_id = ?").run(workspaceIdValue);
+    db.prepare("DELETE FROM containers WHERE workspace_id = ?").run(workspaceIdValue);
+    db.prepare("DELETE FROM locations WHERE workspace_id = ?").run(workspaceIdValue);
+
+    for (const location of locations) {
+      db.prepare(
+        `INSERT INTO locations (id, workspace_id, name, description, notes, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        location.id,
+        workspaceIdValue,
+        location.name || "",
+        location.description || "",
+        location.notes || "",
+        location.created_at || location.createdAt || now(),
+        location.updated_at || location.updatedAt || now()
+      );
+    }
+
+    for (const container of containers) {
+      db.prepare(
+        `INSERT INTO containers (
+           id, workspace_id, parent_container_id, location_id, name, slug, type, description, notes, rfid_tag_id,
+           image_file_name, image_stored_name, image_mime_type, image_size_bytes, created_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        container.id,
+        workspaceIdValue,
+        container.parent_container_id || null,
+        container.location_id || null,
+        container.name || "",
+        container.slug || "",
+        container.type || "Container",
+        container.description || "",
+        container.notes || "",
+        container.rfid_tag_id || "",
+        container.image_file_name || "",
+        container.image_stored_name || "",
+        container.image_mime_type || "",
+        container.image_size_bytes || 0,
+        container.created_at || now(),
+        container.updated_at || now()
+      );
+    }
+
+    for (const item of items) {
+      db.prepare(
+        `INSERT INTO items (id, workspace_id, container_id, name, description, notes, quantity, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        item.id,
+        workspaceIdValue,
+        item.container_id,
+        item.name || "",
+        item.description || "",
+        item.notes || "",
+        item.quantity || 1,
+        item.created_at || now(),
+        item.updated_at || now()
+      );
+    }
+
+    for (const photo of photos) {
+      db.prepare(
+        `INSERT INTO photos (id, workspace_id, item_id, file_name, stored_name, mime_type, size_bytes, caption, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        photo.id,
+        workspaceIdValue,
+        photo.item_id,
+        photo.file_name || "",
+        photo.stored_name || "",
+        photo.mime_type || "",
+        photo.size_bytes || 0,
+        photo.caption || "",
+        photo.created_at || now()
+      );
+    }
+
+    for (const tag of tags) {
+      db.prepare(
+        `INSERT INTO tags (id, workspace_id, token, status, source, entity_type, entity_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        tag.id,
+        workspaceIdValue,
+        tag.token,
+        tag.status || "unassigned",
+        tag.source || "generated",
+        tag.entity_type || null,
+        tag.entity_id || null,
+        tag.created_at || now(),
+        tag.updated_at || now()
+      );
+    }
+
+    for (const entry of moveLog) {
+      db.prepare(
+        `INSERT INTO move_log (
+           id, workspace_id, entity_type, entity_id, from_container_id, to_container_id, from_location_id, to_location_id, notes, moved_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        entry.id,
+        workspaceIdValue,
+        entry.entity_type,
+        entry.entity_id,
+        entry.from_container_id || null,
+        entry.to_container_id || null,
+        entry.from_location_id || null,
+        entry.to_location_id || null,
+        entry.notes || "",
+        entry.moved_at || now()
+      );
+    }
+
+    for (const entry of itemHistory) {
+      db.prepare(
+        `INSERT INTO item_history (id, workspace_id, item_id, event_type, from_quantity, to_quantity, notes, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        entry.id,
+        workspaceIdValue,
+        entry.item_id,
+        entry.event_type,
+        entry.from_quantity ?? null,
+        entry.to_quantity ?? null,
+        entry.notes || "",
+        entry.created_at || now()
+      );
+    }
+
+    for (const entry of itemEventLog) {
+      db.prepare(
+        `INSERT INTO item_event_log (id, workspace_id, item_id, event_type, from_text, to_text, notes, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        entry.id,
+        workspaceIdValue,
+        entry.item_id,
+        entry.event_type,
+        entry.from_text || "",
+        entry.to_text || "",
+        entry.notes || "",
+        entry.created_at || now()
+      );
+    }
+
+    for (const entry of containerEventLog) {
+      db.prepare(
+        `INSERT INTO container_event_log (id, workspace_id, container_id, event_type, from_text, to_text, notes, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        entry.id,
+        workspaceIdValue,
+        entry.container_id,
+        entry.event_type,
+        entry.from_text || "",
+        entry.to_text || "",
+        entry.notes || "",
+        entry.created_at || now()
+      );
+    }
+
+    for (const entry of containerActivityLog) {
+      db.prepare(
+        `INSERT INTO container_activity_log (id, workspace_id, container_id, item_id, item_name, action_type, from_quantity, to_quantity, notes, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        entry.id,
+        workspaceIdValue,
+        entry.container_id,
+        entry.item_id || null,
+        entry.item_name || "",
+        entry.action_type,
+        entry.from_quantity ?? null,
+        entry.to_quantity ?? null,
+        entry.notes || "",
+        entry.created_at || now()
+      );
+    }
+
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
 }
 
 function currentSession() {
