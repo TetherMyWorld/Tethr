@@ -310,12 +310,16 @@ export async function handleRequest(req, res) {
 
       if (req.method === "POST" && url.pathname.startsWith("/api/containers/") && url.pathname.endsWith("/photo")) {
         const id = url.pathname.split("/")[3];
-        const before = getContainerDetail(id);
         const upload = await readMultipart(req);
-        const saved = saveContainerPhoto(id, upload);
-        const storageSync = session
-          ? await syncContainerPhotoToSupabase(session.workspace.id, upload, saved, before)
-          : { synced: false, reason: "No signed-in session." };
+        const before = hostedRuntime ? null : getContainerDetail(id);
+        const saved = hostedRuntime
+          ? await saveHostedContainerPhoto(session, id, upload)
+          : saveContainerPhoto(id, upload);
+        const storageSync = hostedRuntime
+          ? { synced: true }
+          : session
+            ? await syncContainerPhotoToSupabase(session.workspace.id, upload, saved, before)
+            : { synced: false, reason: "No signed-in session." };
         return sendJson(res, 201, {
           ...saved,
           supabaseSync: storageSync
@@ -411,12 +415,16 @@ export async function handleRequest(req, res) {
 
       if (req.method === "POST" && url.pathname.startsWith("/api/items/") && url.pathname.endsWith("/photos")) {
         const id = url.pathname.split("/")[3];
-        const before = getItemDetail(id);
         const upload = await readMultipart(req);
-        const saved = saveItemPhoto(id, upload);
-        const storageSync = session
-          ? await syncItemPhotoToSupabase(session.workspace.id, id, upload, saved, before)
-          : { synced: false, reason: "No signed-in session." };
+        const before = hostedRuntime ? null : getItemDetail(id);
+        const saved = hostedRuntime
+          ? await saveHostedItemPhoto(session, id, upload)
+          : saveItemPhoto(id, upload);
+        const storageSync = hostedRuntime
+          ? { synced: true }
+          : session
+            ? await syncItemPhotoToSupabase(session.workspace.id, id, upload, saved, before)
+            : { synced: false, reason: "No signed-in session." };
         return sendJson(res, 201, {
           ...saved,
           supabaseSync: storageSync
@@ -1203,6 +1211,95 @@ async function syncItemPhotoToSupabase(workspaceId, itemId, upload, savedPhoto, 
       reason: String(error.message || error)
     };
   }
+}
+
+function buildStoredUploadName(fileName = "") {
+  const extension = path.extname(String(fileName || "").trim()).toLowerCase() || ".bin";
+  return `${crypto.randomUUID()}${extension}`;
+}
+
+async function saveHostedItemPhoto(session, itemId, upload) {
+  if (!session?.workspace?.id) {
+    throw new Error("Please sign in.");
+  }
+  const workspaceId = session.workspace.id;
+  const existingItem = (await supabaseSelect(
+    "items",
+    `?workspace_id=eq.${encodeURIComponent(workspaceId)}&id=eq.${encodeURIComponent(itemId)}&select=*`
+  ))[0];
+  if (!existingItem) {
+    throw new Error("Item not found");
+  }
+
+  const previousPhotos = await supabaseSelect(
+    "photos",
+    `?workspace_id=eq.${encodeURIComponent(workspaceId)}&item_id=eq.${encodeURIComponent(itemId)}&select=*&order=created_at.desc`
+  );
+  const storedName = buildStoredUploadName(upload.fileName);
+  const photoId = crypto.randomUUID();
+  const createdAt = new Date().toISOString();
+
+  await uploadSupabaseObject(workspaceId, "items", storedName, upload);
+  for (const photo of previousPhotos) {
+    if (photo?.stored_name && photo.stored_name !== storedName) {
+      await deleteSupabaseObject(workspaceId, "items", photo.stored_name);
+    }
+  }
+  await deleteSupabaseRecordsByField("photos", "item_id", itemId, workspaceId);
+  await upsertSupabaseRow("photos", {
+    id: photoId,
+    workspace_id: workspaceId,
+    item_id: itemId,
+    file_name: upload.fileName,
+    stored_name: storedName,
+    mime_type: upload.mimeType,
+    size_bytes: upload.buffer.byteLength,
+    caption: "",
+    created_at: createdAt
+  }, "id");
+
+  return {
+    id: photoId,
+    item_id: itemId,
+    file_name: upload.fileName,
+    stored_name: storedName,
+    mime_type: upload.mimeType,
+    size_bytes: upload.buffer.byteLength,
+    caption: "",
+    created_at: createdAt
+  };
+}
+
+async function saveHostedContainerPhoto(session, containerId, upload) {
+  if (!session?.workspace?.id) {
+    throw new Error("Please sign in.");
+  }
+  const workspaceId = session.workspace.id;
+  const container = (await supabaseSelect(
+    "containers",
+    `?workspace_id=eq.${encodeURIComponent(workspaceId)}&id=eq.${encodeURIComponent(containerId)}&select=*`
+  ))[0];
+  if (!container) {
+    throw new Error("Container not found");
+  }
+
+  const storedName = buildStoredUploadName(upload.fileName);
+  await uploadSupabaseObject(workspaceId, "containers", storedName, upload);
+  if (container.image_stored_name && container.image_stored_name !== storedName) {
+    await deleteSupabaseObject(workspaceId, "containers", container.image_stored_name);
+  }
+
+  const updated = {
+    ...container,
+    image_file_name: upload.fileName,
+    image_stored_name: storedName,
+    image_mime_type: upload.mimeType,
+    image_size_bytes: upload.buffer.byteLength,
+    updated_at: new Date().toISOString()
+  };
+  await upsertSupabaseRow("containers", updated, "id");
+
+  return updated;
 }
 
 async function syncContainerPhotoToSupabase(workspaceId, upload, savedContainer, beforeDetail) {

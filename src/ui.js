@@ -250,8 +250,8 @@ export function renderApp(initialContainerId) {
       };
 
       const imageUploadPolicy = {
-        maxDimension: 1600,
-        quality: 0.82
+        maxDimension: 1200,
+        quality: 0.76
       };
 
       const els = {
