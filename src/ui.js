@@ -250,8 +250,8 @@ export function renderApp(initialContainerId) {
       };
 
       const imageUploadPolicy = {
-        maxDimension: 1200,
-        quality: 0.76
+        maxDimension: 1000,
+        quality: 0.72
       };
 
       const els = {
@@ -307,10 +307,8 @@ export function renderApp(initialContainerId) {
         const image = await loadImageElement(file);
         const longestSide = Math.max(image.naturalWidth || image.width || 0, image.naturalHeight || image.height || 0);
         const needsResize = longestSide > imageUploadPolicy.maxDimension;
-        const outputType = file.type === "image/png" ? "image/png" : "image/jpeg";
-        const outputName = outputType === "image/png"
-          ? renameFileExtension(file.name, ".png")
-          : renameFileExtension(file.name, ".jpg");
+        const outputType = "image/jpeg";
+        const outputName = renameFileExtension(file.name, ".jpg");
 
         if (!needsResize && outputType === file.type && file.size <= 900 * 1024) {
           return file;
@@ -335,7 +333,7 @@ export function renderApp(initialContainerId) {
               return;
             }
             reject(new Error("Could not optimize the selected image."));
-          }, outputType, outputType === "image/png" ? undefined : imageUploadPolicy.quality);
+          }, outputType, imageUploadPolicy.quality);
         });
 
         if (!optimizedBlob || optimizedBlob.size >= file.size) {
