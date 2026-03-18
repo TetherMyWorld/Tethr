@@ -1,14 +1,19 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { DatabaseSync } from "node:sqlite";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { slugify } from "./domain.js";
 
-const dataDir = path.join(process.cwd(), "data");
+const runningHosted = Boolean(process.env.VERCEL);
+const dataDir = runningHosted
+  ? path.join(os.tmpdir(), "tethrarca-data")
+  : path.join(process.cwd(), "data");
 const uploadsDir = path.join(dataDir, "uploads");
 const dbFile = path.join(dataDir, "tethrarca.sqlite");
 
+fs.mkdirSync(dataDir, { recursive: true });
 fs.mkdirSync(uploadsDir, { recursive: true });
 
 const db = new DatabaseSync(dbFile);
