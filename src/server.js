@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { Readable } from "node:stream";
+import { pathToFileURL } from "node:url";
 import {
   assignTag,
   createContainer,
@@ -53,7 +54,7 @@ const supabaseConfigured = Boolean(
 );
 let supabaseBucketEnsured = false;
 
-const server = http.createServer((req, res) => {
+export async function handleRequest(req, res) {
   const cookies = parseCookies(req.headers.cookie || "");
   const session = getSessionByToken(cookies[sessionCookieName] || "");
   const context = session
@@ -418,11 +419,18 @@ const server = http.createServer((req, res) => {
       sendJson(res, status, { error: error.message || "Unexpected error" });
     }
   });
-});
+}
 
-server.listen(port, host, () => {
-  console.log(`TethrArca running at http://${host}:${port}`);
-});
+const runningDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (runningDirectly) {
+  const server = http.createServer((req, res) => {
+    handleRequest(req, res);
+  });
+
+  server.listen(port, host, () => {
+    console.log(`TethrArca running at http://${host}:${port}`);
+  });
+}
 
 function sendHtml(res, body) {
   res.writeHead(200, {
