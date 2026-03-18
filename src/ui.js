@@ -1276,7 +1276,7 @@ export function renderApp(initialContainerId) {
                         '<div class="item-quantity-wrap">' +
                           '<div class="item-quantity-row">' +
                             '<button class="item-quantity-button minus" type="button" data-quantity-delta="-1" data-item-id="' + item.id + '" aria-label="Decrease quantity for ' + escapeAttr(item.name) + '">' + minusIconMarkup + '</button>' +
-                            '<div class="item-quantity-value">' + item.quantity + '</div>' +
+                            '<div class="item-quantity-value" data-item-quantity-value="' + item.id + '">' + item.quantity + '</div>' +
                             '<button class="item-quantity-button plus" type="button" data-quantity-delta="1" data-item-id="' + item.id + '" aria-label="Increase quantity for ' + escapeAttr(item.name) + '">' + plusIconMarkup + '</button>' +
                           '</div>' +
                         '</div>' +
@@ -2039,7 +2039,15 @@ export function renderApp(initialContainerId) {
               : entry
           ));
         }
-        renderStage();
+
+        const containerQuantityValue = els.stageContent.querySelector('[data-item-quantity-value="' + itemId + '"]');
+        if (containerQuantityValue) {
+          containerQuantityValue.textContent = String(nextQuantity);
+        }
+        const itemDetailQuantityValue = els.stageContent.querySelector(".hero-count.item-quantity-display");
+        if (!containerQuantityValue && itemDetailQuantityValue && state.activeItemDetail?.item?.id === itemId) {
+          itemDetailQuantityValue.textContent = String(nextQuantity);
+        }
 
         try {
           await api("/api/items/" + itemId, {
@@ -2062,7 +2070,19 @@ export function renderApp(initialContainerId) {
           if (previousBootstrapItems) {
             state.bootstrap.items = previousBootstrapItems;
           }
-          renderStage();
+          if (previousContainerItems) {
+            const restoredContainerItem = previousContainerItems.find((entry) => entry.id === itemId);
+            const containerQuantityValueAfterError = els.stageContent.querySelector('[data-item-quantity-value="' + itemId + '"]');
+            if (restoredContainerItem && containerQuantityValueAfterError) {
+              containerQuantityValueAfterError.textContent = String(restoredContainerItem.quantity);
+            }
+          }
+          if (previousActiveItemDetail?.item?.id === itemId) {
+            const itemDetailQuantityValueAfterError = els.stageContent.querySelector(".hero-count.item-quantity-display");
+            if (itemDetailQuantityValueAfterError) {
+              itemDetailQuantityValueAfterError.textContent = String(previousActiveItemDetail.item.quantity);
+            }
+          }
         }
       }
 
