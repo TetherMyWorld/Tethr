@@ -181,6 +181,7 @@ export function renderApp(initialContainerId) {
       .icon-button.danger { background:linear-gradient(180deg, #b04f3f 0%, #983b2b 100%); }
       .icon-button svg { width:24px; height:24px; display:block; stroke:currentColor; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
       .icon-button.save-icon { width:60px; height:60px; font-size:2rem; background:linear-gradient(180deg, #2ea56b 0%, #1f7d4d 100%); box-shadow:0 10px 22px rgba(31,125,77,.20); }
+      .icon-button.save-icon.is-saving { font-size:1.05rem; letter-spacing:.2em; }
       .icon-button.add-icon { width:60px; height:60px; background:linear-gradient(180deg, #2ea56b 0%, #1f7d4d 100%); box-shadow:0 10px 22px rgba(31,125,77,.20); }
       .icon-button.add-icon svg { width:28px; height:28px; display:block; stroke:currentColor; stroke-width:3.2; stroke-linecap:round; }
       .icon-button.delete-icon svg { width:24px; height:24px; stroke-width:3.4; }
@@ -1653,58 +1654,78 @@ export function renderApp(initialContainerId) {
 
             modal.querySelector("#container-modal-form").addEventListener("submit", async (event) => {
               event.preventDefault();
-              const form = new FormData(event.currentTarget);
-              const url = isEdit ? "/api/containers/" + container.id : "/api/containers";
-              const method = isEdit ? "PATCH" : "POST";
-              const saved = await api(url, {
-                method,
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({
-                  name: form.get("name"),
-                  locationId: form.get("locationId") || null,
-                  notes: form.get("notes")
-                })
-              });
-              if (tagToken && !isEdit) {
-                await api("/api/tags/" + encodeURIComponent(tagToken), {
-                  method: "PATCH",
+              const formElement = event.currentTarget;
+              setFormSaving(formElement, true);
+              try {
+                const form = new FormData(formElement);
+                const url = isEdit ? "/api/containers/" + container.id : "/api/containers";
+                const method = isEdit ? "PATCH" : "POST";
+                const saved = await api(url, {
+                  method,
                   headers: { "content-type": "application/json" },
                   body: JSON.stringify({
-                    entityType: "container",
-                    entityId: saved.id
+                    name: form.get("name"),
+                    locationId: form.get("locationId") || null,
+                    notes: form.get("notes")
                   })
                 });
-              }
-              const selectedPhoto = photoInput && photoInput.files && photoInput.files[0] ? photoInput.files[0] : null;
-              if (selectedPhoto) {
-                const optimizedPhoto = await optimizeImageFile(selectedPhoto);
-                const photoForm = new FormData();
-                photoForm.append("photo", optimizedPhoto);
-                await api("/api/containers/" + saved.id + "/photo", { method: "POST", body: photoForm });
-              }
-              closeModal();
-              showMessage(isEdit
-                ? (selectedPhoto ? "Container and image updated." : "Container updated.")
-                : (tagToken ? "Container created and tag assigned." : "Container created."));
-              if (isEdit) {
+                if (tagToken && !isEdit) {
+                  await api("/api/tags/" + encodeURIComponent(tagToken), {
+                    method: "PATCH",
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify({
+                      entityType: "container",
+                      entityId: saved.id
+                    })
+                  });
+                }
+                const selectedPhoto = photoInput && photoInput.files && photoInput.files[0] ? photoInput.files[0] : null;
+                let photoSaved = false;
+                if (selectedPhoto) {
+                  try {
+                    const optimizedPhoto = await optimizeImageFile(selectedPhoto);
+                    const photoForm = new FormData();
+                    photoForm.append("photo", optimizedPhoto);
+                    await api("/api/containers/" + saved.id + "/photo", { method: "POST", body: photoForm });
+                    photoSaved = true;
+                  } catch (error) {
+                    await refreshAll();
+                    closeModal();
+                    showMessage(isEdit
+                      ? "Container saved, but the image upload failed."
+                      : "Container created, but the image upload failed.", true);
+                    if (saved.id) {
+                      await openContainer(saved.id, false);
+                    }
+                    return;
+                  }
+                }
+                closeModal();
+                showMessage(isEdit
+                  ? (photoSaved ? "Container and image updated." : "Container updated.")
+                  : (tagToken ? "Container created and tag assigned." : "Container created."));
+                if (isEdit) {
+                  await refreshAll();
+                  await openContainer(saved.id, false);
+                  return;
+                }
+                if (tagToken) {
+                  state.scanToken = null;
+                  await refreshAll();
+                  await openContainer(saved.id, false);
+                  return;
+                }
+                state.stage = "containers";
+                state.selectedLocationId = saved.location_id || null;
+                state.activeContainerId = null;
+                state.activeContainerDetail = null;
+                state.activeItemId = null;
+                state.activeItemDetail = null;
+                history.pushState({}, "", "/");
                 await refreshAll();
-                await openContainer(saved.id, false);
-                return;
+              } finally {
+                setFormSaving(formElement, false);
               }
-              if (tagToken) {
-                state.scanToken = null;
-                await refreshAll();
-                await openContainer(saved.id, false);
-                return;
-              }
-              state.stage = "containers";
-              state.selectedLocationId = saved.location_id || null;
-              state.activeContainerId = null;
-              state.activeContainerDetail = null;
-              state.activeItemId = null;
-              state.activeItemDetail = null;
-              history.pushState({}, "", "/");
-              await refreshAll();
             });
           }
         );
@@ -1831,46 +1852,68 @@ export function renderApp(initialContainerId) {
 
             modal.querySelector("#item-modal-form").addEventListener("submit", async (event) => {
               event.preventDefault();
-              const form = new FormData(event.currentTarget);
-              const url = item ? "/api/items/" + item.id : "/api/items";
-              const method = item ? "PATCH" : "POST";
-              const saved = await api(url, {
-                method,
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({
-                  name: form.get("name"),
-                  containerId: form.get("containerId"),
-                  quantity: form.get("quantity"),
-                  notes: form.get("notes")
-                })
-              });
-              if (tagToken && !item) {
-                await api("/api/tags/" + encodeURIComponent(tagToken), {
-                  method: "PATCH",
+              const formElement = event.currentTarget;
+              setFormSaving(formElement, true);
+              try {
+                const form = new FormData(formElement);
+                const url = item ? "/api/items/" + item.id : "/api/items";
+                const method = item ? "PATCH" : "POST";
+                const saved = await api(url, {
+                  method,
                   headers: { "content-type": "application/json" },
                   body: JSON.stringify({
-                    entityType: "item",
-                    entityId: saved.id
+                    name: form.get("name"),
+                    containerId: form.get("containerId"),
+                    quantity: form.get("quantity"),
+                    notes: form.get("notes")
                   })
                 });
-              }
-              const selectedPhoto = photoInput && photoInput.files && photoInput.files[0] ? photoInput.files[0] : null;
-              if (selectedPhoto) {
-                const optimizedPhoto = await optimizeImageFile(selectedPhoto);
-                const photoForm = new FormData();
-                photoForm.append("photo", optimizedPhoto);
-                await api("/api/items/" + saved.id + "/photos", { method: "POST", body: photoForm });
-              }
-              closeModal();
-              showMessage(item
-                ? (selectedPhoto ? "Item and image updated." : "Item updated.")
-                : (tagToken ? "Item created and tag assigned." : "Item created."));
-              await refreshAll();
-              if (item) {
-                await openItem(item.id);
-              } else {
-                state.scanToken = null;
-                await openContainer(saved.container_id || form.get("containerId"), false);
+                if (tagToken && !item) {
+                  await api("/api/tags/" + encodeURIComponent(tagToken), {
+                    method: "PATCH",
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify({
+                      entityType: "item",
+                      entityId: saved.id
+                    })
+                  });
+                }
+                const selectedPhoto = photoInput && photoInput.files && photoInput.files[0] ? photoInput.files[0] : null;
+                let photoSaved = false;
+                if (selectedPhoto) {
+                  try {
+                    const optimizedPhoto = await optimizeImageFile(selectedPhoto);
+                    const photoForm = new FormData();
+                    photoForm.append("photo", optimizedPhoto);
+                    await api("/api/items/" + saved.id + "/photos", { method: "POST", body: photoForm });
+                    photoSaved = true;
+                  } catch (error) {
+                    await refreshAll();
+                    closeModal();
+                    showMessage(item
+                      ? "Item saved, but the image upload failed."
+                      : "Item created, but the image upload failed.", true);
+                    if (item) {
+                      await openItem(item.id);
+                    } else {
+                      await openContainer(saved.container_id || form.get("containerId"), false);
+                    }
+                    return;
+                  }
+                }
+                closeModal();
+                showMessage(item
+                  ? (photoSaved ? "Item and image updated." : "Item updated.")
+                  : (tagToken ? "Item created and tag assigned." : "Item created."));
+                await refreshAll();
+                if (item) {
+                  await openItem(item.id);
+                } else {
+                  state.scanToken = null;
+                  await openContainer(saved.container_id || form.get("containerId"), false);
+                }
+              } finally {
+                setFormSaving(formElement, false);
               }
             });
           }
@@ -2181,6 +2224,21 @@ export function renderApp(initialContainerId) {
       function closeModal() {
         els.modalRoot.hidden = true;
         els.modalRoot.innerHTML = "";
+      }
+
+      function setFormSaving(form, isSaving) {
+        if (!form) {
+          return;
+        }
+        const saveButton = form.querySelector('.save-icon[type="submit"]');
+        if (!saveButton) {
+          return;
+        }
+        saveButton.disabled = isSaving;
+        saveButton.classList.toggle("is-saving", isSaving);
+        saveButton.setAttribute("aria-busy", isSaving ? "true" : "false");
+        saveButton.setAttribute("title", isSaving ? "Saving..." : "Save");
+        saveButton.innerHTML = isSaving ? "..." : "&#10003;";
       }
 
       async function api(url, options) {
