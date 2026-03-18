@@ -1193,9 +1193,50 @@ async function syncItemHistoryToSupabase(session, itemId) {
     if (!detail) {
       return { synced: false, reason: "Item not found." };
     }
-    await upsertSupabaseRows("move_log", detail.moveLog || [], "id");
-    await upsertSupabaseRows("item_history", detail.quantityLog || [], "id");
-    await upsertSupabaseRows("item_event_log", detail.eventLog || [], "id");
+    await upsertSupabaseRows(
+      "move_log",
+      (detail.moveLog || []).map((entry) => ({
+        id: entry.id,
+        workspace_id: session.workspace.id,
+        entity_type: entry.entity_type,
+        entity_id: entry.entity_id,
+        from_container_id: entry.from_container_id || null,
+        to_container_id: entry.to_container_id || null,
+        from_location_id: entry.from_location_id || null,
+        to_location_id: entry.to_location_id || null,
+        notes: entry.notes || "",
+        moved_at: entry.moved_at
+      })),
+      "id"
+    );
+    await upsertSupabaseRows(
+      "item_history",
+      (detail.quantityLog || []).map((entry) => ({
+        id: entry.id,
+        workspace_id: session.workspace.id,
+        item_id: itemId,
+        event_type: entry.event_type,
+        from_quantity: entry.from_quantity ?? null,
+        to_quantity: entry.to_quantity ?? null,
+        notes: entry.notes || "",
+        created_at: entry.created_at
+      })),
+      "id"
+    );
+    await upsertSupabaseRows(
+      "item_event_log",
+      (detail.eventLog || []).map((entry) => ({
+        id: entry.id,
+        workspace_id: session.workspace.id,
+        item_id: itemId,
+        event_type: entry.event_type,
+        from_text: entry.from_text || "",
+        to_text: entry.to_text || "",
+        notes: entry.notes || "",
+        created_at: entry.created_at
+      })),
+      "id"
+    );
     return { synced: true };
   } catch (error) {
     console.error("Supabase item history sync failed:", error);
@@ -1216,9 +1257,52 @@ async function syncContainerHistoryToSupabase(session, containerId) {
     if (!detail) {
       return { synced: false, reason: "Container not found." };
     }
-    await upsertSupabaseRows("move_log", detail.moveLog || [], "id");
-    await upsertSupabaseRows("container_event_log", detail.eventLog || [], "id");
-    await upsertSupabaseRows("container_activity_log", detail.itemActivity || [], "id");
+    await upsertSupabaseRows(
+      "move_log",
+      (detail.moveLog || []).map((entry) => ({
+        id: entry.id,
+        workspace_id: session.workspace.id,
+        entity_type: entry.entity_type,
+        entity_id: entry.entity_id,
+        from_container_id: entry.from_container_id || null,
+        to_container_id: entry.to_container_id || null,
+        from_location_id: entry.from_location_id || null,
+        to_location_id: entry.to_location_id || null,
+        notes: entry.notes || "",
+        moved_at: entry.moved_at
+      })),
+      "id"
+    );
+    await upsertSupabaseRows(
+      "container_event_log",
+      (detail.eventLog || []).map((entry) => ({
+        id: entry.id,
+        workspace_id: session.workspace.id,
+        container_id: containerId,
+        event_type: entry.event_type,
+        from_text: entry.from_text || "",
+        to_text: entry.to_text || "",
+        notes: entry.notes || "",
+        created_at: entry.created_at
+      })),
+      "id"
+    );
+    await upsertSupabaseRows(
+      "container_activity_log",
+      (detail.itemActivity || []).map((entry) => ({
+        id: entry.id,
+        workspace_id: session.workspace.id,
+        container_id: containerId,
+        item_id: entry.item_id || null,
+        item_name: entry.item_name || "",
+        action_type: entry.action_type,
+        from_quantity: entry.from_quantity ?? null,
+        to_quantity: entry.to_quantity ?? null,
+        notes: entry.notes || "",
+        created_at: entry.created_at
+      })),
+      "id"
+    );
     return { synced: true };
   } catch (error) {
     console.error("Supabase container history sync failed:", error);
