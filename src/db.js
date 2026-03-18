@@ -1271,6 +1271,26 @@ function insertContainerEventLog({
   );
 }
 
+export function recordItemImageEvent(itemId, fromText = "", toText = "", notes = "") {
+  insertItemEventLog({
+    itemId,
+    eventType: "image_changed",
+    fromText,
+    toText,
+    notes
+  });
+}
+
+export function recordContainerImageEvent(containerId, fromText = "", toText = "", notes = "") {
+  insertContainerEventLog({
+    containerId,
+    eventType: "image_changed",
+    fromText,
+    toText,
+    notes
+  });
+}
+
 function insertContainerActivityLog({
   containerId,
   itemId = null,

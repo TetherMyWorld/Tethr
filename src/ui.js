@@ -1315,7 +1315,15 @@ export function renderApp(initialContainerId) {
             '<div class="contents-grid">' + itemRows + '</div>' +
           '</div>';
 
-        document.getElementById("container-history-button").addEventListener("click", () => openContainerHistoryModal(detail));
+        document.getElementById("container-history-button").addEventListener("click", async () => {
+          try {
+            const freshDetail = await api("/api/containers/" + detail.container.id);
+            state.activeContainerDetail = freshDetail;
+            openContainerHistoryModal(freshDetail);
+          } catch (error) {
+            showError(error.message || "Could not load container history.");
+          }
+        });
         document.getElementById("container-scan-move-button").addEventListener("click", () => {
           state.pendingScanAction = {
             kind: "moveContainer",
@@ -1427,7 +1435,15 @@ export function renderApp(initialContainerId) {
               copyHtml +
             '</div>' +
           '</div>';
-        document.getElementById("item-history-button").addEventListener("click", () => openItemHistoryModal(detail));
+        document.getElementById("item-history-button").addEventListener("click", async () => {
+          try {
+            const freshDetail = await api("/api/items/" + detail.item.id);
+            state.activeItemDetail = freshDetail;
+            openItemHistoryModal(freshDetail);
+          } catch (error) {
+            showError(error.message || "Could not load item history.");
+          }
+        });
         document.getElementById("item-scan-move-button").addEventListener("click", () => {
           state.pendingScanAction = {
             kind: "moveItem",
@@ -2060,6 +2076,9 @@ export function renderApp(initialContainerId) {
               notes: item.notes || ""
             })
           });
+          if (state.activeItemDetail?.item?.id === itemId) {
+            state.activeItemDetail = await api("/api/items/" + itemId);
+          }
         } catch (error) {
           if (previousContainerItems) {
             state.activeContainerDetail.items = previousContainerItems;

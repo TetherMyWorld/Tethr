@@ -24,6 +24,8 @@ import {
   normalizeUserEmail,
   getTag,
   runWithRequestContext,
+  recordContainerImageEvent,
+  recordItemImageEvent,
   signInWithEmail,
   signInWithGoogleProfile,
   signOutSession,
@@ -1407,6 +1409,7 @@ async function saveHostedItemPhoto(session, itemId, upload) {
     "photos",
     `?workspace_id=eq.${encodeURIComponent(workspaceId)}&item_id=eq.${encodeURIComponent(itemId)}&select=*&order=created_at.desc`
   );
+  const previousFileName = String(previousPhotos[0]?.file_name || "").trim();
   const storedName = buildStoredUploadName(upload.fileName);
   const photoId = crypto.randomUUID();
   const createdAt = new Date().toISOString();
@@ -1429,6 +1432,12 @@ async function saveHostedItemPhoto(session, itemId, upload) {
     caption: "",
     created_at: createdAt
   }, "id");
+
+  recordItemImageEvent(
+    itemId,
+    previousFileName,
+    String(upload.fileName || "").trim()
+  );
 
   return {
     id: photoId,
@@ -1455,6 +1464,7 @@ async function saveHostedContainerPhoto(session, containerId, upload) {
     throw new Error("Container not found");
   }
 
+  const previousFileName = String(container.image_file_name || "").trim();
   const storedName = buildStoredUploadName(upload.fileName);
   await uploadSupabaseObject(workspaceId, "containers", storedName, upload);
   if (container.image_stored_name && container.image_stored_name !== storedName) {
@@ -1470,6 +1480,12 @@ async function saveHostedContainerPhoto(session, containerId, upload) {
     updated_at: new Date().toISOString()
   };
   await upsertSupabaseRow("containers", updated, "id");
+
+  recordContainerImageEvent(
+    containerId,
+    previousFileName,
+    String(upload.fileName || "").trim()
+  );
 
   return updated;
 }
