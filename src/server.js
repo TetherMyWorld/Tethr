@@ -302,6 +302,9 @@ export async function handleRequest(req, res) {
         const syncStatus = session
           ? await syncContainerToSupabase(session, container)
           : { synced: false, reason: "No signed-in session." };
+        if (hostedRuntime && session) {
+          await syncContainerHistoryToSupabase(session, container.id);
+        }
         return sendJson(res, 200, {
           ...container,
           supabaseSync: syncStatus
@@ -320,6 +323,9 @@ export async function handleRequest(req, res) {
           : session
             ? await syncContainerPhotoToSupabase(session.workspace.id, upload, saved, before)
             : { synced: false, reason: "No signed-in session." };
+        if (hostedRuntime && session) {
+          await syncContainerHistoryToSupabase(session, saved.id);
+        }
         return sendJson(res, 201, {
           ...saved,
           supabaseSync: storageSync
@@ -333,6 +339,9 @@ export async function handleRequest(req, res) {
         const syncStatus = session
           ? await syncContainerToSupabase(session, moved)
           : { synced: false, reason: "No signed-in session." };
+        if (hostedRuntime && session) {
+          await syncContainerHistoryToSupabase(session, moved.id);
+        }
         return sendJson(res, 200, {
           ...moved,
           supabaseSync: syncStatus
@@ -366,6 +375,9 @@ export async function handleRequest(req, res) {
         const syncStatus = session
           ? await syncItemToSupabase(session, item)
           : { synced: false, reason: "No signed-in session." };
+        if (hostedRuntime && session) {
+          await syncContainerHistoryToSupabase(session, item.container_id);
+        }
         return sendJson(res, 201, {
           ...item,
           supabaseSync: syncStatus
@@ -374,10 +386,19 @@ export async function handleRequest(req, res) {
 
       if (req.method === "PATCH" && url.pathname.startsWith("/api/items/") && !url.pathname.endsWith("/move")) {
         const id = url.pathname.split("/")[3];
+        const before = hostedRuntime ? getItemDetail(id) : null;
         const item = updateItem(id, await readJson(req));
         const syncStatus = session
           ? await syncItemToSupabase(session, item)
           : { synced: false, reason: "No signed-in session." };
+        if (hostedRuntime && session) {
+          await syncItemHistoryToSupabase(session, item.id);
+          await syncContainerHistoryToSupabase(session, item.container_id);
+          const previousContainerId = before?.item?.container_id || null;
+          if (previousContainerId && previousContainerId !== item.container_id) {
+            await syncContainerHistoryToSupabase(session, previousContainerId);
+          }
+        }
         return sendJson(res, 200, {
           ...item,
           supabaseSync: syncStatus
@@ -386,11 +407,20 @@ export async function handleRequest(req, res) {
 
       if (req.method === "POST" && url.pathname.startsWith("/api/items/") && url.pathname.endsWith("/move")) {
         const id = url.pathname.split("/")[3];
+        const before = hostedRuntime ? getItemDetail(id) : null;
         const body = await readJson(req);
         const moved = moveItem(id, body.containerId, body.notes || "");
         const syncStatus = session
           ? await syncItemToSupabase(session, moved)
           : { synced: false, reason: "No signed-in session." };
+        if (hostedRuntime && session) {
+          await syncItemHistoryToSupabase(session, moved.id);
+          await syncContainerHistoryToSupabase(session, moved.container_id);
+          const previousContainerId = before?.item?.container_id || null;
+          if (previousContainerId && previousContainerId !== moved.container_id) {
+            await syncContainerHistoryToSupabase(session, previousContainerId);
+          }
+        }
         return sendJson(res, 200, {
           ...moved,
           supabaseSync: syncStatus
@@ -406,6 +436,9 @@ export async function handleRequest(req, res) {
           : { synced: false, reason: "No signed-in session." };
         if (session && detail) {
           await deleteItemPhotosFromSupabase(session.workspace.id, detail);
+          if (hostedRuntime && detail.item?.container_id) {
+            await syncContainerHistoryToSupabase(session, detail.item.container_id);
+          }
         }
         return sendJson(res, 200, {
           ...deleted,
@@ -425,6 +458,9 @@ export async function handleRequest(req, res) {
           : session
             ? await syncItemPhotoToSupabase(session.workspace.id, id, upload, saved, before)
             : { synced: false, reason: "No signed-in session." };
+        if (hostedRuntime && session) {
+          await syncItemHistoryToSupabase(session, id);
+        }
         return sendJson(res, 201, {
           ...saved,
           supabaseSync: storageSync
@@ -852,6 +888,12 @@ async function upsertSupabaseRow(tableName, row, conflictTarget) {
   }
 }
 
+async function upsertSupabaseRows(tableName, rows, conflictTarget = "id") {
+  for (const row of rows || []) {
+    await upsertSupabaseRow(tableName, row, conflictTarget);
+  }
+}
+
 async function deleteSupabaseRecord(tableName, workspaceId, id) {
   if (!supabaseConfigured) {
     return { synced: false, reason: "Supabase is not configured." };
@@ -1134,6 +1176,52 @@ async function syncContainerToSupabase(session, container) {
     return { synced: true };
   } catch (error) {
     console.error("Supabase container sync failed:", error);
+    return {
+      synced: false,
+      reason: String(error.message || error)
+    };
+  }
+}
+
+async function syncItemHistoryToSupabase(session, itemId) {
+  if (!supabaseConfigured || !itemId) {
+    return { synced: false, reason: "Supabase is not configured." };
+  }
+
+  try {
+    const detail = getItemDetail(itemId);
+    if (!detail) {
+      return { synced: false, reason: "Item not found." };
+    }
+    await upsertSupabaseRows("move_log", detail.moveLog || [], "id");
+    await upsertSupabaseRows("item_history", detail.quantityLog || [], "id");
+    await upsertSupabaseRows("item_event_log", detail.eventLog || [], "id");
+    return { synced: true };
+  } catch (error) {
+    console.error("Supabase item history sync failed:", error);
+    return {
+      synced: false,
+      reason: String(error.message || error)
+    };
+  }
+}
+
+async function syncContainerHistoryToSupabase(session, containerId) {
+  if (!supabaseConfigured || !containerId) {
+    return { synced: false, reason: "Supabase is not configured." };
+  }
+
+  try {
+    const detail = getContainerDetail(containerId);
+    if (!detail) {
+      return { synced: false, reason: "Container not found." };
+    }
+    await upsertSupabaseRows("move_log", detail.moveLog || [], "id");
+    await upsertSupabaseRows("container_event_log", detail.eventLog || [], "id");
+    await upsertSupabaseRows("container_activity_log", detail.itemActivity || [], "id");
+    return { synced: true };
+  } catch (error) {
+    console.error("Supabase container history sync failed:", error);
     return {
       synced: false,
       reason: String(error.message || error)

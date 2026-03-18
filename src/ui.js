@@ -2001,6 +2001,21 @@ export function renderApp(initialContainerId) {
           return;
         }
 
+        const previousContainerItems = state.activeContainerDetail?.items
+          ? state.activeContainerDetail.items.map((entry) => ({ ...entry }))
+          : null;
+        const previousActiveItemDetail = state.activeItemDetail
+          ? {
+              ...state.activeItemDetail,
+              item: state.activeItemDetail.item
+                ? { ...state.activeItemDetail.item }
+                : state.activeItemDetail.item
+            }
+          : null;
+        const previousBootstrapItems = Array.isArray(state.bootstrap?.items)
+          ? state.bootstrap.items.map((entry) => ({ ...entry }))
+          : null;
+
         if (state.activeContainerDetail?.items) {
           state.activeContainerDetail.items = state.activeContainerDetail.items.map((entry) => (
             entry.id === itemId
@@ -2017,6 +2032,13 @@ export function renderApp(initialContainerId) {
             }
           };
         }
+        if (Array.isArray(state.bootstrap?.items)) {
+          state.bootstrap.items = state.bootstrap.items.map((entry) => (
+            entry.id === itemId
+              ? { ...entry, quantity: nextQuantity }
+              : entry
+          ));
+        }
         renderStage();
 
         try {
@@ -2030,19 +2052,17 @@ export function renderApp(initialContainerId) {
               notes: item.notes || ""
             })
           });
-          await refreshAll();
-          if (state.stage === "item" && state.activeItemId) {
-            await openItem(state.activeItemId);
-          } else if (state.activeContainerId) {
-            await openContainer(state.activeContainerId, false);
-          }
         } catch (error) {
-          await refreshAll();
-          if (state.stage === "item" && state.activeItemId) {
-            await openItem(state.activeItemId);
-          } else if (state.activeContainerId) {
-            await openContainer(state.activeContainerId, false);
+          if (previousContainerItems) {
+            state.activeContainerDetail.items = previousContainerItems;
           }
+          if (previousActiveItemDetail) {
+            state.activeItemDetail = previousActiveItemDetail;
+          }
+          if (previousBootstrapItems) {
+            state.bootstrap.items = previousBootstrapItems;
+          }
+          renderStage();
         }
       }
 
