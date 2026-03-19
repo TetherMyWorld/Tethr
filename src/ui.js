@@ -2422,21 +2422,31 @@ export function renderApp(initialContainerId) {
           (modal) => {
             modal.querySelector("#move-item-modal-form").addEventListener("submit", async (event) => {
               event.preventDefault();
-              const form = new FormData(event.currentTarget);
-              await api("/api/items/" + item.id + "/move", {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({
-                  containerId: form.get("containerId"),
-                  notes: form.get("notes") || ""
-                })
-              });
-              const destinationId = String(form.get("containerId") || "").trim();
-              closeModal();
-              showMessage("Item moved.");
-              await refreshAll();
-              if (destinationId) {
-                await openContainer(destinationId, false);
+              const formElement = event.currentTarget;
+              setFormSaving(formElement, true);
+              try {
+                const form = new FormData(formElement);
+                const destinationId = String(form.get("containerId") || "").trim();
+                await api("/api/items/" + item.id + "/move", {
+                  method: "POST",
+                  headers: { "content-type": "application/json" },
+                  body: JSON.stringify({
+                    containerId: destinationId,
+                    notes: form.get("notes") || ""
+                  })
+                });
+                const bootstrapItem = getItem(item.id);
+                if (bootstrapItem) {
+                  bootstrapItem.container_id = destinationId || null;
+                }
+                closeModal();
+                showMessage("Item moved.");
+                if (destinationId) {
+                  await openContainer(destinationId, false);
+                }
+                refreshAll().catch(() => {});
+              } finally {
+                setFormSaving(formElement, false);
               }
             });
           }
