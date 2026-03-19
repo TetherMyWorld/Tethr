@@ -198,10 +198,14 @@ export function renderApp(initialContainerId) {
       .modal-header h2 { font-size:2.2rem; line-height:1.02; letter-spacing:-.05em; }
       .modal-body { padding:20px 24px 24px; }
       .close-button { background:linear-gradient(180deg, #fbf7f0 0%, #efe4d2 100%); color:var(--ink); width:auto; flex:0 0 auto; min-width:112px; padding:12px 18px; box-shadow:0 8px 18px rgba(83,61,35,.08); }
-      .action-sheet { display:grid; gap:12px; }
-      .action-sheet-button { width:100%; justify-content:flex-start; text-align:left; padding:16px 18px; border-radius:20px; background:linear-gradient(180deg, #f8fbff 0%, #e2ecf8 100%); color:var(--ink); box-shadow:0 8px 18px rgba(22,80,140,.08); }
-      .action-sheet-button.danger { background:linear-gradient(180deg, #b04f3f 0%, #983b2b 100%); color:#fff; margin-top:4px; }
-      .action-sheet-note { color:var(--muted); font-size:.95rem; line-height:1.45; }
+      .action-compass { display:grid; gap:14px; justify-items:center; padding:8px 0 4px; }
+      .action-compass-row { width:100%; display:grid; grid-template-columns:1fr; justify-items:center; }
+      .action-compass-middle { width:100%; display:grid; grid-template-columns:minmax(0,1fr) 92px minmax(0,1fr); gap:14px; align-items:center; }
+      .action-compass-spacer { min-height:64px; }
+      .action-compass-button { width:min(240px,100%); min-height:64px; justify-content:center; text-align:center; padding:16px 18px; border-radius:22px; background:linear-gradient(180deg, #f8fbff 0%, #e2ecf8 100%); color:var(--ink); box-shadow:0 8px 18px rgba(22,80,140,.08); }
+      .action-compass-button.danger { background:linear-gradient(180deg, #b04f3f 0%, #983b2b 100%); color:#fff; }
+      .action-compass-button.side { width:100%; }
+      .action-compass-center { width:92px; height:92px; border-radius:999px; display:grid; place-items:center; background:linear-gradient(180deg, rgba(255,255,255,.94) 0%, rgba(225,235,246,.98) 100%); color:var(--accent-strong); box-shadow:inset 0 1px 0 rgba(255,255,255,.8), 0 10px 22px rgba(22,80,140,.10); font-family:var(--heading-font); font-size:2.6rem; line-height:1; font-weight:700; }
       @media (max-width:900px) { .tile-grid { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); } .contents-grid { grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); } }
       @media (max-width:720px) {
         .shell { padding:14px; gap:16px; }
@@ -960,22 +964,35 @@ export function renderApp(initialContainerId) {
         }, true);
       }
 
-      function openActionSheet(title, note, actions) {
+      function openActionCompass(title, actions = {}) {
+        const buttonHtml = (action, position, extraClass = "") => {
+          if (!action) {
+            return '<div class="action-compass-spacer"></div>';
+          }
+          return '<button class="action-compass-button ' + extraClass + (action.danger ? ' danger' : ' secondary') + '" type="button" data-action-compass="' + position + '">' +
+            escapeHtml(action.label) +
+          '</button>';
+        };
         openModal(
           title,
-          '<div class="action-sheet">' +
-            (note ? '<div class="action-sheet-note">' + escapeHtml(note) + '</div>' : "") +
-            actions.map((action, index) => (
-              '<button class="' + (action.danger ? 'action-sheet-button danger' : 'action-sheet-button secondary') + '" type="button" data-action-sheet-index="' + index + '">' +
-                escapeHtml(action.label) +
-              '</button>'
-            )).join("") +
+          '<div class="action-compass">' +
+            '<div class="action-compass-row">' +
+              buttonHtml(actions.top, "top") +
+            '</div>' +
+            '<div class="action-compass-middle">' +
+              buttonHtml(actions.left, "left", "side ") +
+              '<div class="action-compass-center">?</div>' +
+              buttonHtml(actions.right, "right", "side ") +
+            '</div>' +
+            '<div class="action-compass-row">' +
+              buttonHtml(actions.bottom, "bottom") +
+            '</div>' +
           '</div>',
           (modal) => {
-            modal.querySelectorAll("[data-action-sheet-index]").forEach((button) => {
+            modal.querySelectorAll("[data-action-compass]").forEach((button) => {
               button.addEventListener("click", async () => {
-                const index = Number.parseInt(button.dataset.actionSheetIndex, 10);
-                const action = actions[index];
+                const position = button.dataset.actionCompass;
+                const action = actions[position];
                 closeModal();
                 if (action?.run) {
                   await action.run();
@@ -2209,31 +2226,21 @@ export function renderApp(initialContainerId) {
       }
 
       function openLocationActionSheet(location) {
-        openActionSheet(
-          location.name,
-          "Tap to open. Press and hold a tile whenever you want actions.",
-          [
-            {
-              label: "Open",
-              run: async () => {
-                openLocation(location.id, true);
-              }
-            },
-            {
-              label: "Edit",
-              run: async () => {
-                openLocationModal(location);
-              }
-            },
-            {
-              label: "Delete",
-              danger: true,
-              run: async () => {
-                openDeleteLocationModal(location);
-              }
+        openActionCompass(location.name, {
+          top: {
+            label: "Edit",
+            run: async () => {
+              openLocationModal(location);
             }
-          ]
-        );
+          },
+          bottom: {
+            label: "Delete",
+            danger: true,
+            run: async () => {
+              openDeleteLocationModal(location);
+            }
+          }
+        });
       }
 
       function openDeleteContainerModal(container) {
@@ -2246,45 +2253,35 @@ export function renderApp(initialContainerId) {
       }
 
       function openContainerActionSheet(container) {
-        openActionSheet(
-          container.name,
-          "Open it, edit it, move it, or delete it from here.",
-          [
-            {
-              label: "Open",
-              run: async () => {
-                await openContainer(container.id, true);
-              }
-            },
-            {
-              label: "Edit",
-              run: async () => {
-                openContainerModal({ container, defaultLocationId: container.location_id || null });
-              }
-            },
-            {
-              label: "Move",
-              run: async () => {
-                openMoveContainerModal(container);
-              }
-            },
-            {
-              label: "History",
-              run: async () => {
-                const freshDetail = await api("/api/containers/" + container.id);
-                state.activeContainerDetail = freshDetail;
-                openContainerHistoryModal(freshDetail);
-              }
-            },
-            {
-              label: "Delete",
-              danger: true,
-              run: async () => {
-                openDeleteContainerModal(container);
-              }
+        openActionCompass(container.name, {
+          top: {
+            label: "Edit",
+            run: async () => {
+              openContainerModal({ container, defaultLocationId: container.location_id || null });
             }
-          ]
-        );
+          },
+          left: {
+            label: "History",
+            run: async () => {
+              const freshDetail = await api("/api/containers/" + container.id);
+              state.activeContainerDetail = freshDetail;
+              openContainerHistoryModal(freshDetail);
+            }
+          },
+          right: {
+            label: "Move",
+            run: async () => {
+              openMoveContainerModal(container);
+            }
+          },
+          bottom: {
+            label: "Delete",
+            danger: true,
+            run: async () => {
+              openDeleteContainerModal(container);
+            }
+          }
+        });
       }
 
       function openDeleteItemModal(itemId) {
@@ -2344,45 +2341,35 @@ export function renderApp(initialContainerId) {
       }
 
       function openItemActionSheet(item) {
-        openActionSheet(
-          item.name,
-          "Open it, edit it, move it, check history, or delete it.",
-          [
-            {
-              label: "Open",
-              run: async () => {
-                await openItem(item.id);
-              }
-            },
-            {
-              label: "Edit",
-              run: async () => {
-                await openItemModal({ itemId: item.id, containerId: item.container_id });
-              }
-            },
-            {
-              label: "Move",
-              run: async () => {
-                openMoveItemModal(item);
-              }
-            },
-            {
-              label: "History",
-              run: async () => {
-                const freshDetail = await api("/api/items/" + item.id);
-                state.activeItemDetail = freshDetail;
-                openItemHistoryModal(freshDetail);
-              }
-            },
-            {
-              label: "Delete",
-              danger: true,
-              run: async () => {
-                openDeleteItemModal(item.id);
-              }
+        openActionCompass(item.name, {
+          top: {
+            label: "Edit",
+            run: async () => {
+              await openItemModal({ itemId: item.id, containerId: item.container_id });
             }
-          ]
-        );
+          },
+          left: {
+            label: "History",
+            run: async () => {
+              const freshDetail = await api("/api/items/" + item.id);
+              state.activeItemDetail = freshDetail;
+              openItemHistoryModal(freshDetail);
+            }
+          },
+          right: {
+            label: "Move",
+            run: async () => {
+              openMoveItemModal(item);
+            }
+          },
+          bottom: {
+            label: "Delete",
+            danger: true,
+            run: async () => {
+              openDeleteItemModal(item.id);
+            }
+          }
+        });
       }
 
       async function adjustItemQuantity(itemId, delta) {
