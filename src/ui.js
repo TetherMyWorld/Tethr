@@ -74,9 +74,6 @@ export function renderApp(initialContainerId) {
       .tile-open:hover { transform:none; box-shadow:none; }
       .tile-thumb { width:100%; aspect-ratio:1.15 / 1; border-radius:18px; overflow:hidden; border:1px solid rgba(24,62,99,.10); background:rgba(255,255,255,.55); box-shadow:0 8px 16px rgba(27,42,63,.08); }
       .tile-thumb img { width:100%; height:100%; object-fit:cover; }
-      .tile-delete { position:absolute; top:14px; right:14px; width:36px; height:36px; padding:0; border-radius:999px; display:grid; place-items:center; background:linear-gradient(180deg, #a54a3c 0%, #873427 100%); color:#fff; box-shadow:0 8px 16px rgba(143,60,47,.14); z-index:1; opacity:.9; }
-      .tile-delete svg { width:15px; height:15px; display:block; stroke:currentColor; stroke-width:3.4; stroke-linecap:round; }
-      .tile-delete:hover { transform:none; box-shadow:0 12px 24px rgba(159,67,51,.24); }
       .tile-title { font-family:var(--heading-font); font-size:1.9rem; line-height:.98; font-weight:700; letter-spacing:-.06em; }
       .tile-subtitle { font-size:.98rem; color:var(--muted); font-weight:600; }
       .hero { border:1px solid rgba(24,62,99,.08); border-radius:24px; background:linear-gradient(135deg, rgba(253,254,255,.99) 0%, rgba(235,242,249,.98) 100%); padding:36px 32px; display:grid; gap:24px; box-shadow:var(--shadow-soft), inset 0 1px 0 rgba(255,255,255,.72); }
@@ -131,12 +128,8 @@ export function renderApp(initialContainerId) {
       .identity-empty { color:var(--muted); }
       .contents-grid { grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px; align-items:stretch; }
       .item-card { position:relative; }
-      .item-card-actions { position:absolute; top:16px; right:16px; z-index:2; display:flex; gap:8px; align-items:center; }
-      .item-card-actions .icon-button { width:42px; height:42px; box-shadow:0 8px 16px rgba(22,80,140,.10); }
-      .item-card-actions .icon-button svg { width:19px; height:19px; }
-      .item-card-actions .delete-icon svg { width:20px; height:20px; }
       .item-row,.photo-card { border:1px solid rgba(24,62,99,.08); border-radius:22px; background:#fcfdff; padding:20px; box-shadow:0 12px 24px rgba(27,42,63,.06), inset 0 1px 0 rgba(255,255,255,.72); }
-      .item-row { display:grid; gap:12px; color:var(--ink); text-align:left; min-height:196px; align-content:start; padding-top:56px; cursor:pointer; }
+      .item-row { display:grid; gap:12px; color:var(--ink); text-align:left; min-height:196px; align-content:start; padding-top:20px; cursor:pointer; }
       .item-row:hover { transform:none; }
       .item-row:focus-visible { outline:none; box-shadow:0 0 0 4px rgba(22,80,140,.10), 0 12px 24px rgba(27,42,63,.06), inset 0 1px 0 rgba(255,255,255,.72); }
       .item-row-thumb { width:100%; aspect-ratio:1 / 1; border-radius:18px; overflow:hidden; border:1px solid rgba(24,62,99,.10); background:rgba(255,255,255,.55); box-shadow:0 8px 16px rgba(27,42,63,.08); }
@@ -205,6 +198,10 @@ export function renderApp(initialContainerId) {
       .modal-header h2 { font-size:2.2rem; line-height:1.02; letter-spacing:-.05em; }
       .modal-body { padding:20px 24px 24px; }
       .close-button { background:linear-gradient(180deg, #fbf7f0 0%, #efe4d2 100%); color:var(--ink); width:auto; flex:0 0 auto; min-width:112px; padding:12px 18px; box-shadow:0 8px 18px rgba(83,61,35,.08); }
+      .action-sheet { display:grid; gap:12px; }
+      .action-sheet-button { width:100%; justify-content:flex-start; text-align:left; padding:16px 18px; border-radius:20px; background:linear-gradient(180deg, #f8fbff 0%, #e2ecf8 100%); color:var(--ink); box-shadow:0 8px 18px rgba(22,80,140,.08); }
+      .action-sheet-button.danger { background:linear-gradient(180deg, #b04f3f 0%, #983b2b 100%); color:#fff; margin-top:4px; }
+      .action-sheet-note { color:var(--muted); font-size:.95rem; line-height:1.45; }
       @media (max-width:900px) { .tile-grid { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); } .contents-grid { grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); } }
       @media (max-width:720px) {
         .shell { padding:14px; gap:16px; }
@@ -223,9 +220,7 @@ export function renderApp(initialContainerId) {
         .tile-open { padding:18px 54px 18px 18px; }
         .tile-title { font-size:1.45rem; }
         .tile-subtitle { font-size:.92rem; }
-        .item-card-actions { top:12px; right:12px; }
-        .item-card-actions .icon-button { width:38px; height:38px; }
-        .item-row { min-height:0; padding-top:52px; }
+        .item-row { min-height:0; padding-top:18px; }
         .hero-count.item-quantity-display { font-size:1.9rem; }
         .hero-notes.item-notes { font-size:1.05rem; }
         .item-hero-layout,.container-hero-layout { grid-template-columns:1fr; gap:18px; }
@@ -857,6 +852,10 @@ export function renderApp(initialContainerId) {
         return state.bootstrap.containers.find((container) => container.id === id) || null;
       }
 
+      function getItem(id) {
+        return state.bootstrap.items.find((item) => item.id === id) || null;
+      }
+
       function containersForLocation(locationId) {
         return state.bootstrap.containers.filter((container) => (container.location_id || null) === (locationId || null));
       }
@@ -880,6 +879,111 @@ export function renderApp(initialContainerId) {
           hash = ((hash << 5) - hash + value.charCodeAt(index)) | 0;
         }
         return list[Math.abs(hash) % list.length];
+      }
+
+      function attachPressAndHoldAction(target, onHold, options = {}) {
+        if (!target || typeof onHold !== "function") {
+          return;
+        }
+        const holdDelay = options.holdDelay || 420;
+        const cancelSelector = options.cancelSelector || "";
+        let timer = null;
+        let holdTriggered = false;
+        let startPoint = null;
+
+        const pointForEvent = (event) => {
+          const touch = event.touches?.[0] || event.changedTouches?.[0];
+          return touch
+            ? { x: touch.clientX, y: touch.clientY }
+            : { x: event.clientX || 0, y: event.clientY || 0 };
+        };
+
+        const shouldIgnore = (event) => cancelSelector && event.target.closest(cancelSelector);
+
+        const clearHold = () => {
+          if (timer) {
+            clearTimeout(timer);
+            timer = null;
+          }
+          startPoint = null;
+        };
+
+        const triggerHold = (event) => {
+          holdTriggered = true;
+          clearHold();
+          onHold(event);
+        };
+
+        const startHold = (event) => {
+          if (shouldIgnore(event)) {
+            return;
+          }
+          holdTriggered = false;
+          startPoint = pointForEvent(event);
+          clearHold();
+          startPoint = pointForEvent(event);
+          timer = setTimeout(() => triggerHold(event), holdDelay);
+        };
+
+        const maybeCancelHold = (event) => {
+          if (!timer || !startPoint) {
+            return;
+          }
+          const point = pointForEvent(event);
+          if (Math.abs(point.x - startPoint.x) > 10 || Math.abs(point.y - startPoint.y) > 10) {
+            clearHold();
+          }
+        };
+
+        target.addEventListener("touchstart", startHold, { passive: true });
+        target.addEventListener("touchmove", maybeCancelHold, { passive: true });
+        target.addEventListener("touchend", clearHold, { passive: true });
+        target.addEventListener("touchcancel", clearHold, { passive: true });
+        target.addEventListener("mousedown", startHold);
+        target.addEventListener("mousemove", maybeCancelHold);
+        target.addEventListener("mouseup", clearHold);
+        target.addEventListener("mouseleave", clearHold);
+        target.addEventListener("contextmenu", (event) => {
+          if (shouldIgnore(event)) {
+            return;
+          }
+          event.preventDefault();
+          onHold(event);
+        });
+        target.addEventListener("click", (event) => {
+          if (!holdTriggered) {
+            return;
+          }
+          holdTriggered = false;
+          event.preventDefault();
+          event.stopPropagation();
+        }, true);
+      }
+
+      function openActionSheet(title, note, actions) {
+        openModal(
+          title,
+          '<div class="action-sheet">' +
+            (note ? '<div class="action-sheet-note">' + escapeHtml(note) + '</div>' : "") +
+            actions.map((action, index) => (
+              '<button class="' + (action.danger ? 'action-sheet-button danger' : 'action-sheet-button secondary') + '" type="button" data-action-sheet-index="' + index + '">' +
+                escapeHtml(action.label) +
+              '</button>'
+            )).join("") +
+          '</div>',
+          (modal) => {
+            modal.querySelectorAll("[data-action-sheet-index]").forEach((button) => {
+              button.addEventListener("click", async () => {
+                const index = Number.parseInt(button.dataset.actionSheetIndex, 10);
+                const action = actions[index];
+                closeModal();
+                if (action?.run) {
+                  await action.run();
+                }
+              });
+            });
+          }
+        );
       }
 
       function renderTagCard(tag, options = {}) {
@@ -1141,7 +1245,7 @@ export function renderApp(initialContainerId) {
 
       function renderLocationsStage() {
         els.stageTitle.textContent = "Locations";
-        els.stageMeta.textContent = "Choose a location to see its containers.";
+        els.stageMeta.textContent = "Tap a place to open it. Press and hold a tile for actions.";
         setBreadcrumbs([
           { label: "Places" }
         ]);
@@ -1153,7 +1257,6 @@ export function renderApp(initialContainerId) {
         const noLocationCount = containersForLocation(null).length;
         const locationTiles = state.bootstrap.locations.map((location, index) => (
           '<div class="tile tile-card ' + toneClass(locationTones, index) + '">' +
-            '<button class="tile-delete danger" type="button" data-delete-location="' + location.id + '" aria-label="Delete ' + escapeAttr(location.name) + '">' + deleteIconMarkup + '</button>' +
             '<button class="tile-open" type="button" data-open-location="' + location.id + '">' +
               '<div class="tile-title">' + escapeHtml(location.name) + '</div>' +
               '<div class="tile-subtitle">' + location.container_count + ' container' + (location.container_count === 1 ? '' : 's') + '</div>' +
@@ -1180,12 +1283,17 @@ export function renderApp(initialContainerId) {
         els.stageContent.querySelectorAll("[data-open-location]").forEach((button) => {
           button.addEventListener("click", () => openLocation(button.dataset.openLocation === "__none__" ? null : button.dataset.openLocation));
         });
-        els.stageContent.querySelectorAll("[data-delete-location]").forEach((button) => {
-          button.addEventListener("click", () => {
-            const location = getLocation(button.dataset.deleteLocation);
-            if (location) {
-              openDeleteLocationModal(location);
-            }
+        els.stageContent.querySelectorAll("[data-open-location]").forEach((button) => {
+          const locationId = button.dataset.openLocation;
+          if (!locationId || locationId === "__none__") {
+            return;
+          }
+          const location = getLocation(locationId);
+          if (!location) {
+            return;
+          }
+          attachPressAndHoldAction(button, () => {
+            openLocationActionSheet(location);
           });
         });
       }
@@ -1250,7 +1358,7 @@ export function renderApp(initialContainerId) {
         }
         renderTopbarNav();
         els.stageTitle.textContent = location ? (location.name + " Containers") : "Unassigned Containers";
-        els.stageMeta.textContent = location ? "Choose a container to see its contents." : "Choose a container to see its contents.";
+        els.stageMeta.textContent = "Tap a container to open it. Press and hold a tile for actions.";
         setBreadcrumbs(
           location
             ? [
@@ -1274,7 +1382,6 @@ export function renderApp(initialContainerId) {
           ? '<div class="section">' +
               '<div class="tile-grid">' + containers.map((container, index) => (
                 '<div class="tile tile-card ' + toneClass(containerTones, index) + '">' +
-                  '<button class="tile-delete danger" type="button" data-delete-container="' + container.id + '" aria-label="Delete ' + escapeAttr(container.name) + '">' + deleteIconMarkup + '</button>' +
                   '<button class="tile-open" type="button" data-open-container="' + container.id + '">' +
                     (container.image_stored_name
                       ? '<div class="tile-thumb"><img src="' + getImageUrl(container.image_stored_name, "containers") + '" alt="' + escapeHtml(container.name) + '"></div>'
@@ -1305,12 +1412,13 @@ export function renderApp(initialContainerId) {
         els.stageContent.querySelectorAll("[data-open-container]").forEach((button) => {
           button.addEventListener("click", () => openContainer(button.dataset.openContainer, true));
         });
-        els.stageContent.querySelectorAll("[data-delete-container]").forEach((button) => {
-          button.addEventListener("click", () => {
-            const container = getContainer(button.dataset.deleteContainer);
-            if (container) {
-              openDeleteContainerModal(container);
-            }
+        els.stageContent.querySelectorAll("[data-open-container]").forEach((button) => {
+          const container = getContainer(button.dataset.openContainer);
+          if (!container) {
+            return;
+          }
+          attachPressAndHoldAction(button, () => {
+            openContainerActionSheet(container);
           });
         });
       }
@@ -1348,7 +1456,7 @@ export function renderApp(initialContainerId) {
           : "";
         renderTopbarNav();
         els.stageTitle.textContent = location ? location.name : "No Location";
-        els.stageMeta.textContent = "";
+        els.stageMeta.textContent = "Tap an item to open it. Press and hold a tile for actions.";
         setBreadcrumbs(
           location
             ? [
@@ -1367,10 +1475,6 @@ export function renderApp(initialContainerId) {
         const itemRows = detail.items.length
           ? detail.items.map((item, index) => (
               '<div class="item-card">' +
-                '<div class="item-card-actions">' +
-                  '<button class="secondary icon-button" type="button" data-edit-item="' + item.id + '" aria-label="Edit ' + escapeAttr(item.name) + '" title="Edit item">' + editIconMarkup + '</button>' +
-                  '<button class="danger icon-button delete-icon" type="button" data-delete-item="' + item.id + '" aria-label="Delete ' + escapeAttr(item.name) + '" title="Delete item">' + deleteIconMarkup + '</button>' +
-                '</div>' +
                 '<div class="item-row ' + toneClass(itemTones, index) + '" data-open-item="' + item.id + '" tabindex="0" role="button" aria-label="Open ' + escapeAttr(item.name) + '">' +
                   (item.thumbnail_stored_name
                     ? '<div class="item-row-thumb"><img src="' + getImageUrl(item.thumbnail_stored_name, "items") + '" alt="' + escapeHtml(item.name) + '"></div>'
@@ -1456,26 +1560,23 @@ export function renderApp(initialContainerId) {
             }
           });
         });
-        els.stageContent.querySelectorAll("[data-edit-item]").forEach((button) => {
-          button.addEventListener("click", (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            openItemModal({ itemId: button.dataset.editItem, containerId: detail.container.id });
-          });
-        });
-        els.stageContent.querySelectorAll("[data-delete-item]").forEach((button) => {
-          button.addEventListener("click", (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            openDeleteItemModal(button.dataset.deleteItem);
-          });
-        });
         els.stageContent.querySelectorAll("[data-quantity-delta]").forEach((button) => {
           button.addEventListener("click", async (event) => {
             event.preventDefault();
             event.stopPropagation();
             const delta = Number.parseInt(button.dataset.quantityDelta, 10) || 0;
             await adjustItemQuantity(button.dataset.itemId, delta);
+          });
+        });
+        els.stageContent.querySelectorAll("[data-open-item]").forEach((button) => {
+          const item = detail.items.find((entry) => entry.id === button.dataset.openItem);
+          if (!item) {
+            return;
+          }
+          attachPressAndHoldAction(button, () => {
+            openItemActionSheet(item);
+          }, {
+            cancelSelector: "[data-quantity-delta]"
           });
         });
       }
@@ -2107,6 +2208,34 @@ export function renderApp(initialContainerId) {
         });
       }
 
+      function openLocationActionSheet(location) {
+        openActionSheet(
+          location.name,
+          "Tap to open. Press and hold a tile whenever you want actions.",
+          [
+            {
+              label: "Open",
+              run: async () => {
+                openLocation(location.id, true);
+              }
+            },
+            {
+              label: "Edit",
+              run: async () => {
+                openLocationModal(location);
+              }
+            },
+            {
+              label: "Delete",
+              danger: true,
+              run: async () => {
+                openDeleteLocationModal(location);
+              }
+            }
+          ]
+        );
+      }
+
       function openDeleteContainerModal(container) {
         openConfirmModal("Delete Container", 'Delete <strong>' + escapeHtml(container.name) + '</strong>? Items and photos inside it will also be deleted.', async () => {
           await api("/api/containers/" + container.id, { method: "DELETE" });
@@ -2114,6 +2243,48 @@ export function renderApp(initialContainerId) {
           await refreshAll();
           openLocation(container.location_id || null);
         });
+      }
+
+      function openContainerActionSheet(container) {
+        openActionSheet(
+          container.name,
+          "Open it, edit it, move it, or delete it from here.",
+          [
+            {
+              label: "Open",
+              run: async () => {
+                await openContainer(container.id, true);
+              }
+            },
+            {
+              label: "Edit",
+              run: async () => {
+                openContainerModal({ container, defaultLocationId: container.location_id || null });
+              }
+            },
+            {
+              label: "Move",
+              run: async () => {
+                openMoveContainerModal(container);
+              }
+            },
+            {
+              label: "History",
+              run: async () => {
+                const freshDetail = await api("/api/containers/" + container.id);
+                state.activeContainerDetail = freshDetail;
+                openContainerHistoryModal(freshDetail);
+              }
+            },
+            {
+              label: "Delete",
+              danger: true,
+              run: async () => {
+                openDeleteContainerModal(container);
+              }
+            }
+          ]
+        );
       }
 
       function openDeleteItemModal(itemId) {
@@ -2127,6 +2298,91 @@ export function renderApp(initialContainerId) {
             goToLocations(false);
           }
         });
+      }
+
+      function openMoveItemModal(item) {
+        const containerOptions = state.bootstrap.containers
+          .filter((container) => container.id !== item.container_id)
+          .map((container) => (
+            '<option value="' + container.id + '">' + escapeHtml(container.name) + '</option>'
+          )).join("");
+
+        if (!containerOptions) {
+          showMessage("Create another container before moving this item.", true);
+          return;
+        }
+
+        openModal(
+          "Move Item",
+          '<form id="move-item-modal-form" class="form-grid">' +
+            '<label>Move To Container<select name="containerId">' + containerOptions + '</select></label>' +
+            '<label>Move Notes<input name="notes" placeholder="optional move note"></label>' +
+            '<div class="button-row">' + saveActionButton + '</div>' +
+          '</form>',
+          (modal) => {
+            modal.querySelector("#move-item-modal-form").addEventListener("submit", async (event) => {
+              event.preventDefault();
+              const form = new FormData(event.currentTarget);
+              await api("/api/items/" + item.id + "/move", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({
+                  containerId: form.get("containerId"),
+                  notes: form.get("notes") || ""
+                })
+              });
+              const destinationId = String(form.get("containerId") || "").trim();
+              closeModal();
+              showMessage("Item moved.");
+              await refreshAll();
+              if (destinationId) {
+                await openContainer(destinationId, false);
+              }
+            });
+          }
+        );
+      }
+
+      function openItemActionSheet(item) {
+        openActionSheet(
+          item.name,
+          "Open it, edit it, move it, check history, or delete it.",
+          [
+            {
+              label: "Open",
+              run: async () => {
+                await openItem(item.id);
+              }
+            },
+            {
+              label: "Edit",
+              run: async () => {
+                await openItemModal({ itemId: item.id, containerId: item.container_id });
+              }
+            },
+            {
+              label: "Move",
+              run: async () => {
+                openMoveItemModal(item);
+              }
+            },
+            {
+              label: "History",
+              run: async () => {
+                const freshDetail = await api("/api/items/" + item.id);
+                state.activeItemDetail = freshDetail;
+                openItemHistoryModal(freshDetail);
+              }
+            },
+            {
+              label: "Delete",
+              danger: true,
+              run: async () => {
+                openDeleteItemModal(item.id);
+              }
+            }
+          ]
+        );
       }
 
       async function adjustItemQuantity(itemId, delta) {
