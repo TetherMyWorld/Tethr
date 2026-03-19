@@ -14,7 +14,7 @@ export function renderApp(initialContainerId) {
         radial-gradient(circle at top right, rgba(22,80,140,.18), transparent 24%),
         linear-gradient(180deg, #f5f9ff 0%, #e9f0f8 34%, var(--bg) 70%, var(--bg-deep) 100%); }
       a { color:var(--accent); text-decoration:none; }
-      img { width:100%; border-radius:16px; display:block; }
+      img { width:100%; border-radius:16px; display:block; -webkit-user-drag:none; user-select:none; -webkit-user-select:none; }
       .shell { max-width:1240px; margin:0 auto; padding:40px 28px 44px; display:grid; gap:24px; }
       .topbar,.panel,.modal-shell { background:
         linear-gradient(180deg, rgba(252,253,255,.98) 0%, rgba(246,249,253,.97) 100%);
@@ -70,10 +70,10 @@ export function renderApp(initialContainerId) {
       .tile.container-tone-2 { background:linear-gradient(180deg, #f7fcfc 0%, #dff0f0 100%); border-color:rgba(15,109,115,.15); }
       .tile.container-tone-3 { background:linear-gradient(180deg, #fffdf8 0%, #f5e6c8 100%); border-color:rgba(176,125,31,.16); }
       .tile-card { position:relative; padding:0; overflow:hidden; min-height:210px; }
-      .tile-open { width:100%; min-height:210px; text-align:left; padding:28px 76px 26px 26px; border:0; border-radius:26px; background:transparent; color:inherit; display:grid; align-content:space-between; gap:12px; box-shadow:none; }
+      .tile-open { width:100%; min-height:210px; text-align:left; padding:28px 76px 26px 26px; border:0; border-radius:26px; background:transparent; color:inherit; display:grid; align-content:space-between; gap:12px; box-shadow:none; -webkit-touch-callout:none; user-select:none; -webkit-user-select:none; }
       .tile-open:hover { transform:none; box-shadow:none; }
       .tile-thumb { width:100%; aspect-ratio:1.15 / 1; border-radius:18px; overflow:hidden; border:1px solid rgba(24,62,99,.10); background:rgba(255,255,255,.55); box-shadow:0 8px 16px rgba(27,42,63,.08); }
-      .tile-thumb img { width:100%; height:100%; object-fit:cover; }
+      .tile-thumb img { width:100%; height:100%; object-fit:cover; pointer-events:none; -webkit-touch-callout:none; }
       .tile-title { font-family:var(--heading-font); font-size:1.9rem; line-height:.98; font-weight:700; letter-spacing:-.06em; }
       .tile-subtitle { font-size:.98rem; color:var(--muted); font-weight:600; }
       .hero { border:1px solid rgba(24,62,99,.08); border-radius:24px; background:linear-gradient(135deg, rgba(253,254,255,.99) 0%, rgba(235,242,249,.98) 100%); padding:36px 32px; display:grid; gap:24px; box-shadow:var(--shadow-soft), inset 0 1px 0 rgba(255,255,255,.72); }
@@ -129,11 +129,11 @@ export function renderApp(initialContainerId) {
       .contents-grid { grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px; align-items:stretch; }
       .item-card { position:relative; }
       .item-row,.photo-card { border:1px solid rgba(24,62,99,.08); border-radius:22px; background:#fcfdff; padding:20px; box-shadow:0 12px 24px rgba(27,42,63,.06), inset 0 1px 0 rgba(255,255,255,.72); }
-      .item-row { display:grid; gap:12px; color:var(--ink); text-align:left; min-height:196px; align-content:start; padding-top:20px; cursor:pointer; }
+      .item-row { display:grid; gap:12px; color:var(--ink); text-align:left; min-height:196px; align-content:start; padding-top:20px; cursor:pointer; -webkit-touch-callout:none; user-select:none; -webkit-user-select:none; }
       .item-row:hover { transform:none; }
       .item-row:focus-visible { outline:none; box-shadow:0 0 0 4px rgba(22,80,140,.10), 0 12px 24px rgba(27,42,63,.06), inset 0 1px 0 rgba(255,255,255,.72); }
       .item-row-thumb { width:100%; aspect-ratio:1 / 1; border-radius:18px; overflow:hidden; border:1px solid rgba(24,62,99,.10); background:rgba(255,255,255,.55); box-shadow:0 8px 16px rgba(27,42,63,.08); }
-      .item-row-thumb img { width:100%; height:100%; object-fit:cover; }
+      .item-row-thumb img { width:100%; height:100%; object-fit:cover; pointer-events:none; -webkit-touch-callout:none; }
       .item-row-body { display:grid; gap:10px; }
       .item-row.item-tone-1 { background:linear-gradient(180deg, #f9fbff 0%, #e3ecfb 100%); border-color:rgba(22,80,140,.14); }
       .item-row.item-tone-2 { background:linear-gradient(180deg, #f8fcfc 0%, #e1f1f1 100%); border-color:rgba(15,109,115,.14); }
