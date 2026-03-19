@@ -27,6 +27,13 @@ export function renderApp(initialContainerId) {
       .brand { display:grid; gap:4px; }
       .brand h1 { margin:0; font-family:var(--heading-font); font-size:clamp(2.3rem,4vw,3.3rem); line-height:.95; letter-spacing:-.06em; font-weight:700; }
       .brand p,.meta,.muted,.mini-note { color:var(--muted); }
+      .breadcrumbs { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; min-height:1.8rem; }
+      .breadcrumbs:empty { display:none; }
+      .breadcrumb-link,
+      .breadcrumb-current { display:inline-flex; align-items:center; min-height:34px; border-radius:999px; padding:7px 12px; font-size:.92rem; font-weight:700; letter-spacing:-.01em; }
+      .breadcrumb-link { border:0; width:auto; background:linear-gradient(180deg, #f7fbff 0%, #dfeafb 100%); color:var(--ink); box-shadow:0 6px 14px rgba(22,80,140,.08); cursor:pointer; }
+      .breadcrumb-current { background:rgba(255,255,255,.64); color:var(--accent-strong); box-shadow:inset 0 1px 0 rgba(255,255,255,.7); }
+      .breadcrumb-separator { color:var(--muted); font-weight:700; padding:0 1px; }
       .button-row,.topbar-nav { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
       .button-row { justify-content:flex-end; }
       .button-row > *, .topbar-nav > * { width:auto; }
@@ -258,6 +265,7 @@ export function renderApp(initialContainerId) {
             <div>
               <h2 id="stage-title">Locations</h2>
               <div id="stage-meta" class="stage-meta">Choose a location to see its containers.</div>
+              <div id="stage-breadcrumbs" class="breadcrumbs"></div>
             </div>
             <div id="stage-actions" class="stage-actions"></div>
           </div>
@@ -294,6 +302,7 @@ export function renderApp(initialContainerId) {
         message: document.getElementById("message"),
         stageTitle: document.getElementById("stage-title"),
         stageMeta: document.getElementById("stage-meta"),
+        stageBreadcrumbs: document.getElementById("stage-breadcrumbs"),
         stageActions: document.getElementById("stage-actions"),
         stageContent: document.getElementById("stage-content"),
         searchForm: document.getElementById("search-form"),
@@ -597,11 +606,41 @@ export function renderApp(initialContainerId) {
         }
       }
 
+      function setBreadcrumbs(crumbs = []) {
+        if (!els.stageBreadcrumbs) {
+          return;
+        }
+        const safeCrumbs = Array.isArray(crumbs) ? crumbs.filter(Boolean) : [];
+        if (!safeCrumbs.length) {
+          els.stageBreadcrumbs.innerHTML = "";
+          return;
+        }
+        els.stageBreadcrumbs.innerHTML = safeCrumbs.map((crumb, index) => {
+          const isLast = index === safeCrumbs.length - 1;
+          const label = escapeHtml(crumb.label || "");
+          const chip = isLast
+            ? '<span class="breadcrumb-current">' + label + '</span>'
+            : '<button class="breadcrumb-link" type="button" data-breadcrumb-index="' + index + '">' + label + '</button>';
+          const separator = isLast ? "" : '<span class="breadcrumb-separator">/</span>';
+          return chip + separator;
+        }).join("");
+        els.stageBreadcrumbs.querySelectorAll("[data-breadcrumb-index]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const index = Number.parseInt(button.dataset.breadcrumbIndex, 10);
+            const crumb = safeCrumbs[index];
+            if (crumb?.onClick) {
+              crumb.onClick();
+            }
+          });
+        });
+      }
+
       function renderSignInStage() {
         state.stage = "locations";
         state.searchResults = null;
         els.stageTitle.textContent = "Welcome";
         els.stageMeta.textContent = "Sign in to get your own private TethrArca workspace.";
+        setBreadcrumbs([]);
         els.stageActions.innerHTML = "";
         els.stageContent.innerHTML =
           '<div class="section" style="max-width:560px;">' +
@@ -1103,6 +1142,9 @@ export function renderApp(initialContainerId) {
       function renderLocationsStage() {
         els.stageTitle.textContent = "Locations";
         els.stageMeta.textContent = "Choose a location to see its containers.";
+        setBreadcrumbs([
+          { label: "Places" }
+        ]);
         els.stageActions.innerHTML =
           '<div class="action-cluster">' +
             '<button id="open-simulated-scan" class="secondary" type="button">Test Scan</button>' +
@@ -1152,6 +1194,10 @@ export function renderApp(initialContainerId) {
         renderTopbarNav();
         els.stageTitle.textContent = "New Tag Detected";
         els.stageMeta.textContent = "Token: " + state.scanToken;
+        setBreadcrumbs([
+          { label: "Places", onClick: () => goToLocations(true) },
+          { label: "New Label" }
+        ]);
         els.stageActions.innerHTML = "";
         els.stageContent.innerHTML =
           '<div class="section">' +
@@ -1205,6 +1251,17 @@ export function renderApp(initialContainerId) {
         renderTopbarNav();
         els.stageTitle.textContent = location ? (location.name + " Containers") : "Unassigned Containers";
         els.stageMeta.textContent = location ? "Choose a container to see its contents." : "Choose a container to see its contents.";
+        setBreadcrumbs(
+          location
+            ? [
+                { label: "Places", onClick: () => goToLocations(true) },
+                { label: location.name }
+              ]
+            : [
+                { label: "Places", onClick: () => goToLocations(true) },
+                { label: "No Location" }
+              ]
+        );
         els.stageActions.innerHTML =
           '<div class="action-cluster">' +
             (location
@@ -1276,6 +1333,7 @@ export function renderApp(initialContainerId) {
         if (!state.activeContainerDetail) {
           els.stageTitle.textContent = "Container";
           els.stageMeta.textContent = "Open a container to see what is inside it.";
+          setBreadcrumbs([]);
           els.stageActions.innerHTML = '<button id="back-to-locations" class="secondary" type="button">Back</button>';
           els.stageContent.innerHTML = '<div class="empty-state"><h3>No container open</h3><div class="mini-note">Choose a location first, then a container.</div></div>';
           document.getElementById("back-to-locations").addEventListener("click", () => goToLocations(true));
@@ -1291,6 +1349,19 @@ export function renderApp(initialContainerId) {
         renderTopbarNav();
         els.stageTitle.textContent = location ? location.name : "No Location";
         els.stageMeta.textContent = "";
+        setBreadcrumbs(
+          location
+            ? [
+                { label: "Places", onClick: () => goToLocations(true) },
+                { label: location.name, onClick: () => openLocation(location.id, true) },
+                { label: detail.container.name }
+              ]
+            : [
+                { label: "Places", onClick: () => goToLocations(true) },
+                { label: "No Location", onClick: () => openLocation(null, true) },
+                { label: detail.container.name }
+              ]
+        );
         els.stageActions.innerHTML = "";
 
         const itemRows = detail.items.length
@@ -1425,11 +1496,28 @@ export function renderApp(initialContainerId) {
         }
 
         const detail = state.activeItemDetail;
+        const container = getContainer(detail.item.container_id);
+        const location = container?.location_id ? getLocation(container.location_id) : null;
         const heroTone = toneClassForId(heroTones, detail.item.id);
         const detailTone = toneClassForId(detailTones, detail.item.id);
         renderTopbarNav();
         els.stageTitle.textContent = detail.item.container_name;
         els.stageMeta.textContent = "";
+        setBreadcrumbs(
+          location
+            ? [
+                { label: "Places", onClick: () => goToLocations(true) },
+                { label: location.name, onClick: () => openLocation(location.id, true) },
+                { label: detail.item.container_name, onClick: () => openContainer(detail.item.container_id, true) },
+                { label: detail.item.name }
+              ]
+            : [
+                { label: "Places", onClick: () => goToLocations(true) },
+                { label: "No Location", onClick: () => openLocation(null, true) },
+                { label: detail.item.container_name, onClick: () => openContainer(detail.item.container_id, true) },
+                { label: detail.item.name }
+              ]
+        );
         els.stageActions.innerHTML = "";
 
         const primaryPhoto = detail.photos[0] || null;
@@ -1501,6 +1589,10 @@ export function renderApp(initialContainerId) {
       function renderSearchStage() {
         els.stageTitle.textContent = "Search";
         els.stageMeta.textContent = state.searchResults.query ? 'Results for "' + state.searchResults.query + '"' : "Search";
+        setBreadcrumbs([
+          { label: "Places", onClick: () => goToLocations(true) },
+          { label: "Search" }
+        ]);
         els.stageActions.innerHTML = '<button id="clear-search" class="secondary" type="button">Clear Search</button>';
 
         const locationResults = state.searchResults.locations.map((location) => (
