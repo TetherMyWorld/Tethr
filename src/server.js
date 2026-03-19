@@ -211,7 +211,7 @@ export async function handleRequest(req, res) {
         return sendHtml(res, renderPrintLabelPage({ name, entityType, qrUrl, size }));
       }
 
-      if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/simulate-scan" || url.pathname === "/test-labels" || url.pathname.startsWith("/containers/") || url.pathname.startsWith("/scan/"))) {
+      if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/simulate-scan" || url.pathname.startsWith("/containers/") || url.pathname.startsWith("/scan/"))) {
         const selectedContainer = session && url.pathname.startsWith("/containers/")
           ? getContainerFromRoute(url.pathname.split("/").pop())
           : null;

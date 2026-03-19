@@ -184,12 +184,6 @@ export function renderApp(initialContainerId) {
       .scanner-manual-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:end; }
       .scanner-manual-row > * { width:100%; }
       .scanner-manual-row button { width:auto; min-width:138px; }
-      .qr-test-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px; }
-      .qr-test-card { display:grid; gap:14px; justify-items:center; text-align:center; }
-      .qr-test-card img { width:min(100%, 220px); aspect-ratio:1 / 1; object-fit:contain; border-radius:22px; background:#fff; padding:12px; border:1px solid rgba(24,62,99,.10); box-shadow:0 8px 18px rgba(27,42,63,.08); }
-      .qr-test-card .item-name { font-size:1.3rem; }
-      .qr-test-card .mini-note { min-height:2.6rem; }
-      .qr-test-token { font-family:"Cascadia Code","Consolas","Courier New",monospace; font-size:.84rem; line-height:1.45; color:var(--muted); word-break:break-all; }
       .quantity-stepper { display:grid; grid-template-columns:76px 1fr 76px; gap:12px; align-items:center; }
       .quantity-stepper input { text-align:center; font-size:1.25rem; font-weight:700; padding-left:12px; padding-right:12px; }
       .step-button { height:58px; padding:0; display:grid; place-items:center; line-height:1; }
@@ -347,8 +341,6 @@ export function renderApp(initialContainerId) {
         activeItemDetail: null,
         scanToken: null,
         pendingScanAction: null,
-        testLabelCards: null,
-        testLabelLoading: false,
         searchResults: null,
         messageTimer: null,
         searchTimer: null
@@ -553,7 +545,7 @@ export function renderApp(initialContainerId) {
             '<div class="session-name">' + escapeHtml(user.name || "Signed in") + '</div>' +
             '<div class="session-email">' + escapeHtml(user.email || "") + '</div>' +
           '</button>';
-        const showBack = state.stage === "containers" || state.stage === "container" || state.stage === "item" || state.stage === "simulatedScan" || state.stage === "testLabels";
+        const showBack = state.stage === "containers" || state.stage === "container" || state.stage === "item" || state.stage === "simulatedScan";
         if (!showBack) {
           els.topbarNav.innerHTML =
             '<div class="action-cluster">' +
@@ -595,10 +587,6 @@ export function renderApp(initialContainerId) {
               renderStage();
               return;
             }
-          }
-          if (state.stage === "testLabels") {
-            goToLocations(true);
-            return;
           }
           if (state.stage === "container") {
             openLocation(state.selectedLocationId || null);
@@ -677,10 +665,6 @@ export function renderApp(initialContainerId) {
         }
         if (state.stage === "simulatedScan") {
           renderSimulatedScanStage();
-          return;
-        }
-        if (state.stage === "testLabels") {
-          renderTestLabelsStage();
           return;
         }
         if (state.stage === "item") {
@@ -802,12 +786,6 @@ export function renderApp(initialContainerId) {
           state.searchResults = null;
           state.stage = "simulatedScan";
           state.scanToken = null;
-          renderStage();
-          return;
-        }
-        if (window.location.pathname === "/test-labels") {
-          state.searchResults = null;
-          state.stage = "testLabels";
           renderStage();
           return;
         }
@@ -1273,83 +1251,6 @@ export function renderApp(initialContainerId) {
         return window.location.origin + "/scan/" + encodeURIComponent(token);
       }
 
-      function getSampleRecord(entityType) {
-        if (entityType === "location") {
-          return state.bootstrap.locations[0] || null;
-        }
-        if (entityType === "container") {
-          return state.bootstrap.containers[0] || null;
-        }
-        if (entityType === "item") {
-          return state.bootstrap.items[0] || null;
-        }
-        return null;
-      }
-
-      async function ensureTestLabelCards() {
-        const cards = [];
-        let didCreateTag = false;
-        const sampleKinds = [
-          { entityType: "location", title: "Place Label", emptyText: "Create a place first." },
-          { entityType: "container", title: "Container Label", emptyText: "Create a container first." },
-          { entityType: "item", title: "Item Label", emptyText: "Create an item first." }
-        ];
-
-        for (const sample of sampleKinds) {
-          const record = getSampleRecord(sample.entityType);
-          if (!record) {
-            cards.push({
-              title: sample.title,
-              name: "Not ready yet",
-              subtitle: sample.emptyText,
-              token: "",
-              qrUrl: "",
-              disabled: true
-            });
-            continue;
-          }
-          let token = String(record.tag_token || "").trim();
-          if (!token) {
-            const created = await api("/api/tags", {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({
-                entityType: sample.entityType,
-                entityId: record.id
-              })
-            });
-            token = created.token;
-            didCreateTag = true;
-          }
-          cards.push({
-            title: sample.title,
-            name: record.name,
-            subtitle: "Scan to open this " + sample.entityType + ".",
-            token,
-            qrUrl: "https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=" + encodeURIComponent(buildScanUrl(token)),
-            disabled: false
-          });
-        }
-
-        const existingUnassigned = state.testLabelCards?.find((card) => card.kind === "unassigned");
-        const unassignedToken = existingUnassigned?.token || ("test-unassigned-" + crypto.randomUUID());
-        cards.push({
-          kind: "unassigned",
-          title: "New Label Setup",
-          name: "Unassigned Label",
-          subtitle: "Scan to test the new-label setup flow.",
-          token: unassignedToken,
-          qrUrl: "https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=" + encodeURIComponent(buildScanUrl(unassignedToken)),
-          disabled: false
-        });
-
-        if (didCreateTag) {
-          state.bootstrap = await api("/api/bootstrap?selectedContainerId=" + encodeURIComponent(state.activeContainerId || ""));
-          renderOverview();
-        }
-        return cards;
-      }
-
       function openPrintLabelWindow({ name, entityType, token, size }) {
         const printUrl = window.location.origin +
           "/print-label?name=" + encodeURIComponent(name || "Label") +
@@ -1489,53 +1390,6 @@ export function renderApp(initialContainerId) {
         startScanner().catch(() => {
           updateScannerStatus("Scanner could not start. You can still paste a code below.");
         });
-      }
-
-      function renderTestLabelsStage() {
-        renderTopbarNav();
-        els.stageTitle.textContent = "Test QR Labels";
-        els.stageMeta.textContent = "Open this page on your computer screen and scan the codes with your phone.";
-        setBreadcrumbs([
-          { label: "Places", onClick: () => goToLocations(true) },
-          { label: "Test QR Labels" }
-        ]);
-        els.stageActions.innerHTML = "";
-
-        if (!state.testLabelCards) {
-          els.stageContent.innerHTML = '<div class="empty-state"><h3>Preparing labels</h3><div class="mini-note">Creating any missing sample tags and building QR codes.</div></div>';
-          if (!state.testLabelLoading) {
-            state.testLabelLoading = true;
-            ensureTestLabelCards()
-              .then((cards) => {
-                state.testLabelCards = cards;
-                state.testLabelLoading = false;
-                renderStage();
-              })
-              .catch((error) => {
-                state.testLabelLoading = false;
-                showMessage(error.message || "Could not prepare test QR labels.", true);
-                els.stageContent.innerHTML = '<div class="empty-state"><h3>Could not prepare labels</h3><div class="mini-note">Try refreshing the page.</div></div>';
-              });
-          }
-          return;
-        }
-
-        els.stageContent.innerHTML =
-          '<div class="section">' +
-            '<div class="qr-test-grid">' +
-              state.testLabelCards.map((card) => (
-                '<div class="photo-card qr-test-card">' +
-                  '<div class="identity-label">' + escapeHtml(card.title) + '</div>' +
-                  (card.qrUrl
-                    ? '<img src="' + card.qrUrl + '" alt="QR code for ' + escapeAttr(card.name) + '">'
-                    : '<div class="empty-state" style="padding:28px 18px;"><h3>Not ready</h3><div class="mini-note">' + escapeHtml(card.subtitle) + '</div></div>') +
-                  '<div class="item-name">' + escapeHtml(card.name) + '</div>' +
-                  '<div class="mini-note">' + escapeHtml(card.subtitle) + '</div>' +
-                  (card.token ? '<div class="qr-test-token">' + escapeHtml(card.token) + '</div>' : '') +
-                '</div>'
-              )).join("") +
-            '</div>' +
-          '</div>';
       }
 
       function renderLocationsStage() {
