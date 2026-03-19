@@ -224,6 +224,7 @@ export function renderApp(initialContainerId) {
         box-shadow:0 12px 28px rgba(20, 28, 45, .08);
       }
       .action-compass-button { padding:0; }
+      .action-compass-button:disabled { opacity:.46; cursor:default; box-shadow:none; }
       .action-compass-button svg { width:34px; height:34px; display:block; stroke:currentColor; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; fill:none; }
       .action-compass-button .compass-glyph { font-family:var(--heading-font); font-size:2.6rem; line-height:1; font-weight:700; }
       .action-compass-button.danger { color:#181f31; border-color:rgba(20, 28, 45, .95); }
@@ -1003,15 +1004,16 @@ export function renderApp(initialContainerId) {
         }, true);
       }
 
-      function openActionCompass(title, actions = {}) {
+      function openActionCompass(title, actions = {}, options = {}) {
         const buttonHtml = (action, position, extraClass = "") => {
           if (!action) {
             return '<div class="action-compass-spacer"></div>';
           }
+          const disabledAttr = options.requireRelease ? ' disabled' : '';
           return '<button class="action-compass-button ' + extraClass + (action.danger ? ' danger' : ' secondary') + '" type="button" data-action-compass="' + position + '">' +
             (action.icon || ('<span class="compass-glyph">' + escapeHtml(action.label) + '</span>')) +
             '<span class="sr-only">' + escapeHtml(action.label) + '</span>' +
-          '</button>';
+          '</button>'.replace('>', disabledAttr + '>');
         };
         openModal(
           title,
@@ -1029,6 +1031,18 @@ export function renderApp(initialContainerId) {
             '</div>' +
           '</div>',
           (modal) => {
+            const compassButtons = Array.from(modal.querySelectorAll("[data-action-compass]"));
+            const armActions = () => {
+              compassButtons.forEach((button) => {
+                button.disabled = false;
+              });
+            };
+            if (options.requireRelease) {
+              const releaseEvents = ["pointerup", "touchend", "mouseup", "touchcancel"];
+              releaseEvents.forEach((eventName) => {
+                window.addEventListener(eventName, armActions, { once: true, capture: true });
+              });
+            }
             modal.querySelectorAll("[data-action-compass]").forEach((button) => {
               button.addEventListener("click", async () => {
                 const position = button.dataset.actionCompass;
@@ -2339,7 +2353,7 @@ export function renderApp(initialContainerId) {
               openDeleteLocationModal(location);
             }
           }
-        });
+        }, { requireRelease: true });
       }
 
       function openDeleteContainerModal(container) {
@@ -2384,7 +2398,7 @@ export function renderApp(initialContainerId) {
               openDeleteContainerModal(container);
             }
           }
-        });
+        }, { requireRelease: true });
       }
 
       function openDeleteItemModal(itemId) {
@@ -2486,7 +2500,7 @@ export function renderApp(initialContainerId) {
               openDeleteItemModal(item.id);
             }
           }
-        });
+        }, { requireRelease: true });
       }
 
       async function adjustItemQuantity(itemId, delta) {
