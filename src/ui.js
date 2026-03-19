@@ -3,12 +3,12 @@ export function renderApp(initialContainerId) {
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <title>TethrArca</title>
     <style>
       :root { --bg:#e4ebf3; --bg-deep:#cfd9e6; --panel:#fbfdff; --panel-soft:#eef4fb; --panel-strong:#e2ebf6; --ink:#18202b; --muted:#5f6b7b; --accent:#16508c; --accent-soft:#dfeafb; --accent-strong:#123a64; --teal:#0f6d73; --teal-soft:#d8f0f0; --gold:#b07d1f; --gold-soft:#f8ebc7; --rose:#9f4f6f; --rose-soft:#f4dfeb; --line:rgba(24,32,43,.09); --line-strong:rgba(24,32,43,.16); --danger:#8d3a31; --danger-soft:#f1ddd9; --shadow:0 28px 68px rgba(20,38,64,.14); --shadow-soft:0 14px 28px rgba(20,38,64,.10); --heading-font:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif; --body-font:"Aptos","Segoe UI","Trebuchet MS",sans-serif; }
       * { box-sizing:border-box; }
-      body { margin:0; font-family:var(--body-font); color:var(--ink); -webkit-text-size-adjust:100%; background:
+      body { margin:0; font-family:var(--body-font); color:var(--ink); -webkit-text-size-adjust:100%; overflow-x:hidden; touch-action:manipulation; background:
         radial-gradient(circle at top left, rgba(15,109,115,.18), transparent 22%),
         radial-gradient(circle at top center, rgba(176,125,31,.15), transparent 24%),
         radial-gradient(circle at top right, rgba(22,80,140,.18), transparent 24%),
@@ -161,7 +161,7 @@ export function renderApp(initialContainerId) {
       .notice.error { background:var(--danger-soft); color:var(--danger); border-color:rgba(162,63,50,.12); }
       label { display:grid; gap:6px; font-size:.92rem; color:var(--muted); }
       input,textarea,select,button { font:inherit; width:100%; }
-      input,textarea,select { border-radius:16px; border:1px solid rgba(24,62,99,.12); padding:16px 18px; background:#fcfdff; color:var(--ink); box-shadow:inset 0 1px 0 rgba(255,255,255,.8); }
+      input,textarea,select { border-radius:16px; border:1px solid rgba(24,62,99,.12); padding:16px 18px; background:#fcfdff; color:var(--ink); box-shadow:inset 0 1px 0 rgba(255,255,255,.8); font-size:16px; }
       input[type="file"] { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0, 0, 0, 0); border:0; }
       input[type="number"]::-webkit-outer-spin-button,
       input[type="number"]::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
@@ -179,7 +179,7 @@ export function renderApp(initialContainerId) {
       .file-picker-button { width:auto; min-height:58px; padding:16px 26px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(180deg, #f7fbff 0%, #dfeafb 100%); color:var(--ink); font-weight:700; letter-spacing:-.01em; box-shadow:0 10px 20px rgba(22,80,140,.10); cursor:pointer; }
       .file-picker-button:hover { box-shadow:0 12px 24px rgba(22,80,140,.14); transform:translateY(-1px); }
       .file-picker-name { font-size:.95rem; color:var(--muted); min-height:1.25rem; }
-      button { border:0; border-radius:999px; background:linear-gradient(180deg, #2060a5 0%, #16508c 100%); color:#fff; padding:14px 22px; cursor:pointer; font-weight:700; letter-spacing:-.01em; box-shadow:0 10px 20px rgba(22,80,140,.18); }
+      button { border:0; border-radius:999px; background:linear-gradient(180deg, #2060a5 0%, #16508c 100%); color:#fff; padding:14px 22px; cursor:pointer; font-weight:700; letter-spacing:-.01em; box-shadow:0 10px 20px rgba(22,80,140,.18); touch-action:manipulation; }
       button.secondary { background:linear-gradient(180deg, #f7fbff 0%, #dfeafb 100%); color:var(--ink); box-shadow:0 8px 18px rgba(22,80,140,.08); }
       button.danger { background:linear-gradient(180deg, #b04f3f 0%, #983b2b 100%); color:#fff; }
       button:disabled { opacity:.58; cursor:not-allowed; box-shadow:none; }
