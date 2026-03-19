@@ -198,14 +198,38 @@ export function renderApp(initialContainerId) {
       .modal-header h2 { font-size:2.2rem; line-height:1.02; letter-spacing:-.05em; }
       .modal-body { padding:20px 24px 24px; }
       .close-button { background:linear-gradient(180deg, #fbf7f0 0%, #efe4d2 100%); color:var(--ink); width:auto; flex:0 0 auto; min-width:112px; padding:12px 18px; box-shadow:0 8px 18px rgba(83,61,35,.08); }
-      .action-compass { display:grid; gap:14px; justify-items:center; padding:8px 0 4px; }
+      .action-compass { display:grid; gap:32px; justify-items:center; padding:12px 0 10px; }
       .action-compass-row { width:100%; display:grid; grid-template-columns:1fr; justify-items:center; }
-      .action-compass-middle { width:100%; display:grid; grid-template-columns:minmax(0,1fr) 92px minmax(0,1fr); gap:14px; align-items:center; }
-      .action-compass-spacer { min-height:64px; }
-      .action-compass-button { width:min(240px,100%); min-height:64px; justify-content:center; text-align:center; padding:16px 18px; border-radius:22px; background:linear-gradient(180deg, #f8fbff 0%, #e2ecf8 100%); color:var(--ink); box-shadow:0 8px 18px rgba(22,80,140,.08); }
-      .action-compass-button.danger { background:linear-gradient(180deg, #b04f3f 0%, #983b2b 100%); color:#fff; }
-      .action-compass-button.side { width:100%; }
-      .action-compass-center { width:92px; height:92px; border-radius:999px; display:grid; place-items:center; background:linear-gradient(180deg, rgba(255,255,255,.94) 0%, rgba(225,235,246,.98) 100%); color:var(--accent-strong); box-shadow:inset 0 1px 0 rgba(255,255,255,.8), 0 10px 22px rgba(22,80,140,.10); font-family:var(--heading-font); font-size:2.6rem; line-height:1; font-weight:700; }
+      .action-compass-middle { width:100%; display:grid; grid-template-columns:minmax(0,1fr) 112px minmax(0,1fr); gap:20px; align-items:center; justify-items:center; }
+      .action-compass-spacer { width:96px; height:96px; }
+      .action-compass-button,
+      .action-compass-center {
+        width:96px;
+        height:96px;
+        border-radius:999px;
+        display:grid;
+        place-items:center;
+        background:#fff;
+        color:var(--ink);
+        border:4px solid rgba(20, 28, 45, .95);
+        box-shadow:0 12px 28px rgba(20, 28, 45, .08);
+      }
+      .action-compass-button { padding:0; }
+      .action-compass-button svg { width:34px; height:34px; display:block; stroke:currentColor; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+      .action-compass-button .compass-glyph { font-family:var(--heading-font); font-size:2.6rem; line-height:1; font-weight:700; }
+      .action-compass-button.danger { color:#181f31; border-color:rgba(20, 28, 45, .95); }
+      .action-compass-center { font-family:var(--heading-font); font-size:2.5rem; line-height:1; font-weight:700; }
+      .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0, 0, 0, 0); white-space:nowrap; border:0; }
+      @media (max-width: 640px) {
+        .action-compass { gap:24px; }
+        .action-compass-middle { grid-template-columns:minmax(0,1fr) 98px minmax(0,1fr); gap:14px; }
+        .action-compass-button,
+        .action-compass-center,
+        .action-compass-spacer { width:82px; height:82px; }
+        .action-compass-button svg { width:30px; height:30px; }
+        .action-compass-button .compass-glyph,
+        .action-compass-center { font-size:2.2rem; }
+      }
       @media (max-width:900px) { .tile-grid { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); } .contents-grid { grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); } }
       @media (max-width:720px) {
         .shell { padding:14px; gap:16px; }
@@ -432,6 +456,8 @@ export function renderApp(initialContainerId) {
       const deleteIconMarkup = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg>';
       const editIconMarkup = '&#9998;';
       const historyIconMarkup = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 7v5l3 2"></path></svg>';
+      const compassEditIconMarkup = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4Z"></path><path d="M13 7l4 4"></path></svg>';
+      const moveIconMarkup = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 7 5 5-5 5"></path><path d="m13 7 5 5-5 5"></path></svg>';
 
       boot();
 
@@ -970,7 +996,8 @@ export function renderApp(initialContainerId) {
             return '<div class="action-compass-spacer"></div>';
           }
           return '<button class="action-compass-button ' + extraClass + (action.danger ? ' danger' : ' secondary') + '" type="button" data-action-compass="' + position + '">' +
-            escapeHtml(action.label) +
+            (action.icon || ('<span class="compass-glyph">' + escapeHtml(action.label) + '</span>')) +
+            '<span class="sr-only">' + escapeHtml(action.label) + '</span>' +
           '</button>';
         };
         openModal(
@@ -2229,12 +2256,14 @@ export function renderApp(initialContainerId) {
         openActionCompass(location.name, {
           top: {
             label: "Edit",
+            icon: compassEditIconMarkup,
             run: async () => {
               openLocationModal(location);
             }
           },
           bottom: {
             label: "Delete",
+            icon: deleteIconMarkup,
             danger: true,
             run: async () => {
               openDeleteLocationModal(location);
@@ -2256,12 +2285,14 @@ export function renderApp(initialContainerId) {
         openActionCompass(container.name, {
           top: {
             label: "Edit",
+            icon: compassEditIconMarkup,
             run: async () => {
               openContainerModal({ container, defaultLocationId: container.location_id || null });
             }
           },
           left: {
             label: "History",
+            icon: historyIconMarkup,
             run: async () => {
               const freshDetail = await api("/api/containers/" + container.id);
               state.activeContainerDetail = freshDetail;
@@ -2270,12 +2301,14 @@ export function renderApp(initialContainerId) {
           },
           right: {
             label: "Move",
+            icon: moveIconMarkup,
             run: async () => {
               openMoveContainerModal(container);
             }
           },
           bottom: {
             label: "Delete",
+            icon: deleteIconMarkup,
             danger: true,
             run: async () => {
               openDeleteContainerModal(container);
@@ -2344,12 +2377,14 @@ export function renderApp(initialContainerId) {
         openActionCompass(item.name, {
           top: {
             label: "Edit",
+            icon: compassEditIconMarkup,
             run: async () => {
               await openItemModal({ itemId: item.id, containerId: item.container_id });
             }
           },
           left: {
             label: "History",
+            icon: historyIconMarkup,
             run: async () => {
               const freshDetail = await api("/api/items/" + item.id);
               state.activeItemDetail = freshDetail;
@@ -2358,12 +2393,14 @@ export function renderApp(initialContainerId) {
           },
           right: {
             label: "Move",
+            icon: moveIconMarkup,
             run: async () => {
               openMoveItemModal(item);
             }
           },
           bottom: {
             label: "Delete",
+            icon: deleteIconMarkup,
             danger: true,
             run: async () => {
               openDeleteItemModal(item.id);
