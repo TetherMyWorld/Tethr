@@ -2680,14 +2680,15 @@ export function renderApp(initialContainerId) {
         );
       }
 
-      function openModal(title, contentHtml, setup) {
+      function openModal(title, contentHtml, setup, options = {}) {
+        const showCloseButton = options.showCloseButton !== false;
         els.modalRoot.hidden = false;
         els.modalRoot.innerHTML =
           '<div class="modal-backdrop">' +
             '<div class="modal-shell">' +
               '<div class="modal-header">' +
                 '<div><h2>' + title + '</h2></div>' +
-                '<button class="close-button" type="button" data-close-modal>Close</button>' +
+                (showCloseButton ? '<button class="close-button" type="button" data-close-modal>Close</button>' : '') +
               '</div>' +
               '<div class="modal-body">' + contentHtml + '</div>' +
             '</div>' +
@@ -2718,7 +2719,8 @@ export function renderApp(initialContainerId) {
               await onConfirm();
               closeModal();
             });
-          }
+          },
+          { showCloseButton: false }
         );
       }
 
