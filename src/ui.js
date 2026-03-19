@@ -174,6 +174,16 @@ export function renderApp(initialContainerId) {
       .item-modal-preview img { max-width:180px; aspect-ratio:1 / 1; object-fit:cover; }
       .item-modal-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
       .item-modal-actions > * { width:auto; }
+      .scanner-section { display:grid; gap:18px; }
+      .scanner-shell { position:relative; width:min(100%, 440px); aspect-ratio:3 / 4; margin:0 auto; border-radius:28px; overflow:hidden; background:linear-gradient(180deg, #0f1826 0%, #1d2a3f 100%); border:1px solid rgba(255,255,255,.14); box-shadow:0 18px 34px rgba(20,38,64,.18); }
+      .scanner-shell video { width:100%; height:100%; object-fit:cover; background:#0f1826; }
+      .scanner-shell.is-unavailable { display:grid; place-items:center; padding:24px; text-align:center; color:#eef5ff; }
+      .scanner-overlay { position:absolute; inset:auto 18px 18px; padding:12px 14px; border-radius:18px; background:rgba(15,24,38,.58); color:#f6fbff; text-align:center; font-weight:700; letter-spacing:-.01em; backdrop-filter:blur(6px); }
+      .scanner-status { text-align:center; font-size:.98rem; color:var(--muted); min-height:1.35rem; }
+      .scanner-manual { width:min(100%, 520px); margin:0 auto; display:grid; gap:12px; }
+      .scanner-manual-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:end; }
+      .scanner-manual-row > * { width:100%; }
+      .scanner-manual-row button { width:auto; min-width:138px; }
       .quantity-stepper { display:grid; grid-template-columns:76px 1fr 76px; gap:12px; align-items:center; }
       .quantity-stepper input { text-align:center; font-size:1.25rem; font-weight:700; padding-left:12px; padding-right:12px; }
       .step-button { height:58px; padding:0; display:grid; place-items:center; line-height:1; }
@@ -276,6 +286,8 @@ export function renderApp(initialContainerId) {
         .item-modal-secondary { grid-template-columns:1fr; }
         .item-modal-actions { justify-content:space-between; }
         .item-modal-actions > .save-icon { margin-left:auto; }
+        .scanner-manual-row { grid-template-columns:1fr; }
+        .scanner-manual-row button { width:100%; }
         .quantity-stepper { grid-template-columns:64px 1fr 64px; }
       }
       @media (max-width:420px) {
@@ -337,6 +349,14 @@ export function renderApp(initialContainerId) {
       const imageUploadPolicy = {
         maxDimension: 1000,
         quality: 0.72
+      };
+      const scannerState = {
+        stream: null,
+        animationFrame: 0,
+        detector: null,
+        active: false,
+        detecting: false,
+        lastToken: ""
       };
 
       const els = {
@@ -616,6 +636,9 @@ export function renderApp(initialContainerId) {
       }
 
       function renderStage() {
+        if (state.stage !== "simulatedScan") {
+          stopScanner();
+        }
         if (!state.bootstrap.authenticated) {
           renderSignInStage();
           return;
@@ -864,8 +887,8 @@ export function renderApp(initialContainerId) {
           state.pendingScanAction = null;
           state.scanToken = cleanToken;
           showMessage("Container moved.");
-          await refreshAll();
           await openContainer(pending.containerId, true);
+          refreshAll().catch(() => {});
           return;
         }
 
@@ -886,9 +909,122 @@ export function renderApp(initialContainerId) {
           state.pendingScanAction = null;
           state.scanToken = cleanToken;
           showMessage("Item moved.");
-          await refreshAll();
           await openContainer(result.entityId, true);
           await openItem(pending.itemId);
+          refreshAll().catch(() => {});
+        }
+      }
+
+      function extractTokenFromScanValue(rawValue) {
+        const value = String(rawValue || "").trim();
+        if (!value) {
+          return "";
+        }
+        const directMatch = value.match(/\/scan\/([^/?#]+)/i);
+        if (directMatch) {
+          return decodeURIComponent(directMatch[1]);
+        }
+        try {
+          const parsed = new URL(value);
+          const match = parsed.pathname.match(/\/scan\/([^/]+)/i);
+          return match ? decodeURIComponent(match[1]) : value;
+        } catch {
+          return value;
+        }
+      }
+
+      function updateScannerStatus(message) {
+        const status = document.getElementById("scanner-status");
+        if (status) {
+          status.textContent = message || "";
+        }
+      }
+
+      function stopScanner() {
+        scannerState.active = false;
+        scannerState.detecting = false;
+        scannerState.lastToken = "";
+        if (scannerState.animationFrame) {
+          cancelAnimationFrame(scannerState.animationFrame);
+          scannerState.animationFrame = 0;
+        }
+        if (scannerState.stream) {
+          scannerState.stream.getTracks().forEach((track) => track.stop());
+          scannerState.stream = null;
+        }
+        const video = document.getElementById("scanner-video");
+        if (video) {
+          try {
+            video.pause();
+          } catch {
+            // Ignore pause failures.
+          }
+          video.srcObject = null;
+        }
+      }
+
+      async function startScanner() {
+        stopScanner();
+        const shell = document.getElementById("scanner-shell");
+        const video = document.getElementById("scanner-video");
+        if (!shell || !video) {
+          return;
+        }
+        if (!navigator.mediaDevices?.getUserMedia) {
+          shell.classList.add("is-unavailable");
+          shell.innerHTML = '<div class="empty-state" style="padding:24px; background:transparent; border:0; color:#eef5ff;"><h3>Camera not available</h3><div class="mini-note" style="color:#d9e5f7;">This browser cannot open the camera here yet. You can still paste a code below.</div></div>';
+          updateScannerStatus("Camera scanning is not available on this browser.");
+          return;
+        }
+        if (!("BarcodeDetector" in window)) {
+          shell.classList.add("is-unavailable");
+          shell.innerHTML = '<div class="empty-state" style="padding:24px; background:transparent; border:0; color:#eef5ff;"><h3>Scanner not supported</h3><div class="mini-note" style="color:#d9e5f7;">This browser can open the camera, but it cannot decode QR codes in-page yet. You can still paste a code below.</div></div>';
+          updateScannerStatus("This browser does not support in-page QR reading yet.");
+          return;
+        }
+        try {
+          scannerState.stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: "environment" }
+            },
+            audio: false
+          });
+          video.srcObject = scannerState.stream;
+          await video.play();
+          scannerState.detector = new BarcodeDetector({ formats: ["qr_code"] });
+          scannerState.active = true;
+          updateScannerStatus("Point your camera at a QR label.");
+          const scanFrame = async () => {
+            if (!scannerState.active) {
+              return;
+            }
+            if (!scannerState.detecting && video.readyState >= 2) {
+              scannerState.detecting = true;
+              try {
+                const codes = await scannerState.detector.detect(video);
+                const rawValue = codes?.[0]?.rawValue || "";
+                const token = extractTokenFromScanValue(rawValue);
+                if (token && token !== scannerState.lastToken) {
+                  scannerState.lastToken = token;
+                  stopScanner();
+                  await openScanToken(token, true);
+                  return;
+                }
+              } catch {
+                // Ignore detector frame errors and keep scanning.
+              } finally {
+                scannerState.detecting = false;
+              }
+            }
+            scannerState.animationFrame = requestAnimationFrame(() => {
+              scanFrame().catch(() => {});
+            });
+          };
+          scanFrame().catch(() => {});
+        } catch (error) {
+          shell.classList.add("is-unavailable");
+          shell.innerHTML = '<div class="empty-state" style="padding:24px; background:transparent; border:0; color:#eef5ff;"><h3>Camera blocked</h3><div class="mini-note" style="color:#d9e5f7;">Allow camera access to scan labels here, or paste a code below.</div></div>';
+          updateScannerStatus(error?.message || "Camera access was not granted.");
         }
       }
 
@@ -1170,151 +1306,89 @@ export function renderApp(initialContainerId) {
         );
       }
 
-      function getSimulationRecord(entityType) {
-        if (entityType === "location") {
-          return state.bootstrap.locations[0] || null;
-        }
-        if (entityType === "container") {
-          return state.bootstrap.containers[0] || null;
-        }
-        if (entityType === "item") {
-          return state.bootstrap.items[0] || null;
-        }
-        return null;
-      }
-
       function renderSimulatedScanStage() {
         renderTopbarNav();
-        if (state.pendingScanAction?.kind === "moveContainer") {
-          const locations = state.bootstrap.locations;
-          els.stageTitle.textContent = "Scan Location to Move";
-          els.stageMeta.textContent = "Choose a location label to move this container.";
-          els.stageActions.innerHTML = "";
-          els.stageContent.innerHTML =
-            '<div class="section">' +
-              (locations.length
-                ? '<div class="tile-grid">' + locations.map((location, index) => (
-                    '<div class="tile ' + toneClass(locationTones, index) + '">' +
-                      '<div class="tile-title">' + escapeHtml(location.name) + '</div>' +
-                      '<div class="tile-subtitle">Move container here.</div>' +
-                      '<button class="secondary" type="button" data-simulated-scan-record="location" data-record-id="' + location.id + '">Scan Location</button>' +
-                    '</div>'
-                  )).join("") + '</div>'
-                : '<div class="empty-state"><h3>No locations yet</h3><div class="mini-note">Create a location before using scan-to-move.</div></div>') +
-            '</div>';
-        } else if (state.pendingScanAction?.kind === "moveItem") {
-          const containers = state.bootstrap.containers.filter((container) => container.id !== state.activeItemDetail?.item?.container_id);
-          els.stageTitle.textContent = "Scan Container to Move";
-          els.stageMeta.textContent = "Choose a container label to move this item.";
-          els.stageActions.innerHTML = "";
-          els.stageContent.innerHTML =
-            '<div class="section">' +
-              (containers.length
-                ? '<div class="tile-grid">' + containers.map((container, index) => (
-                    '<div class="tile ' + toneClass(containerTones, index) + '">' +
-                      '<div class="tile-title">' + escapeHtml(container.name) + '</div>' +
-                      '<div class="tile-subtitle">Move item here.</div>' +
-                      '<button class="secondary" type="button" data-simulated-scan-record="container" data-record-id="' + container.id + '">Scan Container</button>' +
-                    '</div>'
-                  )).join("") + '</div>'
-                : '<div class="empty-state"><h3>No other containers yet</h3><div class="mini-note">Create another container before using scan-to-move.</div></div>') +
-            '</div>';
-        } else {
-          const location = getSimulationRecord("location");
-          const container = getSimulationRecord("container");
-          const item = getSimulationRecord("item");
+        let title = "Scan Label";
+        let meta = "Point your camera at a QR label, or paste a label code below.";
+        let breadcrumbs = [
+          { label: "Places", onClick: () => goToLocations(true) },
+          { label: "Scan" }
+        ];
 
-          els.stageTitle.textContent = "Simulated Scan";
-          els.stageMeta.textContent = "Use these buttons to test the scan flow without a phone.";
-          els.stageActions.innerHTML = "";
-
-          const tiles = [
-            {
-              type: "location",
-              title: location ? location.name : "No location yet",
-              subtitle: location ? "Test opening a location by scan." : "Create a location first to test this."
-            },
-            {
-              type: "container",
-              title: container ? container.name : "No container yet",
-              subtitle: container ? "Test opening a container by scan." : "Create a container first to test this."
-            },
-            {
-              type: "item",
-              title: item ? item.name : "No item yet",
-              subtitle: item ? "Test opening an item by scan." : "Create an item first to test this."
-            },
-            {
-              type: "unassigned",
-              title: "New Unassigned Tag",
-              subtitle: "Test the setup flow for a brand new label."
-            }
-          ];
-
-          els.stageContent.innerHTML =
-            '<div class="section">' +
-              '<div class="tile-grid">' +
-                tiles.map((entry, index) => (
-                  '<div class="tile ' + toneClass(locationTones, index) + '">' +
-                    '<div class="tile-title">' + escapeHtml(entry.title) + '</div>' +
-                    '<div class="tile-subtitle">' + escapeHtml(entry.subtitle) + '</div>' +
-                    '<button class="secondary" type="button" data-simulated-scan="' + entry.type + '"' + (
-                      entry.type !== "unassigned" && !getSimulationRecord(entry.type) ? " disabled" : ""
-                    ) + '>' + (
-                      entry.type === "unassigned"
-                        ? "Scan New Tag"
-                        : ("Scan " + entry.type[0].toUpperCase() + entry.type.slice(1))
-                    ) + '</button>' +
-                  '</div>'
-                )).join("") +
-              '</div>' +
-            '</div>';
+        if (state.pendingScanAction?.kind === "moveContainer" && state.activeContainerDetail) {
+          title = "Scan Place to Move";
+          meta = "Scan a place label to move this container there.";
+          const detail = state.activeContainerDetail;
+          const currentLocation = detail.container.location_id ? getLocation(detail.container.location_id) : null;
+          breadcrumbs = currentLocation
+            ? [
+                { label: "Places", onClick: () => goToLocations(true) },
+                { label: currentLocation.name, onClick: () => openLocation(currentLocation.id, true) },
+                { label: detail.container.name, onClick: () => openContainer(detail.container.id, true) },
+                { label: "Scan Move" }
+              ]
+            : [
+                { label: "Places", onClick: () => goToLocations(true) },
+                { label: "No Location", onClick: () => openLocation(null, true) },
+                { label: detail.container.name, onClick: () => openContainer(detail.container.id, true) },
+                { label: "Scan Move" }
+              ];
+        } else if (state.pendingScanAction?.kind === "moveItem" && state.activeItemDetail) {
+          title = "Scan Container to Move";
+          meta = "Scan a container label to move this item there.";
+          const detail = state.activeItemDetail;
+          const container = getContainer(detail.item.container_id);
+          const location = container?.location_id ? getLocation(container.location_id) : null;
+          breadcrumbs = location
+            ? [
+                { label: "Places", onClick: () => goToLocations(true) },
+                { label: location.name, onClick: () => openLocation(location.id, true) },
+                { label: detail.item.container_name, onClick: () => openContainer(detail.item.container_id, true) },
+                { label: detail.item.name, onClick: () => openItem(detail.item.id) },
+                { label: "Scan Move" }
+              ]
+            : [
+                { label: "Places", onClick: () => goToLocations(true) },
+                { label: "No Location", onClick: () => openLocation(null, true) },
+                { label: detail.item.container_name, onClick: () => openContainer(detail.item.container_id, true) },
+                { label: detail.item.name, onClick: () => openItem(detail.item.id) },
+                { label: "Scan Move" }
+              ];
         }
 
-        els.stageContent.querySelectorAll("[data-simulated-scan]").forEach((button) => {
-          button.addEventListener("click", async () => {
-            const type = button.dataset.simulatedScan;
-            if (type === "unassigned") {
-              await openScanToken("sim-" + crypto.randomUUID(), true);
-              return;
-            }
+        els.stageTitle.textContent = title;
+        els.stageMeta.textContent = meta;
+        setBreadcrumbs(breadcrumbs);
+        els.stageActions.innerHTML = "";
+        els.stageContent.innerHTML =
+          '<div class="section scanner-section">' +
+            '<div id="scanner-shell" class="scanner-shell">' +
+              '<video id="scanner-video" autoplay playsinline muted></video>' +
+              '<div class="scanner-overlay">Hold the code inside the frame.</div>' +
+            '</div>' +
+            '<div id="scanner-status" class="scanner-status">Opening camera...</div>' +
+            '<form id="scanner-manual-form" class="scanner-manual">' +
+              '<div class="scanner-manual-row">' +
+                '<label>Label Code<input id="scanner-manual-input" placeholder="Paste or type a tag code"></label>' +
+                '<button class="secondary" type="submit">Use Code</button>' +
+              '</div>' +
+            '</form>' +
+          '</div>';
 
-            const record = getSimulationRecord(type);
-            if (!record) {
-              return;
-            }
-
-            let token = record.tag_token || "";
-            if (!token) {
-              const created = await createTagForEntity(type, record.id);
-              token = created.token;
-              await refreshAll();
-            }
-
-            await openScanToken(token, true);
-          });
+        document.getElementById("scanner-manual-form").addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const input = document.getElementById("scanner-manual-input");
+          const token = extractTokenFromScanValue(input?.value || "");
+          if (!token) {
+            showMessage("Enter a label code first.", true);
+            return;
+          }
+          stopScanner();
+          await openScanToken(token, true);
         });
 
-        els.stageContent.querySelectorAll("[data-simulated-scan-record]").forEach((button) => {
-          button.addEventListener("click", async () => {
-            const type = button.dataset.simulatedScanRecord;
-            const id = button.dataset.recordId;
-            const record = type === "location"
-              ? getLocation(id)
-              : getContainer(id);
-            if (!record) {
-              return;
-            }
-
-            let token = record.tag_token || "";
-            if (!token) {
-              const created = await createTagForEntity(type, record.id);
-              token = created.token;
-              await refreshAll();
-            }
-
-            await openScanToken(token, true);
-          });
+        startScanner().catch(() => {
+          updateScannerStatus("Scanner could not start. You can still paste a code below.");
         });
       }
 
