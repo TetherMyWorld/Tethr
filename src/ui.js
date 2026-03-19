@@ -1308,7 +1308,6 @@ export function renderApp(initialContainerId) {
         ]);
         els.stageActions.innerHTML =
           '<div class="action-cluster">' +
-            '<button id="open-simulated-scan" class="secondary" type="button">Test Scan</button>' +
             '<button id="stage-add-location" class="icon-button add-icon" type="button" aria-label="Add location" title="Add location">' + addIconMarkup + '</button>' +
           '</div>';
         const noLocationCount = containersForLocation(null).length;
@@ -1332,11 +1331,6 @@ export function renderApp(initialContainerId) {
           ? '<div class="tile-grid">' + locationTiles.join("") + '</div>'
           : '<div class="empty-state"><h3>No locations yet</h3><div class="mini-note">Create a location, or start with containers that have no location.</div></div>';
         document.getElementById("stage-add-location").addEventListener("click", () => openLocationModal());
-        document.getElementById("open-simulated-scan").addEventListener("click", () => {
-          state.stage = "simulatedScan";
-          history.pushState({}, "", "/simulate-scan");
-          renderStage();
-        });
         els.stageContent.querySelectorAll("[data-open-location]").forEach((button) => {
           button.addEventListener("click", () => openLocation(button.dataset.openLocation === "__none__" ? null : button.dataset.openLocation));
         });
