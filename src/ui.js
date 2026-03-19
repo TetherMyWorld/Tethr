@@ -162,6 +162,15 @@ export function renderApp(initialContainerId) {
       input:focus,textarea:focus,select:focus { outline:none; border-color:rgba(24,62,99,.42); box-shadow:0 0 0 4px rgba(24,62,99,.08); }
       textarea { min-height:84px; resize:vertical; }
       .quantity-field { display:grid; gap:8px; }
+      .item-modal-layout { display:grid; gap:18px; }
+      .item-modal-topline { display:grid; grid-template-columns:minmax(0, 1.5fr) minmax(220px, .9fr); gap:16px; align-items:end; }
+      .item-modal-secondary { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.15fr); gap:16px; align-items:start; }
+      .item-modal-section { border:1px solid rgba(24,62,99,.08); border-radius:22px; background:linear-gradient(180deg, rgba(248,251,255,.96) 0%, rgba(238,245,252,.98) 100%); padding:18px; box-shadow:inset 0 1px 0 rgba(255,255,255,.75); }
+      .item-modal-section h3 { margin:0 0 12px; font-family:var(--heading-font); font-size:1.22rem; letter-spacing:-.03em; color:var(--accent-strong); }
+      .item-modal-preview { display:grid; gap:12px; }
+      .item-modal-preview img { max-width:180px; aspect-ratio:1 / 1; object-fit:cover; }
+      .item-modal-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+      .item-modal-actions > * { width:auto; }
       .quantity-stepper { display:grid; grid-template-columns:76px 1fr 76px; gap:12px; align-items:center; }
       .quantity-stepper input { text-align:center; font-size:1.25rem; font-weight:700; padding-left:12px; padding-right:12px; }
       .step-button { height:58px; padding:0; display:grid; place-items:center; line-height:1; }
@@ -258,6 +267,10 @@ export function renderApp(initialContainerId) {
         .item-title-line h3 { font-size:clamp(2.4rem,10vw,3.2rem); }
         .item-detail-quantity-row { grid-template-columns:46px minmax(66px,auto) 46px; gap:10px; }
         .item-detail-quantity-row .item-quantity-button { width:46px; height:46px; }
+        .item-modal-topline,
+        .item-modal-secondary { grid-template-columns:1fr; }
+        .item-modal-actions { justify-content:space-between; }
+        .item-modal-actions > .save-icon { margin-left:auto; }
         .quantity-stepper { grid-template-columns:64px 1fr 64px; }
       }
       @media (max-width:420px) {
@@ -2083,67 +2096,121 @@ export function renderApp(initialContainerId) {
       }
 
       async function openItemModal({ itemId, containerId, tagToken = null }) {
-        const existing = itemId ? await api("/api/items/" + itemId) : null;
-        const item = existing?.item;
+        let existing = state.activeItemDetail?.item?.id === itemId ? state.activeItemDetail : null;
+        let item = existing?.item || (itemId ? getItem(itemId) : null);
+        if (itemId && !item) {
+          existing = await api("/api/items/" + itemId);
+          item = existing?.item;
+        }
         const returnToContainerAfterSave = Boolean(item && state.stage === "container" && state.activeContainerId);
-        const showLabelButton = item && canShowLabelAction(existing?.tag?.token, existing?.tag?.source);
         const selectedContainerId = item?.container_id || containerId || state.activeContainerId || "";
         const lockContainer = !item && Boolean(selectedContainerId);
+        const selectedContainer = selectedContainerId ? getContainer(selectedContainerId) : null;
         const containerOptions = state.bootstrap.containers.map((container) => (
           '<option value="' + container.id + '"' + (container.id === selectedContainerId ? ' selected' : '') + '>' + escapeHtml(container.name) + '</option>'
         )).join("");
         const containerField = lockContainer
-          ? '<input name="containerId" type="hidden" value="' + escapeAttr(selectedContainerId) + '">'
+          ? '<input name="containerId" type="hidden" value="' + escapeAttr(selectedContainerId) + '"><div class="mini-note">Saving into <strong>' + escapeHtml(selectedContainer?.name || "this container") + '</strong>.</div>'
           : '<label>Container<select name="containerId">' + containerOptions + '</select></label>';
-        const existingPhoto = existing?.photos?.[0] || null;
-        const imageSection =
-          '<div class="stack">' +
-            '<h3 style="margin:0;">Image</h3>' +
-            (existingPhoto
-              ? '<div class="photos-grid">' +
-                  '<div class="photo-card">' +
-                    '<img src="' + getImageUrl(existingPhoto.stored_name, "items") + '" alt="' + escapeHtml(existingPhoto.file_name) + '">' +
-                    '<div class="mini-note" style="margin-top:8px;">' + escapeHtml(existingPhoto.file_name) + '</div>' +
-                  '</div>' +
-                '</div>'
-              : '') +
-            '<div class="file-picker">' +
-              '<input id="item-photo-input" name="photo" type="file" accept="image/*">' +
-              '<label id="item-photo-button" for="item-photo-input" class="secondary file-picker-button">' + (existingPhoto ? "Change Image" : "Add Image") + '</label>' +
-              '<div id="item-photo-name" class="file-picker-name">' + (existingPhoto ? "Current image is set." : "No image selected.") + '</div>' +
-            '</div>' +
-          '</div>';
+        let existingPhoto = existing?.photos?.[0] || null;
+        let resolvedTag = existing?.tag || null;
+        const renderPhotoPreview = () => (
+          existingPhoto
+            ? '<div class="item-modal-preview">' +
+                '<img src="' + getImageUrl(existingPhoto.stored_name, "items") + '" alt="' + escapeHtml(existingPhoto.file_name || item?.name || "Item photo") + '">' +
+                '<div class="mini-note">' + escapeHtml(existingPhoto.file_name || "Current image is set.") + '</div>' +
+              '</div>'
+            : '<div class="mini-note">Add a photo to make this item easier to spot.</div>'
+        );
+        const canShowItemLabel = () => item && canShowLabelAction(resolvedTag?.token || item?.tag_token, resolvedTag?.source || item?.tag_source);
 
         openModal(
           item ? "Edit Item" : "Add Item",
           '<form id="item-modal-form" class="form-grid">' +
-            '<label>Name<input name="name" value="' + escapeAttr(item?.name || "") + '" required></label>' +
-            containerField +
-            '<label class="quantity-field">Quantity' +
-              '<div class="quantity-stepper">' +
-                '<button class="step-button minus" type="button" data-step="-1" aria-label="Decrease quantity">' + minusIconMarkup + '</button>' +
-                '<input name="quantity" type="number" min="1" value="' + (item?.quantity || 1) + '" required>' +
-                '<button class="step-button plus" type="button" data-step="1" aria-label="Increase quantity">' + plusIconMarkup + '</button>' +
+            '<div class="item-modal-layout">' +
+              '<div class="item-modal-topline">' +
+                '<label>Name<input name="name" value="' + escapeAttr(item?.name || "") + '" required></label>' +
+                '<div class="item-modal-section">' +
+                  '<h3>Quantity</h3>' +
+                  '<label class="quantity-field">' +
+                    '<div class="quantity-stepper">' +
+                      '<button class="step-button minus" type="button" data-step="-1" aria-label="Decrease quantity">' + minusIconMarkup + '</button>' +
+                      '<input name="quantity" type="number" min="1" value="' + (item?.quantity || 1) + '" required>' +
+                      '<button class="step-button plus" type="button" data-step="1" aria-label="Increase quantity">' + plusIconMarkup + '</button>' +
+                    '</div>' +
+                  '</label>' +
+                '</div>' +
               '</div>' +
-            '</label>' +
-            '<label>Notes<textarea name="notes">' + escapeHtml(item?.notes || "") + '</textarea></label>' +
-            imageSection +
-            '<div class="button-row">' +
-              (showLabelButton ? '<button id="item-qr-button" class="secondary" type="button">Label</button>' : '') +
-              saveActionButton +
+              '<div class="item-modal-secondary">' +
+                '<div class="item-modal-section">' +
+                  '<h3>Details</h3>' +
+                  '<div class="stack">' +
+                    containerField +
+                    '<label>Notes<textarea name="notes">' + escapeHtml(item?.notes || "") + '</textarea></label>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="item-modal-section">' +
+                  '<h3>Image</h3>' +
+                  '<div id="item-photo-preview-slot">' + renderPhotoPreview() + '</div>' +
+                  '<div class="file-picker">' +
+                    '<input id="item-photo-input" name="photo" type="file" accept="image/*">' +
+                    '<label id="item-photo-button" for="item-photo-input" class="secondary file-picker-button">' + (existingPhoto ? "Change Image" : "Add Image") + '</label>' +
+                    '<div id="item-photo-name" class="file-picker-name">' + (existingPhoto ? "Current image is set." : "No image selected.") + '</div>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+              '<div class="item-modal-actions">' +
+                '<div id="item-label-slot">' + (canShowItemLabel() ? '<button id="item-qr-button" class="secondary" type="button">Label</button>' : '') + '</div>' +
+                saveActionButton +
+              '</div>' +
             '</div>' +
           '</form>',
           (modal) => {
-            if (showLabelButton) {
-              modal.querySelector("#item-qr-button").addEventListener("click", async () => {
+            const labelSlot = modal.querySelector("#item-label-slot");
+            const photoPreviewSlot = modal.querySelector("#item-photo-preview-slot");
+            const photoInput = modal.querySelector("#item-photo-input");
+            const photoName = modal.querySelector("#item-photo-name");
+            const photoButton = modal.querySelector("#item-photo-button");
+            const syncPhotoUi = () => {
+              const hasSelection = photoInput && photoInput.files && photoInput.files[0];
+              const selected = hasSelection
+                ? (photoInput.files[0].name + " (will be optimized)")
+                : (existingPhoto ? "Current image is set." : "No image selected.");
+              if (photoName) {
+                photoName.textContent = selected;
+              }
+              if (photoButton) {
+                photoButton.textContent = hasSelection || existingPhoto ? "Change Image" : "Add Image";
+              }
+              if (!hasSelection && photoPreviewSlot) {
+                photoPreviewSlot.innerHTML = renderPhotoPreview();
+              }
+            };
+            const bindLabelButton = () => {
+              const button = modal.querySelector("#item-qr-button");
+              if (!button || button.dataset.bound === "true" || !item) {
+                return;
+              }
+              button.dataset.bound = "true";
+              button.addEventListener("click", async () => {
                 await openLabelModal({
                   entityType: "item",
                   entityId: item.id,
                   name: item.name,
-                  existingToken: existing?.tag?.token || ""
+                  existingToken: resolvedTag?.token || ""
                 });
               });
-            }
+            };
+            const refreshLabelSlot = () => {
+              if (!labelSlot) {
+                return;
+              }
+              labelSlot.innerHTML = canShowItemLabel()
+                ? '<button id="item-qr-button" class="secondary" type="button">Label</button>'
+                : '';
+              bindLabelButton();
+            };
+            refreshLabelSlot();
             const quantityInput = modal.querySelector('input[name="quantity"]');
             modal.querySelectorAll("[data-step]").forEach((button) => {
               button.addEventListener("click", () => {
@@ -2153,18 +2220,27 @@ export function renderApp(initialContainerId) {
                 quantityInput.dispatchEvent(new Event("input", { bubbles: true }));
               });
             });
-            const photoInput = modal.querySelector("#item-photo-input");
-            const photoName = modal.querySelector("#item-photo-name");
-            const photoButton = modal.querySelector("#item-photo-button");
             if (photoInput && photoName && photoButton) {
-              photoInput.addEventListener("change", () => {
-                const hasSelection = photoInput.files && photoInput.files[0];
-                const selected = hasSelection
-                  ? (photoInput.files[0].name + " (will be optimized)")
-                  : (existingPhoto ? "Current image is set." : "No image selected.");
-                photoName.textContent = selected;
-                photoButton.textContent = hasSelection || existingPhoto ? "Change Image" : "Add Image";
-              });
+              photoInput.addEventListener("change", syncPhotoUi);
+            }
+            syncPhotoUi();
+            if (itemId && !existing) {
+              (async () => {
+                try {
+                  const fetched = await api("/api/items/" + itemId);
+                  if (els.modalRoot.hidden || !modal.isConnected) {
+                    return;
+                  }
+                  existing = fetched;
+                  item = fetched?.item || item;
+                  existingPhoto = fetched?.photos?.[0] || null;
+                  resolvedTag = fetched?.tag || resolvedTag;
+                  syncPhotoUi();
+                  refreshLabelSlot();
+                } catch (error) {
+                  // Keep the fast modal open even if the detail enrichment fails.
+                }
+              })();
             }
 
             modal.querySelector("#item-modal-form").addEventListener("submit", async (event) => {
@@ -2212,7 +2288,7 @@ export function renderApp(initialContainerId) {
                       if (returnToContainerAfterSave) {
                         await openContainer(saved.container_id || form.get("containerId"), false);
                       } else {
-                        await openItem(item.id);
+                        await openItem(saved.id || item.id);
                       }
                     } else {
                       await openContainer(saved.container_id || form.get("containerId"), false);
@@ -2229,7 +2305,7 @@ export function renderApp(initialContainerId) {
                   if (returnToContainerAfterSave) {
                     await openContainer(saved.container_id || form.get("containerId"), false);
                   } else {
-                    await openItem(item.id);
+                    await openItem(saved.id || item.id);
                   }
                 } else {
                   state.scanToken = null;
