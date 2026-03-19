@@ -74,6 +74,9 @@ export function renderApp(initialContainerId) {
       .tile-open:hover { transform:none; box-shadow:none; }
       .tile-thumb { width:100%; aspect-ratio:1.15 / 1; border-radius:18px; overflow:hidden; border:1px solid rgba(24,62,99,.10); background:rgba(255,255,255,.55); box-shadow:0 8px 16px rgba(27,42,63,.08); }
       .tile-thumb img { width:100%; height:100%; object-fit:cover; pointer-events:none; -webkit-touch-callout:none; }
+      .container-tile-open { justify-items:start; }
+      .container-tile-open.has-image { align-content:start; }
+      .container-tile-open.has-image .tile-thumb { width:min(148px, 100%); aspect-ratio:1 / 1; margin:0 auto 2px; }
       .tile-title { font-family:var(--heading-font); font-size:1.9rem; line-height:.98; font-weight:700; letter-spacing:-.06em; }
       .tile-subtitle { font-size:.98rem; color:var(--muted); font-weight:600; }
       .hero { border:1px solid rgba(24,62,99,.08); border-radius:24px; background:linear-gradient(135deg, rgba(253,254,255,.99) 0%, rgba(235,242,249,.98) 100%); padding:36px 32px; display:grid; gap:24px; box-shadow:var(--shadow-soft), inset 0 1px 0 rgba(255,255,255,.72); }
@@ -256,6 +259,7 @@ export function renderApp(initialContainerId) {
         .contents-grid { grid-template-columns:1fr; gap:14px; }
         .tile-card,.tile-open { min-height:0; aspect-ratio:1 / 1; }
         .tile-open { padding:18px 54px 18px 18px; }
+        .container-tile-open.has-image .tile-thumb { width:min(128px, 100%); }
         .tile-title { font-size:1.45rem; }
         .tile-subtitle { font-size:.92rem; }
         .item-row { min-height:0; padding-top:18px; }
@@ -1447,7 +1451,7 @@ export function renderApp(initialContainerId) {
           ? '<div class="section">' +
               '<div class="tile-grid">' + containers.map((container, index) => (
                 '<div class="tile tile-card ' + toneClass(containerTones, index) + '">' +
-                  '<button class="tile-open" type="button" data-open-container="' + container.id + '">' +
+                  '<button class="tile-open container-tile-open' + (container.image_stored_name ? ' has-image' : '') + '" type="button" data-open-container="' + container.id + '">' +
                     (container.image_stored_name
                       ? '<div class="tile-thumb"><img src="' + getImageUrl(container.image_stored_name, "containers") + '" alt="' + escapeHtml(container.name) + '"></div>'
                       : '') +
