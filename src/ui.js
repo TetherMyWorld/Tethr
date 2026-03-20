@@ -1107,7 +1107,11 @@ export function renderApp(initialContainerId) {
       }
 
       function usesTouchTileActions() {
-        return Boolean(window.matchMedia?.("(hover: none), (pointer: coarse)")?.matches || navigator.maxTouchPoints > 0);
+        const hasDesktopHover = Boolean(window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches);
+        if (hasDesktopHover) {
+          return false;
+        }
+        return Boolean(window.matchMedia?.("(hover: none), (pointer: coarse)")?.matches);
       }
 
       function getTileActionHint(noun) {
