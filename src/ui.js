@@ -106,7 +106,7 @@ export function renderApp(initialContainerId) {
       .container-hero-layout { display:grid; grid-template-columns:152px minmax(0, 1fr); gap:22px; align-items:start; }
       .container-hero-layout.no-photo { grid-template-columns:1fr; }
       .container-thumb { width:100%; max-width:152px; aspect-ratio:1 / 1; border-radius:22px; overflow:hidden; border:1px solid rgba(24,62,99,.12); box-shadow:0 10px 22px rgba(27,42,63,.10), inset 0 1px 0 rgba(255,255,255,.7); background:rgba(255,255,255,.55); }
-      .container-thumb img { width:100%; height:100%; object-fit:cover; }
+      .container-thumb img { width:100%; height:100%; object-fit:cover; pointer-events:none; -webkit-touch-callout:none; }
       .container-hero-copy { display:grid; gap:12px; align-content:start; justify-items:start; text-align:left; min-width:0; padding-top:4px; }
       .container-hero-copy .hero-title { justify-items:start; text-align:left; }
       .container-hero-copy .hero-title h3 { font-size:clamp(2.9rem, 5vw, 4.3rem); }
@@ -1638,11 +1638,7 @@ export function renderApp(initialContainerId) {
           : '<div class="empty-state"><h3>No items yet</h3><div class="mini-note">Add the first item to this container.</div></div>';
 
           els.stageContent.innerHTML =
-            '<div class="hero hero-compact ' + heroTone + '">' +
-            '<div class="hero-top"><div class="action-cluster">' +
-              '<button id="container-history-button" class="secondary icon-button" type="button" aria-label="View container history" title="View container history">' + historyIconMarkup + '</button>' +
-              '<button id="edit-container-button" class="secondary icon-button" type="button" aria-label="Edit container" title="Edit container">' + editIconMarkup + '</button>' +
-            '</div></div>' +
+            '<div class="hero hero-compact ' + heroTone + '" data-container-hero-action="' + detail.container.id + '" aria-label="Actions for ' + escapeAttr(detail.container.name) + '">' +
             '<div class="container-hero-layout' + (containerThumb ? "" : " no-photo") + '">' +
               containerThumb +
               '<div class="container-hero-copy">' +
@@ -1665,16 +1661,12 @@ export function renderApp(initialContainerId) {
             '<div class="contents-grid">' + itemRows + '</div>' +
           '</div>';
 
-        document.getElementById("container-history-button").addEventListener("click", async () => {
-          try {
-            const freshDetail = await api("/api/containers/" + detail.container.id);
-            state.activeContainerDetail = freshDetail;
-            openContainerHistoryModal(freshDetail);
-          } catch (error) {
-            showError(error.message || "Could not load container history.");
-          }
-        });
-        document.getElementById("edit-container-button").addEventListener("click", () => openContainerModal({ container: detail.container, defaultLocationId: detail.container.location_id || null }));
+        const heroActionSurface = els.stageContent.querySelector("[data-container-hero-action]");
+        if (heroActionSurface) {
+          attachPressAndHoldAction(heroActionSurface, () => {
+            openContainerActionSheet(detail.container);
+          });
+        }
         document.getElementById("add-item-button").addEventListener("click", () => openItemModal({ itemId: null, containerId: detail.container.id }));
         els.stageContent.querySelectorAll("[data-quantity-delta]").forEach((button) => {
           button.addEventListener("click", async (event) => {
