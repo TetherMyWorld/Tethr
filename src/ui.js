@@ -1135,6 +1135,11 @@ export function renderApp(initialContainerId) {
           : "Right-click a " + label + " for actions.";
       }
 
+      function combineStageHint(primaryText, noun = "tile") {
+        const actionHint = getTileActionHint(noun);
+        return primaryText ? (primaryText + " " + actionHint) : actionHint;
+      }
+
       function attachPressAndHoldAction(target, onHold, options = {}) {
         if (!target || typeof onHold !== "function") {
           return;
@@ -1424,7 +1429,7 @@ export function renderApp(initialContainerId) {
         renderTopbarNav();
         renderStageLevels("places");
         els.stageTitle.textContent = "";
-        els.stageMeta.textContent = getTileActionHint("tile");
+        els.stageMeta.textContent = combineStageHint("Open a place to look inside.", "tile");
         setBreadcrumbs([]);
         els.stageActions.innerHTML =
           '<div class="action-cluster">' +
@@ -1532,13 +1537,10 @@ export function renderApp(initialContainerId) {
         renderTopbarNav();
         renderStageLevels("containers");
         els.stageTitle.textContent = location ? location.name : "No Location";
-        els.stageMeta.textContent = getTileActionHint("tile");
+        els.stageMeta.textContent = combineStageHint("Open a container to look inside.", "tile");
         setBreadcrumbs([]);
         els.stageActions.innerHTML =
           '<div class="action-cluster">' +
-            (location
-              ? '<button id="edit-location-button" class="secondary icon-button" type="button" aria-label="Edit location" title="Edit location">' + editIconMarkup + '</button>'
-              : '') +
             '<button id="add-container-here" class="icon-button add-icon" type="button" aria-label="Add container" title="Add container">' + addIconMarkup + '</button>' +
           '</div>';
 
@@ -1564,9 +1566,6 @@ export function renderApp(initialContainerId) {
           showMessage(saved.name + " created.");
           await refreshAll();
         });
-        if (location) {
-          document.getElementById("edit-location-button").addEventListener("click", () => openLocationModal(location));
-        }
         els.stageContent.querySelectorAll("[data-open-container]").forEach((button) => {
           button.addEventListener("click", () => openContainer(button.dataset.openContainer, true));
         });
@@ -1622,12 +1621,15 @@ export function renderApp(initialContainerId) {
         const detail = state.activeContainerDetail;
         const location = detail.container.location_id ? getLocation(detail.container.location_id) : null;
         const heroTone = toneClassForId(heroTones, detail.container.id);
+        const itemCountLabel = detail.items.length + ' item' + (detail.items.length === 1 ? '' : 's');
         const containerThumb =
           '<div class="container-thumb' + (hasStoredImage(detail.container.image_stored_name) ? '' : ' is-placeholder') + '"><img src="' + getDisplayImageUrl(detail.container.image_stored_name, "containers", detail.container.name) + '" alt="' + escapeHtml(detail.container.name) + '"></div>';
         renderTopbarNav();
-        renderStageLevels("items");
-        els.stageTitle.textContent = location ? location.name : "Containers";
-        els.stageMeta.textContent = "";
+        renderStageLevels("containers");
+        els.stageTitle.textContent = location
+          ? (location.name + " / " + detail.container.name)
+          : detail.container.name;
+        els.stageMeta.textContent = itemCountLabel;
         setBreadcrumbs([]);
         els.stageActions.innerHTML = "";
 
@@ -1661,10 +1663,7 @@ export function renderApp(initialContainerId) {
             '<div class="container-hero-layout' + (containerThumb ? "" : " no-photo") + '">' +
               containerThumb +
               '<div class="container-hero-copy">' +
-                '<div class="hero-title">' +
-                  '<h3>' + escapeHtml(detail.container.name) + '</h3>' +
-                  '<div class="hero-count">' + detail.items.length + ' item' + (detail.items.length === 1 ? '' : 's') + '</div>' +
-                '</div>' +
+                '<div class="hero-count">' + itemCountLabel + '</div>' +
                 (detail.container.notes ? '<div class="hero-notes item-notes">' + escapeHtml(detail.container.notes) + '</div>' : '') +
               '</div>' +
             '</div>' +
