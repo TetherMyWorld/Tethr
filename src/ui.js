@@ -1642,7 +1642,7 @@ export function renderApp(initialContainerId) {
           '</div>' +
           '<div class="section items-section">' +
             '<div class="section-head">' +
-              '<div class="stack" style="gap:6px;">' +
+              '<div style="display:flex; gap:12px; align-items:baseline; flex-wrap:wrap;">' +
                 '<h3>Items</h3>' +
                 '<div class="mini-note">' + getTileActionHint("tile") + '</div>' +
               '</div>' +
