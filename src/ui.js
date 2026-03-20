@@ -82,6 +82,23 @@ export function renderApp(initialContainerId) {
       .tile-open:hover { transform:none; box-shadow:none; }
       .tile-thumb { width:100%; aspect-ratio:1.15 / 1; border-radius:18px; overflow:hidden; border:1px solid rgba(24,62,99,.10); background:rgba(255,255,255,.55); box-shadow:0 8px 16px rgba(27,42,63,.08); }
       .tile-thumb img { width:100%; height:100%; object-fit:cover; pointer-events:none; -webkit-touch-callout:none; }
+      .tile-thumb.is-placeholder,
+      .container-thumb.is-placeholder,
+      .item-thumb.is-placeholder,
+      .item-row-thumb.is-placeholder,
+      .item-photo-chip.is-placeholder {
+        border-color:transparent;
+        background:transparent;
+        box-shadow:none;
+      }
+      .tile-thumb.is-placeholder img,
+      .container-thumb.is-placeholder img,
+      .item-thumb.is-placeholder img,
+      .item-row-thumb.is-placeholder img,
+      .item-photo-chip.is-placeholder img {
+        object-fit:contain;
+        padding:10px;
+      }
       .container-tile-open { justify-items:start; }
       .container-tile-open.has-image { align-content:start; }
       .container-tile-open.has-image .tile-thumb { width:min(148px, 100%); aspect-ratio:1 / 1; margin:0 auto 2px; }
@@ -397,6 +414,10 @@ export function renderApp(initialContainerId) {
         modalRoot: document.getElementById("modal-root")
       };
 
+      function hasStoredImage(storedName) {
+        return Boolean(String(storedName || "").trim());
+      }
+
       function getImageUrl(storedName, category = "items") {
         const cleanName = String(storedName || "").trim();
         if (!cleanName) {
@@ -409,12 +430,10 @@ export function renderApp(initialContainerId) {
         const isContainer = category === "containers";
         const typeLabel = escapeHtml(isContainer ? "Container" : "Item");
         const icon = isContainer
-          ? '<path d="M92 118 160 86l68 32-68 34Z" fill="#e7eef6" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/><path d="M92 118v76l68 40v-82Z" fill="#e7eef6" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/><path d="M228 118v76l-68 40v-82Z" fill="#e7eef6" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/>'
-          : '<path d="M171 86c12-15 31-20 47-13-11 10-22 16-36 18" fill="none" stroke="#2a4f78" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M160 110c18-17 50-15 62 8 10 20 6 44-2 64-10 25-28 49-60 49-33 0-51-24-61-49-8-20-12-44-2-64 12-23 44-25 63-8Z" fill="#e7eef6" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/>';
+          ? '<path d="M98 126 160 94l62 32-62 32Z" fill="none" stroke="#2a4f78" stroke-width="12" stroke-linejoin="round"/><path d="M98 126v68l62 34v-70Z" fill="none" stroke="#2a4f78" stroke-width="12" stroke-linejoin="round"/><path d="M222 126v68l-62 34v-70Z" fill="none" stroke="#2a4f78" stroke-width="12" stroke-linejoin="round"/>'
+          : '<path d="M170 96c10-13 27-18 41-12-10 9-19 14-31 16" fill="none" stroke="#2a4f78" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M160 116c17-16 46-14 57 8 9 18 5 40-2 59-9 23-25 44-55 44s-46-21-55-44c-7-19-11-41-2-59 11-22 40-24 57-8Z" fill="none" stroke="#2a4f78" stroke-width="12" stroke-linejoin="round"/>';
         const svg =
           '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-label="' + typeLabel + ' placeholder">' +
-            '<rect width="320" height="320" rx="40" fill="#f7fbff"/>' +
-            '<rect x="18" y="18" width="284" height="284" rx="32" fill="#eef5fb" stroke="#c6d5e5" stroke-width="4"/>' +
             icon +
           '</svg>';
         return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
@@ -1527,7 +1546,7 @@ export function renderApp(initialContainerId) {
           ? '<div class="tile-grid">' + containers.map((container, index) => (
                 '<div class="tile tile-card ' + toneClass(containerTones, index) + '">' +
                   '<button class="tile-open container-tile-open has-image" type="button" data-open-container="' + container.id + '">' +
-                    '<div class="tile-thumb"><img src="' + getDisplayImageUrl(container.image_stored_name, "containers", container.name) + '" alt="' + escapeHtml(container.name) + '"></div>' +
+                    '<div class="tile-thumb' + (hasStoredImage(container.image_stored_name) ? '' : ' is-placeholder') + '"><img src="' + getDisplayImageUrl(container.image_stored_name, "containers", container.name) + '" alt="' + escapeHtml(container.name) + '"></div>' +
                     '<div class="tile-title">' + escapeHtml(container.name) + '</div>' +
                     '<div class="tile-subtitle">' + (itemsMap.get(container.id) || 0) + ' item' + ((itemsMap.get(container.id) || 0) === 1 ? '' : 's') + '</div>' +
                   '</button>' +
@@ -1604,7 +1623,7 @@ export function renderApp(initialContainerId) {
         const location = detail.container.location_id ? getLocation(detail.container.location_id) : null;
         const heroTone = toneClassForId(heroTones, detail.container.id);
         const containerThumb =
-          '<div class="container-thumb"><img src="' + getDisplayImageUrl(detail.container.image_stored_name, "containers", detail.container.name) + '" alt="' + escapeHtml(detail.container.name) + '"></div>';
+          '<div class="container-thumb' + (hasStoredImage(detail.container.image_stored_name) ? '' : ' is-placeholder') + '"><img src="' + getDisplayImageUrl(detail.container.image_stored_name, "containers", detail.container.name) + '" alt="' + escapeHtml(detail.container.name) + '"></div>';
         renderTopbarNav();
         renderStageLevels("items");
         els.stageTitle.textContent = location ? location.name : "Containers";
@@ -1616,7 +1635,7 @@ export function renderApp(initialContainerId) {
           ? detail.items.map((item, index) => (
               '<div class="item-card">' +
                 '<div class="item-row ' + toneClass(itemTones, index) + (state.revealedItemId === item.id ? ' is-target' : '') + '" data-item-id="' + item.id + '" tabindex="0" role="group" aria-label="Actions for ' + escapeAttr(item.name) + '">' +
-                  '<div class="item-row-thumb"><img src="' + getDisplayImageUrl(item.thumbnail_stored_name, "items", item.name) + '" alt="' + escapeHtml(item.name) + '"></div>' +
+                  '<div class="item-row-thumb' + (hasStoredImage(item.thumbnail_stored_name) ? '' : ' is-placeholder') + '"><img src="' + getDisplayImageUrl(item.thumbnail_stored_name, "items", item.name) + '" alt="' + escapeHtml(item.name) + '"></div>' +
                   '<div class="item-row-body">' +
                     '<div class="item-row-header">' +
                       '<div style="display:grid; gap:10px; width:100%;">' +
