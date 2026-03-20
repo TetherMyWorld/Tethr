@@ -1015,6 +1015,18 @@ function getContainer(id) {
     `SELECT c.id, c.workspace_id, c.location_id, c.name, c.slug, c.type, c.description, c.notes, c.rfid_tag_id,
             c.image_file_name, c.image_stored_name, c.image_mime_type, c.image_size_bytes,
             c.created_at, c.updated_at,
+            (
+              SELECT t.token
+              FROM tags t
+              WHERE t.workspace_id = c.workspace_id AND t.entity_type = 'container' AND t.entity_id = c.id
+              LIMIT 1
+            ) AS tag_token,
+            (
+              SELECT t.source
+              FROM tags t
+              WHERE t.workspace_id = c.workspace_id AND t.entity_type = 'container' AND t.entity_id = c.id
+              LIMIT 1
+            ) AS tag_source,
             l.name AS location_name
      FROM containers c
      LEFT JOIN locations l ON l.id = c.location_id
@@ -1036,6 +1048,18 @@ function extractRecordIdFromSlugId(slugId) {
 function getItem(id) {
   return db.prepare(
     `SELECT i.id, i.workspace_id, i.container_id, i.name, i.description, i.notes, i.quantity, i.created_at, i.updated_at,
+            (
+              SELECT t.token
+              FROM tags t
+              WHERE t.workspace_id = i.workspace_id AND t.entity_type = 'item' AND t.entity_id = i.id
+              LIMIT 1
+            ) AS tag_token,
+            (
+              SELECT t.source
+              FROM tags t
+              WHERE t.workspace_id = i.workspace_id AND t.entity_type = 'item' AND t.entity_id = i.id
+              LIMIT 1
+            ) AS tag_source,
             c.name AS container_name, c.location_id, l.name AS location_name
      FROM items i
      JOIN containers c ON c.id = i.container_id

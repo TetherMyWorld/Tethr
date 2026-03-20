@@ -232,7 +232,14 @@ export async function handleRequest(req, res) {
       ensureAuthenticated(session);
 
       if (req.method === "POST" && url.pathname === "/api/tags") {
-        return sendJson(res, 201, createTag(await readJson(req)));
+        const tag = createTag(await readJson(req));
+        const syncStatus = session
+          ? await syncTagToSupabase(session, tag)
+          : { synced: false, reason: "No signed-in session." };
+        return sendJson(res, 201, {
+          ...tag,
+          supabaseSync: syncStatus
+        });
       }
 
       if (req.method === "GET" && url.pathname.startsWith("/api/tags/")) {
@@ -243,7 +250,14 @@ export async function handleRequest(req, res) {
 
       if (req.method === "PATCH" && url.pathname.startsWith("/api/tags/")) {
         const token = decodeURIComponent(url.pathname.split("/")[3] || "");
-        return sendJson(res, 200, assignTag(token, await readJson(req)));
+        const tag = assignTag(token, await readJson(req));
+        const syncStatus = session
+          ? await syncTagToSupabase(session, tag)
+          : { synced: false, reason: "No signed-in session." };
+        return sendJson(res, 200, {
+          ...tag,
+          supabaseSync: syncStatus
+        });
       }
 
       if (req.method === "POST" && url.pathname === "/api/locations") {
@@ -1178,6 +1192,38 @@ async function syncContainerToSupabase(session, container) {
     return { synced: true };
   } catch (error) {
     console.error("Supabase container sync failed:", error);
+    return {
+      synced: false,
+      reason: String(error.message || error)
+    };
+  }
+}
+
+async function syncTagToSupabase(session, tag) {
+  if (!supabaseConfigured) {
+    return { synced: false, reason: "Supabase is not configured." };
+  }
+
+  if (!tag?.id || !tag?.token) {
+    return { synced: false, reason: "Tag is missing required fields." };
+  }
+
+  try {
+    await syncSessionCoreToSupabase(session);
+    await upsertSupabaseRow("tags", {
+      id: tag.id,
+      workspace_id: session.workspace.id,
+      token: tag.token,
+      status: tag.status || "unassigned",
+      source: tag.source || "generated",
+      entity_type: tag.entityType || null,
+      entity_id: tag.entityId || null,
+      created_at: tag.createdAt || new Date().toISOString(),
+      updated_at: tag.updatedAt || new Date().toISOString()
+    }, "id");
+    return { synced: true };
+  } catch (error) {
+    console.error("Supabase tag sync failed:", error);
     return {
       synced: false,
       reason: String(error.message || error)
