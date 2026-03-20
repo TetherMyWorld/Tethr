@@ -1106,6 +1106,17 @@ export function renderApp(initialContainerId) {
         return list[Math.abs(hash) % list.length];
       }
 
+      function usesTouchTileActions() {
+        return Boolean(window.matchMedia?.("(hover: none), (pointer: coarse)")?.matches || navigator.maxTouchPoints > 0);
+      }
+
+      function getTileActionHint(noun) {
+        const label = noun || "tile";
+        return usesTouchTileActions()
+          ? "Press and hold a " + label + " for actions."
+          : "Right-click a " + label + " for actions.";
+      }
+
       function attachPressAndHoldAction(target, onHold, options = {}) {
         if (!target || typeof onHold !== "function") {
           return;
@@ -1160,14 +1171,12 @@ export function renderApp(initialContainerId) {
           }
         };
 
-        target.addEventListener("touchstart", startHold, { passive: true });
-        target.addEventListener("touchmove", maybeCancelHold, { passive: true });
-        target.addEventListener("touchend", clearHold, { passive: true });
-        target.addEventListener("touchcancel", clearHold, { passive: true });
-        target.addEventListener("mousedown", startHold);
-        target.addEventListener("mousemove", maybeCancelHold);
-        target.addEventListener("mouseup", clearHold);
-        target.addEventListener("mouseleave", clearHold);
+        if (usesTouchTileActions()) {
+          target.addEventListener("touchstart", startHold, { passive: true });
+          target.addEventListener("touchmove", maybeCancelHold, { passive: true });
+          target.addEventListener("touchend", clearHold, { passive: true });
+          target.addEventListener("touchcancel", clearHold, { passive: true });
+        }
         target.addEventListener("contextmenu", (event) => {
           if (shouldIgnore(event)) {
             return;
@@ -1436,7 +1445,7 @@ export function renderApp(initialContainerId) {
       function renderLocationsStage() {
         renderStageLevels("places");
         els.stageTitle.textContent = "Places";
-        els.stageMeta.textContent = "Tap a place to open it. Press and hold a tile for actions.";
+        els.stageMeta.textContent = "Tap a place to open it. " + getTileActionHint("tile");
         setBreadcrumbs([]);
         els.stageActions.innerHTML =
           '<div class="action-cluster">' +
@@ -1543,7 +1552,7 @@ export function renderApp(initialContainerId) {
         renderTopbarNav();
         renderStageLevels("containers");
         els.stageTitle.textContent = location ? location.name : "No Location";
-        els.stageMeta.textContent = "Tap a container to open it. Press and hold a tile for actions.";
+        els.stageMeta.textContent = "Tap a container to open it. " + getTileActionHint("tile");
         setBreadcrumbs([]);
         els.stageActions.innerHTML =
           '<div class="action-cluster">' +
@@ -1633,7 +1642,7 @@ export function renderApp(initialContainerId) {
         renderTopbarNav();
         renderStageLevels("items");
         els.stageTitle.textContent = location ? (location.name + " / " + detail.container.name) : detail.container.name;
-        els.stageMeta.textContent = "Tap an item to open it. Press and hold a tile for actions.";
+        els.stageMeta.textContent = "Tap an item to open it. " + getTileActionHint("tile");
         setBreadcrumbs([]);
         els.stageActions.innerHTML = "";
 
