@@ -2363,7 +2363,10 @@ export function renderApp(initialContainerId) {
         const containerOptions = state.bootstrap.containers
           .filter((container) => container.id !== item.container_id)
           .map((container) => (
-            '<option value="' + container.id + '">' + escapeHtml(container.name) + '</option>'
+            '<option value="' + container.id + '">' +
+              escapeHtml(container.name) +
+              ' (' + escapeHtml(container.location_name || "No Place") + ')' +
+            '</option>'
           )).join("");
 
         if (!containerOptions) {
