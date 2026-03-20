@@ -1252,7 +1252,7 @@ export function renderApp(initialContainerId) {
             return '<div class="action-compass-spacer"></div>';
           }
           const disabledAttr = options.requireRelease ? ' disabled' : '';
-          return '<button class="action-compass-button ' + extraClass + (action.danger ? ' danger' : ' secondary') + '" type="button" data-action-compass="' + position + '">' +
+          return '<button class="action-compass-button ' + extraClass + (action.danger ? ' danger' : ' secondary') + '" type="button" data-action-compass="' + position + '" aria-label="' + escapeAttr(action.label) + '" title="' + escapeAttr(action.label) + '">' +
             (action.icon || ('<span class="compass-glyph">' + escapeHtml(action.label) + '</span>')) +
             '<span class="sr-only">' + escapeHtml(action.label) + '</span>' +
           '</button>'.replace('>', disabledAttr + '>');
