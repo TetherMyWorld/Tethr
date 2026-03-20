@@ -1382,7 +1382,7 @@ export function renderApp(initialContainerId) {
         renderTopbarNav();
         renderStageLevels("places");
         els.stageTitle.textContent = "Places";
-        els.stageMeta.textContent = "Tap a place to open it. " + getTileActionHint("tile");
+        els.stageMeta.textContent = getTileActionHint("tile");
         setBreadcrumbs([]);
         els.stageActions.innerHTML =
           '<div class="action-cluster">' +
@@ -1490,7 +1490,7 @@ export function renderApp(initialContainerId) {
         renderTopbarNav();
         renderStageLevels("containers");
         els.stageTitle.textContent = location ? location.name : "No Location";
-        els.stageMeta.textContent = "Tap a container to open it. " + getTileActionHint("tile");
+        els.stageMeta.textContent = getTileActionHint("tile");
         setBreadcrumbs([]);
         els.stageActions.innerHTML =
           '<div class="action-cluster">' +
@@ -1501,8 +1501,7 @@ export function renderApp(initialContainerId) {
           '</div>';
 
         els.stageContent.innerHTML = infoBlocks.join("") + (containers.length
-          ? '<div class="section">' +
-              '<div class="tile-grid">' + containers.map((container, index) => (
+          ? '<div class="tile-grid">' + containers.map((container, index) => (
                 '<div class="tile tile-card ' + toneClass(containerTones, index) + '">' +
                   '<button class="tile-open container-tile-open' + (container.image_stored_name ? ' has-image' : '') + '" type="button" data-open-container="' + container.id + '">' +
                     (container.image_stored_name
@@ -1512,11 +1511,8 @@ export function renderApp(initialContainerId) {
                     '<div class="tile-subtitle">' + (itemsMap.get(container.id) || 0) + ' item' + ((itemsMap.get(container.id) || 0) === 1 ? '' : 's') + '</div>' +
                   '</button>' +
                 '</div>'
-              )).join("") + '</div>' +
-            '</div>'
-          : '<div class="section">' +
-              '<div class="empty-state"><h3>No containers yet</h3><div class="mini-note">Add a container to this location.</div></div>' +
-            '</div>');
+              )).join("") + '</div>'
+          : '<div class="empty-state"><h3>No containers yet</h3><div class="mini-note">Add a container to this location.</div></div>');
         document.getElementById("add-container-here").addEventListener("click", async () => {
           const saved = await api("/api/containers", {
             method: "POST",
