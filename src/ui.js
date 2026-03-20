@@ -1382,6 +1382,7 @@ export function renderApp(initialContainerId) {
       }
 
       function renderLocationsStage() {
+        renderTopbarNav();
         renderStageLevels("places");
         els.stageTitle.textContent = "Places";
         els.stageMeta.textContent = "Tap a place to open it. " + getTileActionHint("tile");
@@ -1391,7 +1392,8 @@ export function renderApp(initialContainerId) {
             '<button id="stage-add-location" class="icon-button add-icon" type="button" aria-label="Add location" title="Add location">' + addIconMarkup + '</button>' +
           '</div>';
         const noLocationCount = containersForLocation(null).length;
-        const locationTiles = state.bootstrap.locations.map((location, index) => (
+        const safeLocations = Array.isArray(state.bootstrap?.locations) ? state.bootstrap.locations : [];
+        const locationTiles = safeLocations.map((location, index) => (
           '<div class="tile tile-card ' + toneClass(locationTones, index) + '">' +
             '<button class="tile-open" type="button" data-open-location="' + location.id + '">' +
               '<div class="tile-title">' + escapeHtml(location.name) + '</div>' +
