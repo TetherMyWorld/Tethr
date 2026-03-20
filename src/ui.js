@@ -149,9 +149,10 @@ export function renderApp(initialContainerId) {
       .contents-grid { grid-template-columns:repeat(auto-fit,minmax(220px,248px)); gap:16px; align-items:stretch; justify-content:start; }
       .item-card { position:relative; width:100%; max-width:248px; }
       .item-row,.photo-card { border:1px solid rgba(24,62,99,.08); border-radius:22px; background:#fcfdff; padding:20px; box-shadow:0 12px 24px rgba(27,42,63,.06), inset 0 1px 0 rgba(255,255,255,.72); }
-      .item-row { display:grid; gap:10px; color:var(--ink); text-align:left; min-height:0; align-content:start; padding:18px; cursor:pointer; -webkit-touch-callout:none; user-select:none; -webkit-user-select:none; }
+      .item-row { display:grid; gap:10px; color:var(--ink); text-align:left; min-height:0; align-content:start; padding:18px; cursor:default; -webkit-touch-callout:none; user-select:none; -webkit-user-select:none; }
       .item-row:hover { transform:none; }
       .item-row:focus-visible { outline:none; box-shadow:0 0 0 4px rgba(22,80,140,.10), 0 12px 24px rgba(27,42,63,.06), inset 0 1px 0 rgba(255,255,255,.72); }
+      .item-row.is-target { box-shadow:0 0 0 4px rgba(29,140,85,.16), 0 16px 30px rgba(29,140,85,.16), inset 0 1px 0 rgba(255,255,255,.72); border-color:rgba(29,140,85,.34); }
       .item-row-thumb { width:100%; aspect-ratio:1 / 1; border-radius:18px; overflow:hidden; border:1px solid rgba(24,62,99,.10); background:rgba(255,255,255,.55); box-shadow:0 8px 16px rgba(27,42,63,.08); }
       .item-row-thumb img { width:100%; height:100%; object-fit:cover; pointer-events:none; -webkit-touch-callout:none; }
       .item-row-body { display:grid; gap:10px; }
@@ -360,6 +361,7 @@ export function renderApp(initialContainerId) {
         activeContainerDetail: null,
         activeItemId: null,
         activeItemDetail: null,
+        revealedItemId: null,
         scanToken: null,
         pendingScanAction: null,
         searchResults: null,
@@ -584,7 +586,7 @@ export function renderApp(initialContainerId) {
             '<div class="session-name">' + escapeHtml(user.name || "Signed in") + '</div>' +
             '<div class="session-email">' + escapeHtml(user.email || "") + '</div>' +
           '</button>';
-        const showBack = state.stage === "containers" || state.stage === "container" || state.stage === "item" || state.stage === "simulatedScan";
+        const showBack = state.stage === "containers" || state.stage === "container" || state.stage === "simulatedScan";
         if (!showBack) {
           els.topbarNav.innerHTML =
             '<div class="action-cluster">' +
@@ -593,7 +595,7 @@ export function renderApp(initialContainerId) {
           document.getElementById("topbar-account-button").addEventListener("click", openAccountModal);
           return;
         }
-        const showHome = state.stage === "container" || state.stage === "item";
+        const showHome = state.stage === "container";
         els.topbarNav.innerHTML =
           '<div class="action-cluster">' +
             sessionBadgeHtml +
@@ -603,18 +605,10 @@ export function renderApp(initialContainerId) {
             '<button id="topbar-back-button" class="secondary icon-button nav-icon back-icon" type="button" aria-label="Back" title="Back">&#8617;</button>' +
           '</div>';
         document.getElementById("topbar-back-button").addEventListener("click", () => {
-          if (state.stage === "item") {
-            state.stage = "container";
-            state.activeItemId = null;
-            state.activeItemDetail = null;
-            renderOverview();
-            renderStage();
-            return;
-          }
           if (state.stage === "simulatedScan") {
             if (state.activeItemDetail) {
               state.pendingScanAction = null;
-              state.stage = "item";
+              state.stage = "container";
               renderOverview();
               renderStage();
               return;
@@ -708,7 +702,9 @@ export function renderApp(initialContainerId) {
         }
         if (state.stage === "item") {
           renderItemStage();
+          return;
         }
+        goToLocations(false);
       }
 
       function renderStageLevels(activeLevel) {
@@ -722,8 +718,7 @@ export function renderApp(initialContainerId) {
           null;
         const levels = [
           { key: "places", label: "Places", onClick: activeLevel !== "places" ? () => goToLocations(true) : null },
-          { key: "containers", label: "Containers", onClick: activeLevel === "items" ? () => openLocation(selectedLocationId, true) : null },
-          { key: "items", label: "Items" }
+          { key: "containers", label: "Containers", onClick: activeLevel !== "containers" ? () => openLocation(selectedLocationId, true) : null }
         ];
         els.stageLevels.innerHTML = levels.map((level, index) => (
           '<span class="stage-level' +
@@ -831,6 +826,7 @@ export function renderApp(initialContainerId) {
         state.activeContainerDetail = null;
         state.activeItemId = null;
         state.activeItemDetail = null;
+        state.revealedItemId = null;
         state.scanToken = null;
         state.pendingScanAction = null;
         if (push) {
@@ -912,6 +908,7 @@ export function renderApp(initialContainerId) {
           state.activeContainerDetail = null;
           state.activeItemId = null;
           state.activeItemDetail = null;
+          state.revealedItemId = null;
           renderStage();
           return;
         }
@@ -927,7 +924,7 @@ export function renderApp(initialContainerId) {
         }
         if (result.entityType === "item") {
           state.scanToken = cleanToken;
-          await openItem(result.entityId);
+          await revealItemInContainer(result.entityId, { pushUrl: false });
         }
       }
 
@@ -1548,7 +1545,7 @@ export function renderApp(initialContainerId) {
         });
       }
 
-      async function openContainer(containerId, pushUrl) {
+      async function openContainer(containerId, pushUrl, revealedItemId = null) {
         const detail = await api("/api/containers/" + containerId);
         state.stage = "container";
         state.selectedLocationId = detail.container.location_id || null;
@@ -1556,10 +1553,22 @@ export function renderApp(initialContainerId) {
         state.activeContainerDetail = detail;
         state.activeItemId = null;
         state.activeItemDetail = null;
+        state.revealedItemId = revealedItemId;
         if (pushUrl) {
           history.pushState({}, "", "/containers/" + detail.container.slug + "-" + detail.container.id);
         }
         renderStage();
+      }
+
+      async function revealItemInContainer(itemId, options = {}) {
+        const cachedItem = getItem(itemId);
+        const detail = cachedItem?.container_id ? null : await api("/api/items/" + itemId);
+        const item = detail?.item || cachedItem;
+        const containerId = options.containerId || item?.container_id;
+        if (!containerId) {
+          throw new Error("Could not find that item.");
+        }
+        await openContainer(containerId, options.pushUrl ?? false, itemId);
       }
 
       function renderContainerStage() {
@@ -1581,16 +1590,16 @@ export function renderApp(initialContainerId) {
           ? '<div class="container-thumb"><img src="' + getImageUrl(detail.container.image_stored_name, "containers") + '" alt="' + escapeHtml(detail.container.name) + '"></div>'
           : "";
         renderTopbarNav();
-        renderStageLevels("items");
-        els.stageTitle.textContent = location ? (location.name + " / " + detail.container.name) : detail.container.name;
-        els.stageMeta.textContent = "Tap an item to open it. " + getTileActionHint("tile");
+        renderStageLevels("containers");
+        els.stageTitle.textContent = location ? location.name : "Containers";
+        els.stageMeta.textContent = "Use the quantity buttons. " + getTileActionHint("tile");
         setBreadcrumbs([]);
         els.stageActions.innerHTML = "";
 
         const itemRows = detail.items.length
           ? detail.items.map((item, index) => (
               '<div class="item-card">' +
-                '<div class="item-row ' + toneClass(itemTones, index) + '" data-open-item="' + item.id + '" tabindex="0" role="button" aria-label="Open ' + escapeAttr(item.name) + '">' +
+                '<div class="item-row ' + toneClass(itemTones, index) + (state.revealedItemId === item.id ? ' is-target' : '') + '" data-item-id="' + item.id + '" tabindex="0" role="group" aria-label="Actions for ' + escapeAttr(item.name) + '">' +
                   (item.thumbnail_stored_name
                     ? '<div class="item-row-thumb"><img src="' + getImageUrl(item.thumbnail_stored_name, "items") + '" alt="' + escapeHtml(item.name) + '"></div>'
                     : '') +
@@ -1650,21 +1659,6 @@ export function renderApp(initialContainerId) {
         });
         document.getElementById("edit-container-button").addEventListener("click", () => openContainerModal({ container: detail.container, defaultLocationId: detail.container.location_id || null }));
         document.getElementById("add-item-button").addEventListener("click", () => openItemModal({ itemId: null, containerId: detail.container.id }));
-        els.stageContent.querySelectorAll("[data-open-item]").forEach((button) => {
-          button.addEventListener("click", (event) => {
-            if (event.target.closest("[data-quantity-delta]")) {
-              return;
-            }
-            event.preventDefault();
-            openItem(button.dataset.openItem);
-          });
-          button.addEventListener("keydown", (event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              openItem(button.dataset.openItem);
-            }
-          });
-        });
         els.stageContent.querySelectorAll("[data-quantity-delta]").forEach((button) => {
           button.addEventListener("click", async (event) => {
             event.preventDefault();
@@ -1673,100 +1667,47 @@ export function renderApp(initialContainerId) {
             await adjustItemQuantity(button.dataset.itemId, delta);
           });
         });
-        els.stageContent.querySelectorAll("[data-open-item]").forEach((button) => {
-          const item = detail.items.find((entry) => entry.id === button.dataset.openItem);
+        els.stageContent.querySelectorAll("[data-item-id]").forEach((button) => {
+          const item = detail.items.find((entry) => entry.id === button.dataset.itemId);
           if (!item) {
             return;
           }
+          button.addEventListener("keydown", (event) => {
+            if ((event.key === "Enter" || event.key === " ") && !(event.target instanceof HTMLElement && event.target.closest("[data-quantity-delta]"))) {
+              event.preventDefault();
+              openItemActionSheet(item);
+            }
+          });
           attachPressAndHoldAction(button, () => {
             openItemActionSheet(item);
           }, {
             cancelSelector: "[data-quantity-delta]"
           });
         });
+        if (state.revealedItemId) {
+          const revealedRow = els.stageContent.querySelector('[data-item-id="' + state.revealedItemId + '"]');
+          if (revealedRow) {
+            requestAnimationFrame(() => {
+              revealedRow.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+            });
+          }
+        }
       }
 
       async function openItem(itemId) {
-        const detail = await api("/api/items/" + itemId);
-        state.stage = "item";
-        state.activeItemId = itemId;
-        state.activeItemDetail = detail;
-        renderStage();
+        await revealItemInContainer(itemId, { pushUrl: false });
       }
 
       function renderItemStage() {
-        if (!state.activeItemDetail) {
-          state.stage = state.activeContainerDetail ? "container" : "locations";
-          renderStage();
+        if (state.activeItemDetail?.item?.id) {
+          revealItemInContainer(state.activeItemDetail.item.id, {
+            containerId: state.activeItemDetail.item.container_id,
+            pushUrl: false
+          }).catch((error) => showMessage(error.message || "Could not find that item.", true));
           return;
         }
-
-        const detail = state.activeItemDetail;
-        const container = getContainer(detail.item.container_id);
-        const location = container?.location_id ? getLocation(container.location_id) : null;
-        const heroTone = toneClassForId(heroTones, detail.item.id);
-        const detailTone = toneClassForId(detailTones, detail.item.id);
-        renderTopbarNav();
-        renderStageLevels("items");
-        els.stageTitle.textContent = detail.item.container_name + " / " + detail.item.name;
-        els.stageMeta.textContent = "Adjust, move, label, or review this item.";
-        setBreadcrumbs([]);
-        els.stageActions.innerHTML = "";
-
-        const primaryPhoto = detail.photos[0] || null;
-        const thumbHtml = primaryPhoto
-          ? '<div class="item-thumb"><img src="' + getImageUrl(primaryPhoto.stored_name, "items") + '" alt="' + escapeHtml(primaryPhoto.file_name) + '"></div>'
-          : "";
-        const photoStrip = detail.photos.length > 1
-          ? '<div class="item-photo-strip">' + detail.photos.map((photo) => (
-              '<div class="item-photo-chip"><img src="' + getImageUrl(photo.stored_name, "items") + '" alt="' + escapeHtml(photo.file_name) + '"></div>'
-            )).join("") + '</div>'
-          : "";
-        const notesHtml = detail.item.notes ? '<div class="hero-notes item-notes">' + escapeHtml(detail.item.notes) + '</div>' : "";
-        const copyHtml =
-          '<div class="item-hero-copy">' +
-            '<div class="item-hero-header">' +
-              '<div class="item-title-line">' +
-                '<h3>' + escapeHtml(detail.item.name) + '</h3>' +
-                '<div class="item-detail-quantity-row">' +
-                  '<button class="item-quantity-button minus" type="button" data-item-detail-quantity-delta="-1" data-item-id="' + detail.item.id + '" aria-label="Decrease quantity for ' + escapeAttr(detail.item.name) + '">' + minusIconMarkup + '</button>' +
-                  '<div class="hero-count item-quantity-display">' + detail.item.quantity + '</div>' +
-                  '<button class="item-quantity-button plus" type="button" data-item-detail-quantity-delta="1" data-item-id="' + detail.item.id + '" aria-label="Increase quantity for ' + escapeAttr(detail.item.name) + '">' + plusIconMarkup + '</button>' +
-                '</div>' +
-              '</div>' +
-              '<div class="action-cluster">' +
-                '<button id="item-history-button" class="secondary icon-button" type="button" aria-label="View item history" title="View item history">' + historyIconMarkup + '</button>' +
-                '<button id="edit-item-button" class="secondary icon-button" type="button" aria-label="Edit item" title="Edit item">' + editIconMarkup + '</button>' +
-              '</div>' +
-            '</div>' +
-            notesHtml +
-            photoStrip +
-          '</div>';
-
-        els.stageContent.innerHTML =
-          '<div class="hero item-hero ' + heroTone + '">' +
-            '<div class="item-hero-layout' + (primaryPhoto ? "" : " no-photo") + '">' +
-              thumbHtml +
-              copyHtml +
-            '</div>' +
-          '</div>';
-        document.getElementById("item-history-button").addEventListener("click", async () => {
-          try {
-            const freshDetail = await api("/api/items/" + detail.item.id);
-            state.activeItemDetail = freshDetail;
-            openItemHistoryModal(freshDetail);
-          } catch (error) {
-            showError(error.message || "Could not load item history.");
-          }
-        });
-        els.stageContent.querySelectorAll("[data-item-detail-quantity-delta]").forEach((button) => {
-          button.addEventListener("click", async (event) => {
-            event.preventDefault();
-            const delta = Number.parseInt(button.dataset.itemDetailQuantityDelta, 10) || 0;
-            await adjustItemQuantity(button.dataset.itemId, delta);
-          });
-        });
-        document.getElementById("edit-item-button").addEventListener("click", () => openItemModal({ itemId: detail.item.id, containerId: detail.item.container_id }));
+        state.stage = state.activeContainerDetail ? "container" : "locations";
+        renderStage();
       }
 
       function renderSearchStage() {
@@ -1828,7 +1769,7 @@ export function renderApp(initialContainerId) {
         els.stageContent.querySelectorAll("[data-search-item]").forEach((button) => {
           button.addEventListener("click", async () => {
             clearSearch();
-            await openItem(button.dataset.searchItem);
+            await revealItemInContainer(button.dataset.searchItem, { pushUrl: true });
           });
         });
       }
@@ -2075,6 +2016,7 @@ export function renderApp(initialContainerId) {
                 state.activeContainerDetail = null;
                 state.activeItemId = null;
                 state.activeItemDetail = null;
+                state.revealedItemId = null;
                 history.pushState({}, "", "/");
                 await refreshAll();
               } finally {
@@ -2127,7 +2069,6 @@ export function renderApp(initialContainerId) {
           existing = await api("/api/items/" + itemId);
           item = existing?.item;
         }
-        const returnToContainerAfterSave = Boolean(item && state.stage === "container" && state.activeContainerId);
         const selectedContainerId = item?.container_id || containerId || state.activeContainerId || "";
         const lockContainer = !item && Boolean(selectedContainerId);
         const selectedContainer = selectedContainerId ? getContainer(selectedContainerId) : null;
@@ -2309,15 +2250,7 @@ export function renderApp(initialContainerId) {
                     showMessage(item
                       ? "Item saved, but the image upload failed."
                       : "Item created, but the image upload failed.", true);
-                    if (item) {
-                      if (returnToContainerAfterSave) {
-                        await openContainer(saved.container_id || form.get("containerId"), false);
-                      } else {
-                        await openItem(saved.id || item.id);
-                      }
-                    } else {
-                      await openContainer(saved.container_id || form.get("containerId"), false);
-                    }
+                    await openContainer(saved.container_id || form.get("containerId"), false, saved.id || item?.id || null);
                     return;
                   }
                 }
@@ -2326,16 +2259,8 @@ export function renderApp(initialContainerId) {
                   ? (photoSaved ? "Item and image updated." : "Item updated.")
                   : (tagToken ? "Item created and tag assigned." : "Item created."));
                 await refreshAll();
-                if (item) {
-                  if (returnToContainerAfterSave) {
-                    await openContainer(saved.container_id || form.get("containerId"), false);
-                  } else {
-                    await openItem(saved.id || item.id);
-                  }
-                } else {
-                  state.scanToken = null;
-                  await openContainer(saved.container_id || form.get("containerId"), false);
-                }
+                state.scanToken = null;
+                await openContainer(saved.container_id || form.get("containerId"), false, saved.id || item?.id || null);
               } finally {
                 setFormSaving(formElement, false);
               }
@@ -2473,7 +2398,7 @@ export function renderApp(initialContainerId) {
                 closeModal();
                 showMessage("Item moved.");
                 if (destinationId) {
-                  await openContainer(destinationId, false);
+                  await openContainer(destinationId, false, item.id);
                 }
                 refreshAll().catch(() => {});
               } finally {
@@ -2881,6 +2806,7 @@ export function renderApp(initialContainerId) {
             state.activeContainerDetail = null;
             state.activeItemId = null;
             state.activeItemDetail = null;
+            state.revealedItemId = null;
             state.searchResults = null;
             renderOverview();
             renderStage();
@@ -2899,6 +2825,7 @@ export function renderApp(initialContainerId) {
         state.activeContainerDetail = null;
         state.activeItemId = null;
         state.activeItemDetail = null;
+        state.revealedItemId = null;
         state.searchResults = null;
         history.pushState({}, "", "/");
         renderOverview();
