@@ -134,8 +134,8 @@ export function renderApp(initialContainerId) {
       .identity-label { font-size:.82rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700; }
       .identity-token { font-family:"Cascadia Code","Consolas","Courier New",monospace; font-size:1rem; line-height:1.45; color:var(--ink); word-break:break-all; background:rgba(255,255,255,.52); border:1px solid rgba(24,62,99,.08); border-radius:18px; padding:14px 16px; box-shadow:inset 0 1px 0 rgba(255,255,255,.7); }
       .identity-empty { color:var(--muted); }
-      .contents-grid { grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px; align-items:stretch; }
-      .item-card { position:relative; }
+      .contents-grid { grid-template-columns:repeat(auto-fit,minmax(220px,260px)); gap:18px; align-items:stretch; justify-content:start; }
+      .item-card { position:relative; width:100%; max-width:260px; }
       .item-row,.photo-card { border:1px solid rgba(24,62,99,.08); border-radius:22px; background:#fcfdff; padding:20px; box-shadow:0 12px 24px rgba(27,42,63,.06), inset 0 1px 0 rgba(255,255,255,.72); }
       .item-row { display:grid; gap:12px; color:var(--ink); text-align:left; min-height:196px; align-content:start; padding-top:20px; cursor:pointer; -webkit-touch-callout:none; user-select:none; -webkit-user-select:none; }
       .item-row:hover { transform:none; }
@@ -258,7 +258,7 @@ export function renderApp(initialContainerId) {
         .action-compass-button .compass-glyph,
         .action-compass-center { font-size:2.2rem; }
       }
-      @media (max-width:900px) { .tile-grid { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); } .contents-grid { grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); } }
+      @media (max-width:900px) { .tile-grid { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); } .contents-grid { grid-template-columns:repeat(auto-fit,minmax(200px,240px)); } }
       @media (max-width:720px) {
         .shell { padding:14px; gap:16px; }
         .topbar,.panel,.modal-shell,.hero,.tile,.section { border-radius:20px; }
