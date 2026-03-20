@@ -54,6 +54,8 @@ export function renderApp(initialContainerId) {
       .stage-kicker { display:grid; gap:10px; }
       .stage-levels { display:flex; flex-wrap:wrap; align-items:center; gap:10px; min-height:1.6rem; font-size:1rem; color:var(--muted); }
       .stage-level { font-weight:700; letter-spacing:-.01em; }
+      .stage-level.buttonlike { cursor:pointer; text-decoration:none; }
+      .stage-level.buttonlike:hover { color:var(--accent-strong); }
       .stage-level.active { color:#1d8c55; }
       .stage-level-separator { color:rgba(24,32,43,.45); }
       .stage-meta { font-size:1rem; color:var(--muted); margin-top:6px; }
@@ -713,15 +715,38 @@ export function renderApp(initialContainerId) {
         if (!els.stageLevels) {
           return;
         }
+        const selectedLocationId =
+          state.selectedLocationId ||
+          state.activeContainerDetail?.container?.location_id ||
+          state.activeItemDetail?.item?.location_id ||
+          null;
         const levels = [
-          { key: "places", label: "Places" },
-          { key: "containers", label: "Containers" },
+          { key: "places", label: "Places", onClick: activeLevel !== "places" ? () => goToLocations(true) : null },
+          { key: "containers", label: "Containers", onClick: activeLevel === "items" ? () => openLocation(selectedLocationId, true) : null },
           { key: "items", label: "Items" }
         ];
         els.stageLevels.innerHTML = levels.map((level, index) => (
-          '<span class="stage-level' + (level.key === activeLevel ? ' active' : '') + '">' + escapeHtml(level.label) + '</span>' +
+          '<span class="stage-level' +
+            (level.key === activeLevel ? ' active' : '') +
+            (level.onClick ? ' buttonlike' : '') +
+            '"' +
+            (level.onClick ? ' data-stage-level-nav="' + level.key + '" role="button" tabindex="0"' : '') +
+          '>' + escapeHtml(level.label) + '</span>' +
           (index === levels.length - 1 ? '' : '<span class="stage-level-separator">-</span>')
         )).join("");
+        els.stageLevels.querySelectorAll("[data-stage-level-nav]").forEach((button) => {
+          const level = levels.find((entry) => entry.key === button.dataset.stageLevelNav);
+          if (!level?.onClick) {
+            return;
+          }
+          button.addEventListener("click", level.onClick);
+          button.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              level.onClick();
+            }
+          });
+        });
       }
 
       function setBreadcrumbs(crumbs = []) {
