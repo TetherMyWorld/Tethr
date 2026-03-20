@@ -2360,8 +2360,22 @@ export function renderApp(initialContainerId) {
       }
 
       function openMoveItemModal(item) {
+        const currentContainer = getContainer(item.container_id);
+        const currentLocationId = item.location_id || currentContainer?.location_id || null;
         const containerOptions = state.bootstrap.containers
           .filter((container) => container.id !== item.container_id)
+          .sort((a, b) => {
+            const aSameLocation = (a.location_id || null) === currentLocationId;
+            const bSameLocation = (b.location_id || null) === currentLocationId;
+            if (aSameLocation !== bSameLocation) {
+              return aSameLocation ? -1 : 1;
+            }
+            const nameCompare = String(a.name || "").localeCompare(String(b.name || ""));
+            if (nameCompare !== 0) {
+              return nameCompare;
+            }
+            return String(a.location_name || "").localeCompare(String(b.location_name || ""));
+          })
           .map((container) => (
             '<option value="' + container.id + '">' +
               escapeHtml(container.name) +
