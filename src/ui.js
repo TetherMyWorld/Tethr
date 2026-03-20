@@ -2853,8 +2853,22 @@ export function renderApp(initialContainerId) {
         saveButton.innerHTML = isSaving ? "..." : "&#10003;";
       }
 
+      function normalizeApiUrl(url) {
+        const value = String(url || "");
+        if (/^https?:\/\//i.test(value)) {
+          return value;
+        }
+        if (value.startsWith("/")) {
+          return value;
+        }
+        if (value.startsWith("api/")) {
+          return "/" + value;
+        }
+        return value;
+      }
+
       async function api(url, options) {
-        const response = await fetch(url, { cache: "no-store", ...(options || {}) });
+        const response = await fetch(normalizeApiUrl(url), { cache: "no-store", ...(options || {}) });
         const body = await response.json().catch(() => ({}));
         if (!response.ok) {
           if (response.status === 401) {
