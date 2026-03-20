@@ -1,0 +1,7 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - heading "TethrArca" [level=1] [ref=e5]
+    - textbox "Search locations, containers, or items" [ref=e7]
+  - generic [ref=e11]:
+    - heading "Locations" [level=2] [ref=e12]
+    - generic [ref=e13]: Choose a location to see its containers.
