@@ -411,7 +411,7 @@ export function renderApp(initialContainerId) {
         const typeLabel = escapeHtml(isContainer ? "Container" : "Item");
         const icon = isContainer
           ? '<rect x="64" y="86" width="192" height="118" rx="26" fill="#e7eef6" stroke="#2a4f78" stroke-width="10"/><path d="M82 95h156l-18 -28H100z" fill="#dce7f1" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/><path d="M112 136h96" stroke="#5c7694" stroke-width="10" stroke-linecap="round"/><path d="M112 162h72" stroke="#89a0b8" stroke-width="10" stroke-linecap="round"/>'
-          : '<circle cx="160" cy="128" r="60" fill="#e7eef6" stroke="#2a4f78" stroke-width="10"/><path d="M160 90v76" stroke="#2a4f78" stroke-width="10" stroke-linecap="round"/><path d="M122 128h76" stroke="#2a4f78" stroke-width="10" stroke-linecap="round"/><path d="M116 196c12-18 27-28 44-28s32 10 44 28" fill="none" stroke="#89a0b8" stroke-width="10" stroke-linecap="round"/>';
+          : '<path d="M160 78 232 116 160 154 88 116Z" fill="#e7eef6" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/><path d="M88 116v70l72 40v-72Z" fill="#dce7f1" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/><path d="M232 116v70l-72 40v-72Z" fill="#cfdce9" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/><path d="M136 106h48" stroke="#5c7694" stroke-width="10" stroke-linecap="round"/><path d="M110 196c14-12 31-18 50-18s36 6 50 18" fill="none" stroke="#89a0b8" stroke-width="10" stroke-linecap="round"/>';
         const svg =
           '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-label="' + typeLabel + ' placeholder">' +
             '<rect width="320" height="320" rx="40" fill="#f7fbff"/>' +
