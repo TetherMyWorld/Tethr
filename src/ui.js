@@ -1592,7 +1592,7 @@ export function renderApp(initialContainerId) {
         renderTopbarNav();
         renderStageLevels("containers");
         els.stageTitle.textContent = location ? location.name : "Containers";
-        els.stageMeta.textContent = "Use the quantity buttons. " + getTileActionHint("tile");
+        els.stageMeta.textContent = "";
         setBreadcrumbs([]);
         els.stageActions.innerHTML = "";
 
@@ -1642,7 +1642,10 @@ export function renderApp(initialContainerId) {
           '</div>' +
           '<div class="section items-section">' +
             '<div class="section-head">' +
-              '<h3>Items</h3>' +
+              '<div class="stack" style="gap:6px;">' +
+                '<h3>Items</h3>' +
+                '<div class="mini-note">' + getTileActionHint("tile") + '</div>' +
+              '</div>' +
               '<button id="add-item-button" class="icon-button add-icon" type="button" aria-label="Add item" title="Add item">' + addIconMarkup + '</button>' +
             '</div>' +
             '<div class="contents-grid">' + itemRows + '</div>' +
