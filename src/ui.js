@@ -51,6 +51,7 @@ export function renderApp(initialContainerId) {
       .stage-head { align-items:flex-start; padding:0 2px 18px; border-bottom:1px solid rgba(24,32,42,.08); }
       .stage-head h2,.modal-header h2 { margin:0; letter-spacing:-.04em; font-family:var(--heading-font); }
       .stage-head h2 { font-size:clamp(2.2rem,3.4vw,3rem); line-height:.96; }
+      .stage-head h2:empty { display:none; }
       .stage-kicker { display:grid; gap:10px; }
       .stage-levels { display:flex; flex-wrap:wrap; align-items:center; gap:10px; min-height:1.6rem; font-size:1rem; color:var(--muted); }
       .stage-level { font-weight:700; letter-spacing:-.01em; }
@@ -716,10 +717,13 @@ export function renderApp(initialContainerId) {
           state.activeContainerDetail?.container?.location_id ||
           state.activeItemDetail?.item?.location_id ||
           null;
-        const levels = [
+        const allLevels = [
           { key: "places", label: "Places", onClick: activeLevel !== "places" ? () => goToLocations(true) : null },
-          { key: "containers", label: "Containers", onClick: activeLevel !== "containers" ? () => openLocation(selectedLocationId, true) : null }
+          { key: "containers", label: "Containers", onClick: activeLevel === "items" ? () => openLocation(selectedLocationId, true) : null },
+          { key: "items", label: "Items", onClick: null }
         ];
+        const activeIndex = Math.max(0, allLevels.findIndex((level) => level.key === activeLevel));
+        const levels = allLevels.slice(0, activeIndex + 1);
         els.stageLevels.innerHTML = levels.map((level, index) => (
           '<span class="stage-level' +
             (level.key === activeLevel ? ' active' : '') +
@@ -1381,7 +1385,7 @@ export function renderApp(initialContainerId) {
       function renderLocationsStage() {
         renderTopbarNav();
         renderStageLevels("places");
-        els.stageTitle.textContent = "Places";
+        els.stageTitle.textContent = "";
         els.stageMeta.textContent = getTileActionHint("tile");
         setBreadcrumbs([]);
         els.stageActions.innerHTML =
@@ -1586,7 +1590,7 @@ export function renderApp(initialContainerId) {
           ? '<div class="container-thumb"><img src="' + getImageUrl(detail.container.image_stored_name, "containers") + '" alt="' + escapeHtml(detail.container.name) + '"></div>'
           : "";
         renderTopbarNav();
-        renderStageLevels("containers");
+        renderStageLevels("items");
         els.stageTitle.textContent = location ? location.name : "Containers";
         els.stageMeta.textContent = "";
         setBreadcrumbs([]);
