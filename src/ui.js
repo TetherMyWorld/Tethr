@@ -2857,7 +2857,8 @@ export function renderApp(initialContainerId) {
 
       function normalizeApiUrl(url) {
         const value = String(url || "");
-        if (/^https?:\/\//i.test(value)) {
+        const lowerValue = value.toLowerCase();
+        if (lowerValue.startsWith("http://") || lowerValue.startsWith("https://")) {
           return value;
         }
         if (value.startsWith("/")) {
