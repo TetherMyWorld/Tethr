@@ -1265,7 +1265,7 @@ export function renderApp(initialContainerId) {
             '</div>' +
             '<div class="action-compass-middle">' +
               buttonHtml(actions.left, "left", "side ") +
-              '<div class="action-compass-center">?</div>' +
+              '<div class="action-compass-center" aria-hidden="true"></div>' +
               buttonHtml(actions.right, "right", "side ") +
             '</div>' +
             '<div class="action-compass-row">' +
