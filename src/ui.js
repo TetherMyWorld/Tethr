@@ -51,6 +51,11 @@ export function renderApp(initialContainerId) {
       .stage-head { align-items:flex-start; padding:0 2px 18px; border-bottom:1px solid rgba(24,32,42,.08); }
       .stage-head h2,.modal-header h2 { margin:0; letter-spacing:-.04em; font-family:var(--heading-font); }
       .stage-head h2 { font-size:clamp(2.2rem,3.4vw,3rem); line-height:.96; }
+      .stage-kicker { display:grid; gap:10px; }
+      .stage-levels { display:flex; flex-wrap:wrap; align-items:center; gap:10px; min-height:1.6rem; font-size:1rem; color:var(--muted); }
+      .stage-level { font-weight:700; letter-spacing:-.01em; }
+      .stage-level.active { color:#1d8c55; }
+      .stage-level-separator { color:rgba(24,32,43,.45); }
       .stage-meta { font-size:1rem; color:var(--muted); margin-top:6px; }
       .stage-meta:empty { display:none; }
       .stage-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
@@ -316,7 +321,10 @@ export function renderApp(initialContainerId) {
         <div class="stage-shell">
           <div class="stage-head">
             <div>
-              <h2 id="stage-title">Locations</h2>
+              <div class="stage-kicker">
+                <div id="stage-levels" class="stage-levels"></div>
+                <h2 id="stage-title">Locations</h2>
+              </div>
               <div id="stage-meta" class="stage-meta">Choose a location to see its containers.</div>
               <div id="stage-breadcrumbs" class="breadcrumbs"></div>
             </div>
@@ -361,6 +369,7 @@ export function renderApp(initialContainerId) {
 
       const els = {
         message: document.getElementById("message"),
+        stageLevels: document.getElementById("stage-levels"),
         stageTitle: document.getElementById("stage-title"),
         stageMeta: document.getElementById("stage-meta"),
         stageBreadcrumbs: document.getElementById("stage-breadcrumbs"),
@@ -687,6 +696,21 @@ export function renderApp(initialContainerId) {
         if (state.stage === "item") {
           renderItemStage();
         }
+      }
+
+      function renderStageLevels(activeLevel) {
+        if (!els.stageLevels) {
+          return;
+        }
+        const levels = [
+          { key: "places", label: "Places" },
+          { key: "containers", label: "Containers" },
+          { key: "items", label: "Items" }
+        ];
+        els.stageLevels.innerHTML = levels.map((level, index) => (
+          '<span class="stage-level' + (level.key === activeLevel ? ' active' : '') + '">' + escapeHtml(level.label) + '</span>' +
+          (index === levels.length - 1 ? '' : '<span class="stage-level-separator">-</span>')
+        )).join("");
       }
 
       function setBreadcrumbs(crumbs = []) {
@@ -1410,11 +1434,10 @@ export function renderApp(initialContainerId) {
       }
 
       function renderLocationsStage() {
-        els.stageTitle.textContent = "Locations";
+        renderStageLevels("places");
+        els.stageTitle.textContent = "Places";
         els.stageMeta.textContent = "Tap a place to open it. Press and hold a tile for actions.";
-        setBreadcrumbs([
-          { label: "Places" }
-        ]);
+        setBreadcrumbs([]);
         els.stageActions.innerHTML =
           '<div class="action-cluster">' +
             '<button id="stage-add-location" class="icon-button add-icon" type="button" aria-label="Add location" title="Add location">' + addIconMarkup + '</button>' +
@@ -1460,6 +1483,7 @@ export function renderApp(initialContainerId) {
 
       function renderScanSetupStage() {
         renderTopbarNav();
+        renderStageLevels("places");
         els.stageTitle.textContent = "New Tag Detected";
         els.stageMeta.textContent = "Token: " + state.scanToken;
         setBreadcrumbs([
@@ -1517,19 +1541,10 @@ export function renderApp(initialContainerId) {
           );
         }
         renderTopbarNav();
-        els.stageTitle.textContent = location ? (location.name + " Containers") : "Unassigned Containers";
+        renderStageLevels("containers");
+        els.stageTitle.textContent = location ? location.name : "No Location";
         els.stageMeta.textContent = "Tap a container to open it. Press and hold a tile for actions.";
-        setBreadcrumbs(
-          location
-            ? [
-                { label: "Places", onClick: () => goToLocations(true) },
-                { label: location.name }
-              ]
-            : [
-                { label: "Places", onClick: () => goToLocations(true) },
-                { label: "No Location" }
-              ]
-        );
+        setBreadcrumbs([]);
         els.stageActions.innerHTML =
           '<div class="action-cluster">' +
             (location
@@ -1599,6 +1614,7 @@ export function renderApp(initialContainerId) {
 
       function renderContainerStage() {
         if (!state.activeContainerDetail) {
+          renderStageLevels("containers");
           els.stageTitle.textContent = "Container";
           els.stageMeta.textContent = "Open a container to see what is inside it.";
           setBreadcrumbs([]);
@@ -1615,21 +1631,10 @@ export function renderApp(initialContainerId) {
           ? '<div class="container-thumb"><img src="' + getImageUrl(detail.container.image_stored_name, "containers") + '" alt="' + escapeHtml(detail.container.name) + '"></div>'
           : "";
         renderTopbarNav();
-        els.stageTitle.textContent = location ? location.name : "No Location";
+        renderStageLevels("items");
+        els.stageTitle.textContent = location ? (location.name + " / " + detail.container.name) : detail.container.name;
         els.stageMeta.textContent = "Tap an item to open it. Press and hold a tile for actions.";
-        setBreadcrumbs(
-          location
-            ? [
-                { label: "Places", onClick: () => goToLocations(true) },
-                { label: location.name, onClick: () => openLocation(location.id, true) },
-                { label: detail.container.name }
-              ]
-            : [
-                { label: "Places", onClick: () => goToLocations(true) },
-                { label: "No Location", onClick: () => openLocation(null, true) },
-                { label: detail.container.name }
-              ]
-        );
+        setBreadcrumbs([]);
         els.stageActions.innerHTML = "";
 
         const itemRows = detail.items.length
@@ -1762,23 +1767,10 @@ export function renderApp(initialContainerId) {
         const heroTone = toneClassForId(heroTones, detail.item.id);
         const detailTone = toneClassForId(detailTones, detail.item.id);
         renderTopbarNav();
-        els.stageTitle.textContent = detail.item.container_name;
-        els.stageMeta.textContent = "";
-        setBreadcrumbs(
-          location
-            ? [
-                { label: "Places", onClick: () => goToLocations(true) },
-                { label: location.name, onClick: () => openLocation(location.id, true) },
-                { label: detail.item.container_name, onClick: () => openContainer(detail.item.container_id, true) },
-                { label: detail.item.name }
-              ]
-            : [
-                { label: "Places", onClick: () => goToLocations(true) },
-                { label: "No Location", onClick: () => openLocation(null, true) },
-                { label: detail.item.container_name, onClick: () => openContainer(detail.item.container_id, true) },
-                { label: detail.item.name }
-              ]
-        );
+        renderStageLevels("items");
+        els.stageTitle.textContent = detail.item.container_name + " / " + detail.item.name;
+        els.stageMeta.textContent = "Adjust, move, label, or review this item.";
+        setBreadcrumbs([]);
         els.stageActions.innerHTML = "";
 
         const primaryPhoto = detail.photos[0] || null;
