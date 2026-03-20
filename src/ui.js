@@ -407,18 +407,15 @@ export function renderApp(initialContainerId) {
 
       function makePlaceholderDataUrl(category = "items", label = "") {
         const isContainer = category === "containers";
-        const title = escapeHtml(String(label || (isContainer ? "Container" : "Item")));
         const typeLabel = escapeHtml(isContainer ? "Container" : "Item");
         const icon = isContainer
-          ? '<rect x="64" y="86" width="192" height="118" rx="26" fill="#e7eef6" stroke="#2a4f78" stroke-width="10"/><path d="M82 95h156l-18 -28H100z" fill="#dce7f1" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/><path d="M112 136h96" stroke="#5c7694" stroke-width="10" stroke-linecap="round"/><path d="M112 162h72" stroke="#89a0b8" stroke-width="10" stroke-linecap="round"/>'
-          : '<path d="M171 86c12-15 31-20 47-13-11 10-22 16-36 18" fill="none" stroke="#2a4f78" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M160 101c12-15 29-21 47-20" fill="none" stroke="#89a0b8" stroke-width="8" stroke-linecap="round"/><path d="M160 110c18-17 50-15 62 8 10 20 6 44-2 64-10 25-28 49-60 49-33 0-51-24-61-49-8-20-12-44-2-64 12-23 44-25 63-8Z" fill="#e7eef6" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/><path d="M129 145c-8 10-10 28-3 47" fill="none" stroke="#89a0b8" stroke-width="10" stroke-linecap="round"/><path d="M178 141c14-5 28 1 35 12" fill="none" stroke="#5c7694" stroke-width="10" stroke-linecap="round"/>';
+          ? '<rect x="64" y="94" width="192" height="110" rx="24" fill="#e7eef6" stroke="#2a4f78" stroke-width="10"/><path d="M82 104h156l-20 -30H102z" fill="#e7eef6" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/>'
+          : '<path d="M171 86c12-15 31-20 47-13-11 10-22 16-36 18" fill="none" stroke="#2a4f78" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M160 110c18-17 50-15 62 8 10 20 6 44-2 64-10 25-28 49-60 49-33 0-51-24-61-49-8-20-12-44-2-64 12-23 44-25 63-8Z" fill="#e7eef6" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/>';
         const svg =
           '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-label="' + typeLabel + ' placeholder">' +
             '<rect width="320" height="320" rx="40" fill="#f7fbff"/>' +
             '<rect x="18" y="18" width="284" height="284" rx="32" fill="#eef5fb" stroke="#c6d5e5" stroke-width="4"/>' +
             icon +
-            '<text x="160" y="240" text-anchor="middle" font-family="Aptos, Segoe UI, sans-serif" font-size="21" font-weight="700" fill="#2a4f78">' + typeLabel + '</text>' +
-            '<text x="160" y="268" text-anchor="middle" font-family="Aptos, Segoe UI, sans-serif" font-size="15" fill="#6a7d92">' + title + '</text>' +
           '</svg>';
         return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
       }
