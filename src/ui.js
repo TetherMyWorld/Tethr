@@ -599,14 +599,14 @@ export function renderApp(initialContainerId) {
             return;
           }
           if (state.stage === "simulatedScan") {
-            if (state.pendingScanAction?.kind === "moveItem" && state.activeItemDetail) {
+            if (state.activeItemDetail) {
               state.pendingScanAction = null;
               state.stage = "item";
               renderOverview();
               renderStage();
               return;
             }
-            if (state.pendingScanAction?.kind === "moveContainer" && state.activeContainerDetail) {
+            if (state.activeContainerDetail) {
               state.pendingScanAction = null;
               state.stage = "container";
               renderOverview();
@@ -868,10 +868,6 @@ export function renderApp(initialContainerId) {
           showMessage(body.error || "Request failed", true);
           return;
         }
-        if (state.pendingScanAction) {
-          await handlePendingScanAction(cleanToken, result);
-          return;
-        }
         if (!result || result.status === "unassigned") {
           state.stage = "scanSetup";
           state.scanToken = cleanToken;
@@ -896,63 +892,6 @@ export function renderApp(initialContainerId) {
         if (result.entityType === "item") {
           state.scanToken = cleanToken;
           await openItem(result.entityId);
-        }
-      }
-
-      async function handlePendingScanAction(cleanToken, result) {
-        const pending = state.pendingScanAction;
-        if (!pending) {
-          return;
-        }
-
-        if (!result || result.status === "unassigned") {
-          showMessage("That label is not set up yet.", true);
-          renderStage();
-          return;
-        }
-
-        if (pending.kind === "moveContainer") {
-          if (result.entityType !== "location") {
-            showMessage("Scan a location to move this container.", true);
-            renderStage();
-            return;
-          }
-          await api("/api/containers/" + pending.containerId + "/move", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-              locationId: result.entityId,
-              notes: "Moved by scan"
-            })
-          });
-          state.pendingScanAction = null;
-          state.scanToken = cleanToken;
-          showMessage("Container moved.");
-          await openContainer(pending.containerId, true);
-          refreshAll().catch(() => {});
-          return;
-        }
-
-        if (pending.kind === "moveItem") {
-          if (result.entityType !== "container") {
-            showMessage("Scan a container to move this item.", true);
-            renderStage();
-            return;
-          }
-          await api("/api/items/" + pending.itemId + "/move", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-              containerId: result.entityId,
-              notes: "Moved by scan"
-            })
-          });
-          state.pendingScanAction = null;
-          state.scanToken = cleanToken;
-          showMessage("Item moved.");
-          await openContainer(result.entityId, true);
-          await openItem(pending.itemId);
-          refreshAll().catch(() => {});
         }
       }
 
@@ -1362,53 +1301,12 @@ export function renderApp(initialContainerId) {
 
       function renderSimulatedScanStage() {
         renderTopbarNav();
-        let title = "Scan Label";
-        let meta = "Point your camera at a QR label, or paste a label code below.";
-        let breadcrumbs = [
+        const title = "Scan Label";
+        const meta = "Point your camera at a QR label, or paste a label code below.";
+        const breadcrumbs = [
           { label: "Places", onClick: () => goToLocations(true) },
           { label: "Scan" }
         ];
-
-        if (state.pendingScanAction?.kind === "moveContainer" && state.activeContainerDetail) {
-          title = "Scan Place to Move";
-          meta = "Scan a place label to move this container there.";
-          const detail = state.activeContainerDetail;
-          const currentLocation = detail.container.location_id ? getLocation(detail.container.location_id) : null;
-          breadcrumbs = currentLocation
-            ? [
-                { label: "Places", onClick: () => goToLocations(true) },
-                { label: currentLocation.name, onClick: () => openLocation(currentLocation.id, true) },
-                { label: detail.container.name, onClick: () => openContainer(detail.container.id, true) },
-                { label: "Scan Move" }
-              ]
-            : [
-                { label: "Places", onClick: () => goToLocations(true) },
-                { label: "No Location", onClick: () => openLocation(null, true) },
-                { label: detail.container.name, onClick: () => openContainer(detail.container.id, true) },
-                { label: "Scan Move" }
-              ];
-        } else if (state.pendingScanAction?.kind === "moveItem" && state.activeItemDetail) {
-          title = "Scan Container to Move";
-          meta = "Scan a container label to move this item there.";
-          const detail = state.activeItemDetail;
-          const container = getContainer(detail.item.container_id);
-          const location = container?.location_id ? getLocation(container.location_id) : null;
-          breadcrumbs = location
-            ? [
-                { label: "Places", onClick: () => goToLocations(true) },
-                { label: location.name, onClick: () => openLocation(location.id, true) },
-                { label: detail.item.container_name, onClick: () => openContainer(detail.item.container_id, true) },
-                { label: detail.item.name, onClick: () => openItem(detail.item.id) },
-                { label: "Scan Move" }
-              ]
-            : [
-                { label: "Places", onClick: () => goToLocations(true) },
-                { label: "No Location", onClick: () => openLocation(null, true) },
-                { label: detail.item.container_name, onClick: () => openContainer(detail.item.container_id, true) },
-                { label: detail.item.name, onClick: () => openItem(detail.item.id) },
-                { label: "Scan Move" }
-              ];
-        }
 
         els.stageTitle.textContent = title;
         els.stageMeta.textContent = meta;
@@ -1681,7 +1579,6 @@ export function renderApp(initialContainerId) {
           '<div class="hero ' + heroTone + '">' +
             '<div class="hero-top"><div class="action-cluster">' +
               '<button id="container-history-button" class="secondary icon-button" type="button" aria-label="View container history" title="View container history">' + historyIconMarkup + '</button>' +
-              '<button id="container-scan-move-button" class="secondary" type="button">Scan Move</button>' +
               '<button id="edit-container-button" class="secondary icon-button" type="button" aria-label="Edit container" title="Edit container">' + editIconMarkup + '</button>' +
             '</div></div>' +
             '<div class="container-hero-layout' + (containerThumb ? "" : " no-photo") + '">' +
@@ -1711,15 +1608,6 @@ export function renderApp(initialContainerId) {
           } catch (error) {
             showError(error.message || "Could not load container history.");
           }
-        });
-        document.getElementById("container-scan-move-button").addEventListener("click", () => {
-          state.pendingScanAction = {
-            kind: "moveContainer",
-            containerId: detail.container.id
-          };
-          state.stage = "simulatedScan";
-          history.pushState({}, "", "/simulate-scan");
-          renderStage();
         });
         document.getElementById("edit-container-button").addEventListener("click", () => openContainerModal({ container: detail.container, defaultLocationId: detail.container.location_id || null }));
         document.getElementById("add-item-button").addEventListener("click", () => openItemModal({ itemId: null, containerId: detail.container.id }));
@@ -1809,7 +1697,6 @@ export function renderApp(initialContainerId) {
               '</div>' +
               '<div class="action-cluster">' +
                 '<button id="item-history-button" class="secondary icon-button" type="button" aria-label="View item history" title="View item history">' + historyIconMarkup + '</button>' +
-                '<button id="item-scan-move-button" class="secondary" type="button">Scan Move</button>' +
                 '<button id="edit-item-button" class="secondary icon-button" type="button" aria-label="Edit item" title="Edit item">' + editIconMarkup + '</button>' +
               '</div>' +
             '</div>' +
@@ -1832,15 +1719,6 @@ export function renderApp(initialContainerId) {
           } catch (error) {
             showError(error.message || "Could not load item history.");
           }
-        });
-        document.getElementById("item-scan-move-button").addEventListener("click", () => {
-          state.pendingScanAction = {
-            kind: "moveItem",
-            itemId: detail.item.id
-          };
-          state.stage = "simulatedScan";
-          history.pushState({}, "", "/simulate-scan");
-          renderStage();
         });
         els.stageContent.querySelectorAll("[data-item-detail-quantity-delta]").forEach((button) => {
           button.addEventListener("click", async (event) => {
