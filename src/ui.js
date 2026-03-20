@@ -407,8 +407,8 @@ export function renderApp(initialContainerId) {
 
       function makePlaceholderDataUrl(category = "items", label = "") {
         const isContainer = category === "containers";
-        const title = escapeHtmlStatic(String(label || (isContainer ? "Container" : "Item")));
-        const typeLabel = isContainer ? "Container" : "Item";
+        const title = escapeHtml(String(label || (isContainer ? "Container" : "Item")));
+        const typeLabel = escapeHtml(isContainer ? "Container" : "Item");
         const icon = isContainer
           ? '<rect x="64" y="86" width="192" height="118" rx="26" fill="#e7eef6" stroke="#2a4f78" stroke-width="10"/><path d="M82 95h156l-18 -28H100z" fill="#dce7f1" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/><path d="M112 136h96" stroke="#5c7694" stroke-width="10" stroke-linecap="round"/><path d="M112 162h72" stroke="#89a0b8" stroke-width="10" stroke-linecap="round"/>'
           : '<circle cx="160" cy="128" r="60" fill="#e7eef6" stroke="#2a4f78" stroke-width="10"/><path d="M160 90v76" stroke="#2a4f78" stroke-width="10" stroke-linecap="round"/><path d="M122 128h76" stroke="#2a4f78" stroke-width="10" stroke-linecap="round"/><path d="M116 196c12-18 27-28 44-28s32 10 44 28" fill="none" stroke="#89a0b8" stroke-width="10" stroke-linecap="round"/>';
