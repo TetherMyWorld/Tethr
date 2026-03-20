@@ -86,6 +86,8 @@ export function renderApp(initialContainerId) {
       .tile-subtitle { font-size:.98rem; color:var(--muted); font-weight:600; }
       .hero { border:1px solid rgba(24,62,99,.08); border-radius:24px; background:linear-gradient(135deg, rgba(253,254,255,.99) 0%, rgba(235,242,249,.98) 100%); padding:28px 28px 24px; display:grid; gap:18px; box-shadow:var(--shadow-soft), inset 0 1px 0 rgba(255,255,255,.72); }
       .hero-top { display:flex; justify-content:flex-end; margin-bottom:-2px; }
+      .hero.hero-compact { position:relative; padding-top:22px; }
+      .hero.hero-compact .hero-top { position:absolute; top:18px; right:18px; margin:0; z-index:1; }
       .action-cluster { display:inline-flex; gap:10px; align-items:center; padding:8px; border-radius:999px; background:rgba(255,255,255,.42); box-shadow:inset 0 1px 0 rgba(255,255,255,.55); }
       .hero-actions { display:flex; gap:10px; align-items:center; justify-content:flex-end; }
       .hero-title { display:grid; gap:8px; justify-items:center; text-align:center; }
@@ -98,11 +100,11 @@ export function renderApp(initialContainerId) {
       .hero.hero-tone-2 { background:linear-gradient(135deg, rgba(247,252,252,.99) 0%, rgba(223,240,240,.98) 100%); border-color:rgba(15,109,115,.16); }
       .hero.hero-tone-3 { background:linear-gradient(135deg, rgba(255,253,248,.99) 0%, rgba(245,230,200,.98) 100%); border-color:rgba(176,125,31,.17); }
       .hero.hero-tone-4 { background:linear-gradient(135deg, rgba(254,250,253,.99) 0%, rgba(238,216,230,.98) 100%); border-color:rgba(159,79,111,.16); }
-      .container-hero-layout { display:grid; grid-template-columns:152px minmax(0, 1fr); gap:22px; align-items:center; }
+      .container-hero-layout { display:grid; grid-template-columns:152px minmax(0, 1fr); gap:22px; align-items:start; }
       .container-hero-layout.no-photo { grid-template-columns:1fr; }
       .container-thumb { width:100%; max-width:152px; aspect-ratio:1 / 1; border-radius:22px; overflow:hidden; border:1px solid rgba(24,62,99,.12); box-shadow:0 10px 22px rgba(27,42,63,.10), inset 0 1px 0 rgba(255,255,255,.7); background:rgba(255,255,255,.55); }
       .container-thumb img { width:100%; height:100%; object-fit:cover; }
-      .container-hero-copy { display:grid; gap:12px; align-content:center; justify-items:start; text-align:left; min-width:0; }
+      .container-hero-copy { display:grid; gap:12px; align-content:start; justify-items:start; text-align:left; min-width:0; padding-top:4px; }
       .container-hero-copy .hero-title { justify-items:start; text-align:left; }
       .container-hero-copy .hero-title h3 { font-size:clamp(2.9rem, 5vw, 4.3rem); }
       .container-hero-copy .hero-notes.item-notes { font-size:1.08rem; line-height:1.5; max-width:44rem; }
@@ -270,7 +272,8 @@ export function renderApp(initialContainerId) {
         .topbar-nav .action-cluster { width:100%; justify-content:space-between; }
         .session-badge { flex:1 1 auto; min-width:0; }
         .stage-head { align-items:flex-start; grid-template-columns:1fr; gap:14px; }
-        .stage-actions,.hero-actions,.hero-top { justify-content:flex-start; }
+          .stage-actions,.hero-actions,.hero-top { justify-content:flex-start; }
+          .hero.hero-compact .hero-top { position:static; margin:0 0 -2px; }
         .stage-actions { width:100%; }
         .tile-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
         .contents-grid { grid-template-columns:1fr; gap:14px; }
@@ -1577,8 +1580,8 @@ export function renderApp(initialContainerId) {
             )).join("")
           : '<div class="empty-state"><h3>No items yet</h3><div class="mini-note">Add the first item to this container.</div></div>';
 
-        els.stageContent.innerHTML =
-          '<div class="hero ' + heroTone + '">' +
+          els.stageContent.innerHTML =
+            '<div class="hero hero-compact ' + heroTone + '">' +
             '<div class="hero-top"><div class="action-cluster">' +
               '<button id="container-history-button" class="secondary icon-button" type="button" aria-label="View container history" title="View container history">' + historyIconMarkup + '</button>' +
               '<button id="edit-container-button" class="secondary icon-button" type="button" aria-label="Edit container" title="Edit container">' + editIconMarkup + '</button>' +
