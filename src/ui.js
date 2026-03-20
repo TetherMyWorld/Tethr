@@ -405,6 +405,28 @@ export function renderApp(initialContainerId) {
         return "/images/" + encodeURIComponent(category) + "/" + encodeURIComponent(cleanName);
       }
 
+      function makePlaceholderDataUrl(category = "items", label = "") {
+        const isContainer = category === "containers";
+        const title = escapeHtmlStatic(String(label || (isContainer ? "Container" : "Item")));
+        const typeLabel = isContainer ? "Container" : "Item";
+        const icon = isContainer
+          ? '<rect x="64" y="86" width="192" height="118" rx="26" fill="#e7eef6" stroke="#2a4f78" stroke-width="10"/><path d="M82 95h156l-18 -28H100z" fill="#dce7f1" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/><path d="M112 136h96" stroke="#5c7694" stroke-width="10" stroke-linecap="round"/><path d="M112 162h72" stroke="#89a0b8" stroke-width="10" stroke-linecap="round"/>'
+          : '<circle cx="160" cy="128" r="60" fill="#e7eef6" stroke="#2a4f78" stroke-width="10"/><path d="M160 90v76" stroke="#2a4f78" stroke-width="10" stroke-linecap="round"/><path d="M122 128h76" stroke="#2a4f78" stroke-width="10" stroke-linecap="round"/><path d="M116 196c12-18 27-28 44-28s32 10 44 28" fill="none" stroke="#89a0b8" stroke-width="10" stroke-linecap="round"/>';
+        const svg =
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-label="' + typeLabel + ' placeholder">' +
+            '<rect width="320" height="320" rx="40" fill="#f7fbff"/>' +
+            '<rect x="18" y="18" width="284" height="284" rx="32" fill="#eef5fb" stroke="#c6d5e5" stroke-width="4"/>' +
+            icon +
+            '<text x="160" y="240" text-anchor="middle" font-family="Aptos, Segoe UI, sans-serif" font-size="21" font-weight="700" fill="#2a4f78">' + typeLabel + '</text>' +
+            '<text x="160" y="268" text-anchor="middle" font-family="Aptos, Segoe UI, sans-serif" font-size="15" fill="#6a7d92">' + title + '</text>' +
+          '</svg>';
+        return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+      }
+
+      function getDisplayImageUrl(storedName, category = "items", label = "") {
+        return getImageUrl(storedName, category) || makePlaceholderDataUrl(category, label);
+      }
+
       function renameFileExtension(name, nextExtension) {
         const original = String(name || "image").trim() || "image";
         const base = original.includes(".") ? original.slice(0, original.lastIndexOf(".")) : original;
@@ -1507,10 +1529,8 @@ export function renderApp(initialContainerId) {
         els.stageContent.innerHTML = infoBlocks.join("") + (containers.length
           ? '<div class="tile-grid">' + containers.map((container, index) => (
                 '<div class="tile tile-card ' + toneClass(containerTones, index) + '">' +
-                  '<button class="tile-open container-tile-open' + (container.image_stored_name ? ' has-image' : '') + '" type="button" data-open-container="' + container.id + '">' +
-                    (container.image_stored_name
-                      ? '<div class="tile-thumb"><img src="' + getImageUrl(container.image_stored_name, "containers") + '" alt="' + escapeHtml(container.name) + '"></div>'
-                      : '') +
+                  '<button class="tile-open container-tile-open has-image" type="button" data-open-container="' + container.id + '">' +
+                    '<div class="tile-thumb"><img src="' + getDisplayImageUrl(container.image_stored_name, "containers", container.name) + '" alt="' + escapeHtml(container.name) + '"></div>' +
                     '<div class="tile-title">' + escapeHtml(container.name) + '</div>' +
                     '<div class="tile-subtitle">' + (itemsMap.get(container.id) || 0) + ' item' + ((itemsMap.get(container.id) || 0) === 1 ? '' : 's') + '</div>' +
                   '</button>' +
@@ -1586,9 +1606,8 @@ export function renderApp(initialContainerId) {
         const detail = state.activeContainerDetail;
         const location = detail.container.location_id ? getLocation(detail.container.location_id) : null;
         const heroTone = toneClassForId(heroTones, detail.container.id);
-        const containerThumb = detail.container.image_stored_name
-          ? '<div class="container-thumb"><img src="' + getImageUrl(detail.container.image_stored_name, "containers") + '" alt="' + escapeHtml(detail.container.name) + '"></div>'
-          : "";
+        const containerThumb =
+          '<div class="container-thumb"><img src="' + getDisplayImageUrl(detail.container.image_stored_name, "containers", detail.container.name) + '" alt="' + escapeHtml(detail.container.name) + '"></div>';
         renderTopbarNav();
         renderStageLevels("items");
         els.stageTitle.textContent = location ? location.name : "Containers";
@@ -1600,9 +1619,7 @@ export function renderApp(initialContainerId) {
           ? detail.items.map((item, index) => (
               '<div class="item-card">' +
                 '<div class="item-row ' + toneClass(itemTones, index) + (state.revealedItemId === item.id ? ' is-target' : '') + '" data-item-id="' + item.id + '" tabindex="0" role="group" aria-label="Actions for ' + escapeAttr(item.name) + '">' +
-                  (item.thumbnail_stored_name
-                    ? '<div class="item-row-thumb"><img src="' + getImageUrl(item.thumbnail_stored_name, "items") + '" alt="' + escapeHtml(item.name) + '"></div>'
-                    : '') +
+                  '<div class="item-row-thumb"><img src="' + getDisplayImageUrl(item.thumbnail_stored_name, "items", item.name) + '" alt="' + escapeHtml(item.name) + '"></div>' +
                   '<div class="item-row-body">' +
                     '<div class="item-row-header">' +
                       '<div style="display:grid; gap:10px; width:100%;">' +
