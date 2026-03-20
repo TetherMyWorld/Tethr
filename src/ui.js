@@ -61,6 +61,17 @@ export function renderApp(initialContainerId) {
       .stage-level-separator { color:rgba(24,32,43,.45); }
       .stage-meta { font-size:1rem; color:var(--muted); margin-top:6px; }
       .stage-meta:empty { display:none; }
+      .stage-summary { display:flex; flex-wrap:wrap; align-items:center; gap:10px; color:var(--ink); }
+      .stage-summary-action { display:flex; flex-wrap:wrap; align-items:center; gap:10px; background:none; border:0; padding:0; width:auto; color:inherit; box-shadow:none; cursor:pointer; }
+      .stage-summary-action:hover { transform:none; box-shadow:none; }
+      .stage-summary-thumb { width:46px; height:46px; border-radius:14px; overflow:hidden; border:1px solid rgba(24,62,99,.10); background:rgba(255,255,255,.55); box-shadow:0 8px 16px rgba(27,42,63,.08); flex:0 0 auto; }
+      .stage-summary-thumb img { width:100%; height:100%; object-fit:cover; border-radius:0; pointer-events:none; -webkit-touch-callout:none; }
+      .stage-summary-thumb.is-placeholder { border-color:transparent; background:transparent; box-shadow:none; }
+      .stage-summary-thumb.is-placeholder img { object-fit:contain; padding:5px; }
+      .stage-summary-name,
+      .stage-summary-count { font-size:1.08rem; font-weight:700; letter-spacing:-.01em; }
+      .stage-summary-separator { color:rgba(24,32,43,.45); font-weight:700; }
+      .stage-summary-note { margin-top:8px; font-size:1rem; line-height:1.45; color:var(--muted); }
       .stage-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
       .empty-state { padding:56px 26px; border:1px dashed rgba(22,80,140,.18); border-radius:24px; text-align:center; background:linear-gradient(180deg,#f8fbff 0%,#e6eef8 100%); }
       .empty-state h3 { margin:0 0 8px; font-size:1.25rem; letter-spacing:-.02em; }
@@ -1620,16 +1631,21 @@ export function renderApp(initialContainerId) {
 
         const detail = state.activeContainerDetail;
         const location = detail.container.location_id ? getLocation(detail.container.location_id) : null;
-        const heroTone = toneClassForId(heroTones, detail.container.id);
         const itemCountLabel = detail.items.length + ' item' + (detail.items.length === 1 ? '' : 's');
-        const containerThumb =
-          '<div class="container-thumb' + (hasStoredImage(detail.container.image_stored_name) ? '' : ' is-placeholder') + '"><img src="' + getDisplayImageUrl(detail.container.image_stored_name, "containers", detail.container.name) + '" alt="' + escapeHtml(detail.container.name) + '"></div>';
+        const containerSummary =
+          '<div class="stage-summary">' +
+            '<button id="container-stage-summary" class="stage-summary-action" type="button" aria-label="Actions for ' + escapeAttr(detail.container.name) + '">' +
+              '<div class="stage-summary-thumb' + (hasStoredImage(detail.container.image_stored_name) ? '' : ' is-placeholder') + '"><img src="' + getDisplayImageUrl(detail.container.image_stored_name, "containers", detail.container.name) + '" alt="' + escapeHtml(detail.container.name) + '"></div>' +
+              '<span class="stage-summary-name">' + escapeHtml(detail.container.name) + '</span>' +
+              '<span class="stage-summary-separator">/</span>' +
+              '<span class="stage-summary-count">' + itemCountLabel + '</span>' +
+            '</button>' +
+          '</div>' +
+          (detail.container.notes ? '<div class="stage-summary-note">' + escapeHtml(detail.container.notes) + '</div>' : '');
         renderTopbarNav();
         renderStageLevels("containers");
-        els.stageTitle.textContent = location
-          ? (location.name + " / " + detail.container.name)
-          : detail.container.name;
-        els.stageMeta.textContent = itemCountLabel;
+        els.stageTitle.textContent = location ? location.name : "No Location";
+        els.stageMeta.innerHTML = containerSummary;
         setBreadcrumbs([]);
         els.stageActions.innerHTML = "";
 
@@ -1659,15 +1675,6 @@ export function renderApp(initialContainerId) {
           : '<div class="empty-state"><h3>No items yet</h3><div class="mini-note">Add the first item to this container.</div></div>';
 
           els.stageContent.innerHTML =
-            '<div class="hero hero-compact ' + heroTone + '" data-container-hero-action="' + detail.container.id + '" aria-label="Actions for ' + escapeAttr(detail.container.name) + '">' +
-            '<div class="container-hero-layout' + (containerThumb ? "" : " no-photo") + '">' +
-              containerThumb +
-              '<div class="container-hero-copy">' +
-                '<div class="hero-count">' + itemCountLabel + '</div>' +
-                (detail.container.notes ? '<div class="hero-notes item-notes">' + escapeHtml(detail.container.notes) + '</div>' : '') +
-              '</div>' +
-            '</div>' +
-          '</div>' +
           '<div class="section items-section">' +
             '<div class="section-head">' +
               '<div style="display:flex; gap:12px; align-items:baseline; flex-wrap:wrap;">' +
@@ -1679,9 +1686,9 @@ export function renderApp(initialContainerId) {
             '<div class="contents-grid">' + itemRows + '</div>' +
           '</div>';
 
-        const heroActionSurface = els.stageContent.querySelector("[data-container-hero-action]");
-        if (heroActionSurface) {
-          attachPressAndHoldAction(heroActionSurface, () => {
+        const summaryActionSurface = document.getElementById("container-stage-summary");
+        if (summaryActionSurface) {
+          attachPressAndHoldAction(summaryActionSurface, () => {
             openContainerActionSheet(detail.container);
           });
         }
