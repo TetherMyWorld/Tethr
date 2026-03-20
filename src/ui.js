@@ -61,15 +61,18 @@ export function renderApp(initialContainerId) {
       .stage-level-separator { color:rgba(24,32,43,.45); }
       .stage-meta { font-size:1rem; color:var(--muted); margin-top:6px; }
       .stage-meta:empty { display:none; }
-      .stage-title-action { display:inline-flex; flex-wrap:wrap; align-items:center; gap:12px; background:none; border:0; padding:0; width:auto; color:inherit; box-shadow:none; cursor:pointer; }
+      .stage-title-inline { display:inline-flex; flex-wrap:wrap; align-items:center; gap:12px; }
+      .stage-title-location { font:inherit; color:inherit; }
+      .stage-title-action { display:inline-flex; flex-wrap:wrap; align-items:center; gap:0; background:none; border:0; padding:0; width:auto; color:inherit; box-shadow:none; cursor:pointer; }
       .stage-title-action:hover { transform:none; box-shadow:none; }
-      .stage-title-name { font:inherit; color:inherit; }
+      .stage-title-chip { display:inline-flex; align-items:center; gap:12px; padding:8px 16px 8px 10px; border-radius:999px; background:linear-gradient(180deg, #f7fbff 0%, #dfeafb 100%); box-shadow:0 8px 18px rgba(22,80,140,.10); }
+      .stage-title-name { font:inherit; color:var(--accent-strong); }
       .stage-title-thumb { width:52px; height:52px; border-radius:16px; overflow:hidden; border:1px solid rgba(24,62,99,.10); background:rgba(255,255,255,.55); box-shadow:0 8px 16px rgba(27,42,63,.08); flex:0 0 auto; }
       .stage-title-thumb img { width:100%; height:100%; object-fit:cover; border-radius:0; pointer-events:none; -webkit-touch-callout:none; }
       .stage-title-thumb.is-placeholder { border-color:transparent; background:transparent; box-shadow:none; }
       .stage-title-thumb.is-placeholder img { object-fit:contain; padding:6px; }
       .stage-title-separator { color:rgba(24,32,43,.38); font-weight:700; font-size:.78em; line-height:1; }
-      .stage-title-count { font-size:.66em; line-height:1.05; font-weight:700; letter-spacing:-.02em; color:var(--muted); }
+      .stage-title-count { font-size:.66em; line-height:1.05; font-weight:700; letter-spacing:-.02em; color:var(--ink); }
       .stage-context-line { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
       .stage-context-separator { color:rgba(24,32,43,.38); font-weight:700; }
       .stage-summary { display:flex; flex-wrap:wrap; align-items:center; gap:10px; color:var(--ink); }
@@ -324,8 +327,9 @@ export function renderApp(initialContainerId) {
           .stage-actions,.hero-actions,.hero-top { justify-content:flex-start; }
           .hero.hero-compact .hero-top { position:static; margin:0 0 -2px; }
         .stage-actions { width:100%; }
-        .stage-title-action { gap:10px; }
+        .stage-title-inline { gap:10px; }
         .stage-title-thumb { width:42px; height:42px; border-radius:14px; }
+        .stage-title-chip { gap:10px; padding:7px 14px 7px 9px; }
         .stage-title-count { font-size:.58em; }
         .tile-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
         .contents-grid { grid-template-columns:1fr; gap:14px; }
@@ -1649,17 +1653,21 @@ export function renderApp(initialContainerId) {
         renderTopbarNav();
         renderStageLevels("containers");
         els.stageTitle.innerHTML =
-          '<button id="container-stage-title" class="stage-title-action" type="button" aria-label="Actions for ' + escapeAttr(detail.container.name) + '">' +
-            '<span class="stage-title-name">' + escapeHtml(detail.container.name) + '</span>' +
-            '<span class="stage-title-thumb' + (hasStoredImage(detail.container.image_stored_name) ? '' : ' is-placeholder') + '"><img src="' + getDisplayImageUrl(detail.container.image_stored_name, "containers", detail.container.name) + '" alt="' + escapeHtml(detail.container.name) + '"></span>' +
+          '<span class="stage-title-inline">' +
+            '<span class="stage-title-location">' + escapeHtml(location ? location.name : "No Location") + '</span>' +
+            '<span class="stage-title-separator">/</span>' +
+            '<button id="container-stage-title" class="stage-title-action" type="button" aria-label="Actions for ' + escapeAttr(detail.container.name) + '">' +
+              '<span class="stage-title-chip">' +
+                '<span class="stage-title-thumb' + (hasStoredImage(detail.container.image_stored_name) ? '' : ' is-placeholder') + '"><img src="' + getDisplayImageUrl(detail.container.image_stored_name, "containers", detail.container.name) + '" alt="' + escapeHtml(detail.container.name) + '"></span>' +
+                '<span class="stage-title-name">' + escapeHtml(detail.container.name) + '</span>' +
+              '</span>' +
+            '</button>' +
             '<span class="stage-title-separator">/</span>' +
             '<span class="stage-title-count">' + itemCountLabel + '</span>' +
-          '</button>';
-        els.stageMeta.innerHTML =
-          '<div class="stage-context-line">' +
-            '<span>' + escapeHtml(location ? location.name : "No Location") + '</span>' +
-          '</div>' +
-          (detail.container.notes ? '<div class="stage-summary-note">' + escapeHtml(detail.container.notes) + '</div>' : '');
+          '</span>';
+        els.stageMeta.innerHTML = detail.container.notes
+          ? '<div class="stage-summary-note">' + escapeHtml(detail.container.notes) + '</div>'
+          : '';
         setBreadcrumbs([]);
         els.stageActions.innerHTML = "";
 
