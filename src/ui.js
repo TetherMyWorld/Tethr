@@ -409,7 +409,7 @@ export function renderApp(initialContainerId) {
         const isContainer = category === "containers";
         const typeLabel = escapeHtml(isContainer ? "Container" : "Item");
         const icon = isContainer
-          ? '<rect x="64" y="94" width="192" height="110" rx="24" fill="#e7eef6" stroke="#2a4f78" stroke-width="10"/><path d="M82 104h156l-20 -30H102z" fill="#e7eef6" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/>'
+          ? '<path d="M92 118 160 86l68 32-68 34Z" fill="#e7eef6" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/><path d="M92 118v76l68 40v-82Z" fill="#e7eef6" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/><path d="M228 118v76l-68 40v-82Z" fill="#e7eef6" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/>'
           : '<path d="M171 86c12-15 31-20 47-13-11 10-22 16-36 18" fill="none" stroke="#2a4f78" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M160 110c18-17 50-15 62 8 10 20 6 44-2 64-10 25-28 49-60 49-33 0-51-24-61-49-8-20-12-44-2-64 12-23 44-25 63-8Z" fill="#e7eef6" stroke="#2a4f78" stroke-width="10" stroke-linejoin="round"/>';
         const svg =
           '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-label="' + typeLabel + ' placeholder">' +
