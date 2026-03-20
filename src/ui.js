@@ -138,6 +138,12 @@ export function renderApp(initialContainerId) {
       .identity-label { font-size:.82rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700; }
       .identity-token { font-family:"Cascadia Code","Consolas","Courier New",monospace; font-size:1rem; line-height:1.45; color:var(--ink); word-break:break-all; background:rgba(255,255,255,.52); border:1px solid rgba(24,62,99,.08); border-radius:18px; padding:14px 16px; box-shadow:inset 0 1px 0 rgba(255,255,255,.7); }
       .identity-empty { color:var(--muted); }
+      .label-preview { max-width:3in; width:100%; margin:0 auto; text-align:center; display:grid; gap:14px; justify-items:center; padding:20px 18px 18px; }
+      .label-preview-type { display:inline-flex; align-items:center; justify-content:center; padding:6px 12px; border-radius:999px; background:linear-gradient(180deg, #edf3fa 0%, #dde7f2 100%); color:var(--accent-strong); font-size:.76rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+      .label-preview-qr { width:min(100%, 280px); display:grid; place-items:center; padding:10px; border-radius:18px; background:rgba(255,255,255,.72); box-shadow:inset 0 1px 0 rgba(255,255,255,.84); }
+      .label-preview-qr img { width:100%; height:auto; display:block; border-radius:12px; }
+      .label-preview-name { font-family:var(--heading-font); font-size:1.45rem; line-height:1.02; letter-spacing:-.04em; max-width:100%; overflow-wrap:anywhere; }
+      .label-preview-note { font-size:.92rem; color:var(--muted); }
       .contents-grid { grid-template-columns:repeat(auto-fit,minmax(220px,248px)); gap:16px; align-items:stretch; justify-content:start; }
       .item-card { position:relative; width:100%; max-width:248px; }
       .item-row,.photo-card { border:1px solid rgba(24,62,99,.08); border-radius:22px; background:#fcfdff; padding:20px; box-shadow:0 12px 24px rgba(27,42,63,.06), inset 0 1px 0 rgba(255,255,255,.72); }
@@ -1270,10 +1276,11 @@ export function renderApp(initialContainerId) {
         openModal(
           "Label",
           '<div class="stack">' +
-            '<div id="label-panel" class="photo-card" data-size="medium" style="max-width:3in; margin:0 auto; text-align:center;">' +
-              '<div class="item-name" style="font-size:1.4rem;">' + escapeHtml(previewName) + '</div>' +
-              '<div class="mini-note" style="margin-top:6px; text-transform:uppercase; letter-spacing:.08em;">' + escapeHtml(subtitle) + '</div>' +
-              '<div style="max-width:320px; width:100%; margin:18px auto 0;"><img src="' + qrUrl + '" alt="QR code for ' + escapeAttr(previewName) + '"></div>' +
+            '<div id="label-panel" class="photo-card label-preview" data-size="medium">' +
+              '<div class="label-preview-type">' + escapeHtml(subtitle) + '</div>' +
+              '<div class="label-preview-qr"><img src="' + qrUrl + '" alt="QR code for ' + escapeAttr(previewName) + '"></div>' +
+              '<div class="label-preview-name">' + escapeHtml(previewName) + '</div>' +
+              '<div class="label-preview-note">Scan to open in TethrArca</div>' +
             '</div>' +
             '<div class="section-head actions-only">' +
               '<label style="width:auto; min-width:190px;">Label Size<select id="label-size-select"><option value="small">Small</option><option value="medium" selected>Medium</option><option value="large">Large</option></select></label>' +
@@ -2923,9 +2930,11 @@ export function renderPrintLabelPage({ name, entityType, qrUrl, size }) {
       @page { size: auto; margin: 0.3in; }
       body { margin:0; padding:0.25in; font-family:"Aptos","Segoe UI",sans-serif; background:#ffffff; color:#18202b; }
       .sheet { display:flex; justify-content:center; }
-      .label { width:${settings.width}; border:1px solid #c8d4e3; border-radius:18px; padding:${settings.padding}; text-align:center; }
-      .type { font-size:${settings.subtitle}; letter-spacing:.08em; text-transform:uppercase; color:#5f6b7b; font-weight:700; margin-bottom:0.14in; }
-      .name { font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif; font-size:${settings.title}; line-height:1.05; font-weight:700; margin-bottom:0.18in; }
+      .label { width:${settings.width}; border:1px solid #c8d4e3; border-radius:18px; padding:${settings.padding}; text-align:center; display:grid; gap:${settings.gap}; justify-items:center; }
+      .type { display:inline-flex; align-items:center; justify-content:center; padding:${settings.typePad}; border-radius:999px; background:#edf3fa; color:#29486a; font-size:${settings.subtitle}; letter-spacing:.08em; text-transform:uppercase; font-weight:800; }
+      .qr-shell { width:${settings.qrShell}; padding:${settings.qrPad}; border-radius:16px; background:#f8fbff; }
+      .name { font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif; font-size:${settings.title}; line-height:1.05; font-weight:700; max-width:100%; overflow-wrap:anywhere; }
+      .note { font-size:${settings.note}; color:#5f6b7b; }
       .qr { width:${settings.qr}px; height:${settings.qr}px; margin:0 auto; display:block; }
     </style>
   </head>
@@ -2933,8 +2942,9 @@ export function renderPrintLabelPage({ name, entityType, qrUrl, size }) {
     <div class="sheet">
       <div class="label">
         <div class="type">${subtitle}</div>
+        <div class="qr-shell"><img class="qr" src="${qrUrl}" alt="QR code"></div>
         <div class="name">${title}</div>
-        <img class="qr" src="${qrUrl}" alt="QR code">
+        <div class="note">Scan to open in TethrArca</div>
       </div>
     </div>
   </body>
@@ -2943,12 +2953,12 @@ export function renderPrintLabelPage({ name, entityType, qrUrl, size }) {
 
 function labelSizeDefinitionForPrint(size) {
   if (size === "small") {
-    return { width: "2.25in", qr: 150, title: "1rem", subtitle: ".72rem", padding: ".18in" };
+    return { width: "2.25in", qr: 150, qrShell: "1.75in", title: "1rem", subtitle: ".7rem", note: ".64rem", padding: ".18in", gap: ".12in", qrPad: ".08in", typePad: ".05in .12in" };
   }
   if (size === "large") {
-    return { width: "4in", qr: 280, title: "1.45rem", subtitle: ".9rem", padding: ".32in" };
+    return { width: "4in", qr: 280, qrShell: "3.15in", title: "1.45rem", subtitle: ".9rem", note: ".8rem", padding: ".32in", gap: ".18in", qrPad: ".12in", typePad: ".07in .16in" };
   }
-  return { width: "3in", qr: 220, title: "1.2rem", subtitle: ".82rem", padding: ".24in" };
+  return { width: "3in", qr: 220, qrShell: "2.5in", title: "1.2rem", subtitle: ".8rem", note: ".72rem", padding: ".24in", gap: ".15in", qrPad: ".1in", typePad: ".06in .14in" };
 }
 
 function escapeHtmlStatic(value) {
