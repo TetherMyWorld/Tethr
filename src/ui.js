@@ -302,7 +302,8 @@ export function renderApp(initialContainerId) {
       .action-compass-button svg { width:34px; height:34px; display:block; stroke:currentColor; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; fill:none; }
       .action-compass-button .compass-glyph { font-family:var(--heading-font); font-size:2.6rem; line-height:1; font-weight:700; }
       .action-compass-button.danger { color:#181f31; border-color:rgba(20, 28, 45, .95); }
-      .action-compass-center { font-family:var(--heading-font); font-size:2.5rem; line-height:1; font-weight:700; }
+      .action-compass-center { padding:10px; }
+      .action-compass-center svg { width:64px; height:64px; display:block; }
       .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0, 0, 0, 0); white-space:nowrap; border:0; }
       @media (max-width: 640px) {
         .action-compass { gap:24px; }
@@ -311,8 +312,8 @@ export function renderApp(initialContainerId) {
         .action-compass-center,
         .action-compass-spacer { width:82px; height:82px; }
         .action-compass-button svg { width:30px; height:30px; }
-        .action-compass-button .compass-glyph,
-        .action-compass-center { font-size:2.2rem; }
+        .action-compass-button .compass-glyph { font-size:2.2rem; }
+        .action-compass-center svg { width:54px; height:54px; }
       }
       @media (max-width:900px) { .tile-grid { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); } .contents-grid { grid-template-columns:repeat(auto-fit,minmax(200px,232px)); } }
       @media (max-width:720px) {
@@ -586,6 +587,25 @@ export function renderApp(initialContainerId) {
       const deleteIconMarkup = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg>';
       const editIconMarkup = '&#9998;';
       const historyIconMarkup = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 7v5l3 2"></path></svg>';
+      const compassCenterLogoMarkup =
+        '<svg viewBox="0 0 96 96" aria-hidden="true" focusable="false">' +
+          '<defs>' +
+            '<linearGradient id="compass-center-grad-a" x1="18" y1="24" x2="78" y2="70" gradientUnits="userSpaceOnUse">' +
+              '<stop stop-color="#82ddf1"/>' +
+              '<stop offset="0.52" stop-color="#a9d9fa"/>' +
+              '<stop offset="1" stop-color="#5080e3"/>' +
+            '</linearGradient>' +
+            '<linearGradient id="compass-center-grad-b" x1="24" y1="72" x2="78" y2="24" gradientUnits="userSpaceOnUse">' +
+              '<stop stop-color="#5a84ea"/>' +
+              '<stop offset="0.52" stop-color="#7bb9f2"/>' +
+              '<stop offset="1" stop-color="#9acfff"/>' +
+            '</linearGradient>' +
+          '</defs>' +
+          '<path d="M22 31c0-4.6 3.7-8.3 8.3-8.3h35.7c4.5 0 8.8 1.9 11.8 5.3l8.6 9.7c2.4 2.7 2.4 6.8 0 9.5l-8.6 9.7c-3 3.4-7.2 5.3-11.8 5.3H30.3c-4.6 0-8.3-3.7-8.3-8.3 0-2 .7-3.9 2-5.4l6.3-7.2-6.3-7.2a8.3 8.3 0 0 1-2-5.4Z" fill="url(#compass-center-grad-a)"/>' +
+          '<path d="M31.5 63.3c-4.4 0-8.6-1.8-11.6-5.1l-8-8.8a6.2 6.2 0 0 1 0-8.4l8-8.8c3-3.2 7.1-5.1 11.6-5.1h34.9c4.4 0 8.6 1.8 11.6 5.1l8 8.8a6.2 6.2 0 0 1 0 8.4l-8 8.8c-3 3.2-7.1 5.1-11.6 5.1H31.5Zm-.2-8h35.4c2.2 0 4.2-.9 5.7-2.5l6.6-7.2-6.6-7.2a7.7 7.7 0 0 0-5.7-2.5H31.3c-2.2 0-4.2.9-5.7 2.5L19 45.6l6.6 7.2c1.5 1.6 3.5 2.5 5.7 2.5Z" fill="url(#compass-center-grad-b)"/>' +
+          '<path d="M30 41.4h36.3c2.1 0 4.1.9 5.5 2.5l6 6.6-6 6.6a7.5 7.5 0 0 1-5.5 2.5H30c-1.7 0-2.6-2-1.5-3.2l9.1-10-9.1-10c-1.1-1.2-.2-3.2 1.5-3.2Z" fill="#15233f"/>' +
+          '<path d="M41.3 19.2a6 6 0 0 1 8.6 0l20.4 20.5a6 6 0 0 1 0 8.5L49.9 68.7a6 6 0 0 1-8.6 0l-2.6-2.6 18.5-19.2c1.3-1.3 1.3-3.4 0-4.7L38.7 23l2.6-3.8Z" fill="#213b7a" opacity=".85"/>' +
+        '</svg>';
       const compassEditIconMarkup = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4Z"></path><path d="M13 7l4 4"></path></svg>';
       const moveIconMarkup = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 7 5 5-5 5"></path><path d="m13 7 5 5-5 5"></path></svg>';
 
@@ -1265,7 +1285,7 @@ export function renderApp(initialContainerId) {
             '</div>' +
             '<div class="action-compass-middle">' +
               buttonHtml(actions.left, "left", "side ") +
-              '<div class="action-compass-center" aria-hidden="true"></div>' +
+              '<div class="action-compass-center" aria-hidden="true">' + compassCenterLogoMarkup + '</div>' +
               buttonHtml(actions.right, "right", "side ") +
             '</div>' +
             '<div class="action-compass-row">' +
