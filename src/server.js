@@ -7,6 +7,7 @@ import { pathToFileURL } from "node:url";
 import {
   assignTag,
   createAuraWhiskyEntry,
+  updateAuraWhiskyEntry,
   createContainer,
   createItem,
   createLocation,
@@ -38,11 +39,12 @@ import {
   saveContainerPhoto,
   saveItemPhoto,
   searchRecords,
+  searchTethrRecords,
   updateContainer,
   updateItem,
   updateLocation
 } from "./db.js";
-import { renderApp, renderAuraApp, renderAuraHome, renderPrintLabelPage } from "./ui.js";
+import { renderApp, renderAuraApp, renderAuraHome, renderPrintLabelPage, renderTethrHome } from "./ui.js";
 
 loadLocalEnvFile();
 
@@ -223,7 +225,14 @@ export async function handleRequest(req, res) {
         return sendHtml(res, renderAuraApp(url.pathname));
       }
 
-      if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/simulate-scan" || url.pathname.startsWith("/containers/") || url.pathname.startsWith("/scan/"))) {
+      if (req.method === "GET" && url.pathname === "/") {
+        if (session) {
+          return sendHtml(res, renderTethrHome());
+        }
+        return sendHtml(res, renderApp(null));
+      }
+
+      if (req.method === "GET" && (url.pathname === "/arca" || url.pathname === "/simulate-scan" || url.pathname.startsWith("/containers/") || url.pathname.startsWith("/scan/"))) {
         const selectedContainer = session && url.pathname.startsWith("/containers/")
           ? getContainerFromRoute(url.pathname.split("/").pop())
           : null;
@@ -260,6 +269,10 @@ export async function handleRequest(req, res) {
         return detail ? sendJson(res, 200, detail) : sendJson(res, 404, { error: "Whisky not found" });
       }
 
+      if (req.method === "GET" && url.pathname === "/api/tethr-search") {
+        return sendJson(res, 200, searchTethrRecords(url.searchParams.get("q") || ""));
+      }
+
       if (req.method === "POST" && url.pathname.startsWith("/api/aura/whiskies/") && url.pathname.endsWith("/entries")) {
         const id = url.pathname.split("/")[4];
         const entry = createAuraWhiskyEntry(id, await readJson(req));
@@ -267,6 +280,20 @@ export async function handleRequest(req, res) {
           ? await syncAuraWhiskyEntryToSupabase(session, entry)
           : { synced: false, reason: "No signed-in session." };
         return sendJson(res, 201, {
+          ...entry,
+          supabaseSync: syncStatus
+        });
+      }
+
+      if (req.method === "PATCH" && url.pathname.startsWith("/api/aura/whiskies/") && url.pathname.includes("/entries/")) {
+        const parts = url.pathname.split("/");
+        const whiskyId = parts[4];
+        const entryId = parts[6];
+        const entry = updateAuraWhiskyEntry(whiskyId, entryId, await readJson(req));
+        const syncStatus = session
+          ? await syncAuraWhiskyEntryToSupabase(session, entry)
+          : { synced: false, reason: "No signed-in session." };
+        return sendJson(res, 200, {
           ...entry,
           supabaseSync: syncStatus
         });
@@ -1512,6 +1539,7 @@ async function syncAuraWhiskyEntryToSupabase(session, entry) {
       workspace_id: session.workspace.id,
       user_id: session.user.id,
       entry_text: entry.entryText || "",
+      archived_at: entry.archivedAt || null,
       created_at: entry.createdAt || new Date().toISOString(),
       updated_at: entry.updatedAt || new Date().toISOString()
     }, "id");

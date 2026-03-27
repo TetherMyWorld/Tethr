@@ -16,14 +16,14 @@ export function renderApp(initialContainerId) {
       a { color:var(--accent); text-decoration:none; }
       img { width:100%; border-radius:16px; display:block; -webkit-user-drag:none; user-select:none; -webkit-user-select:none; }
       .shell { max-width:1240px; margin:0 auto; padding:40px 28px 44px; display:grid; gap:24px; }
-      .topbar,.panel,.modal-shell { background:
+      .panel,.modal-shell { background:
         linear-gradient(180deg, rgba(252,253,255,.98) 0%, rgba(246,249,253,.97) 100%);
         border:1px solid rgba(255,255,255,.65);
         border-radius:24px;
         box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.72);
         backdrop-filter:blur(14px); }
       .topbar,.stage-head,.modal-header,.item-row-header,.button-row { display:flex; gap:12px; align-items:center; justify-content:space-between; }
-      .topbar { padding:24px 28px; flex-wrap:wrap; }
+      .topbar { padding:4px 2px 8px; display:grid; grid-template-columns:auto minmax(280px, 1fr) auto; align-items:center; gap:18px; }
       .brand { display:grid; gap:4px; }
       .brand h1 { margin:0; font-family:var(--heading-font); font-size:clamp(2.3rem,4vw,3.3rem); line-height:.95; letter-spacing:-.06em; font-weight:700; }
       .brand p,.meta,.muted,.mini-note { color:var(--muted); }
@@ -34,18 +34,50 @@ export function renderApp(initialContainerId) {
       .breadcrumb-link { border:0; width:auto; background:linear-gradient(180deg, #f7fbff 0%, #dfeafb 100%); color:var(--ink); box-shadow:0 6px 14px rgba(22,80,140,.08); cursor:pointer; }
       .breadcrumb-current { background:rgba(255,255,255,.64); color:var(--accent-strong); box-shadow:inset 0 1px 0 rgba(255,255,255,.7); }
       .breadcrumb-separator { color:var(--muted); font-weight:700; padding:0 1px; }
-      .button-row,.topbar-nav { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+      .button-row,.topbar-nav,.top-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
       .button-row { justify-content:flex-end; }
       .button-row > *, .topbar-nav > * { width:auto; }
-      .topbar-nav .action-cluster { background:rgba(255,255,255,.56); box-shadow:0 10px 22px rgba(22,80,140,.08), inset 0 1px 0 rgba(255,255,255,.72); flex-wrap:nowrap; }
-      .topbar-nav .action-cluster > * { width:auto; flex:0 0 auto; }
-      .session-badge { display:grid; gap:2px; padding:10px 16px; border-radius:18px; background:rgba(255,255,255,.62); box-shadow:inset 0 1px 0 rgba(255,255,255,.72); min-width:0; text-align:left; }
-      button.session-badge { border:0; color:var(--ink); cursor:pointer; background:rgba(255,255,255,.62); box-shadow:inset 0 1px 0 rgba(255,255,255,.72); }
-      button.session-badge:hover { transform:translateY(-1px); box-shadow:0 8px 18px rgba(22,80,140,.10), inset 0 1px 0 rgba(255,255,255,.72); }
-      .session-name { font-weight:700; color:var(--ink); line-height:1.1; }
-      .session-email { color:var(--muted); font-size:.88rem; line-height:1.1; }
-      .searchbar { flex:1 1 380px; max-width:440px; }
+      .topbar-nav { justify-content:flex-end; }
+      .top-actions { justify-content:flex-end; }
+      .searchbar { width:min(100%, 520px); justify-self:center; }
       .searchbar input { width:100%; }
+      .nav-icon-badge {
+        width:56px;
+        height:56px;
+        display:grid;
+        place-items:center;
+        padding:0;
+        border-radius:999px;
+        border:1px solid rgba(24,62,99,.10);
+        background:linear-gradient(180deg, rgba(241,246,251,.96) 0%, rgba(226,236,247,.98) 100%);
+        box-shadow:0 10px 18px rgba(27,42,63,.08), inset 0 1px 0 rgba(255,255,255,.78);
+        color:var(--accent-strong);
+        cursor:pointer;
+      }
+      .nav-icon-badge svg {
+        width:26px;
+        height:26px;
+        fill:currentColor;
+      }
+      .account-badge {
+        width:56px;
+        height:56px;
+        display:grid;
+        place-items:center;
+        padding:0;
+        border-radius:999px;
+        border:1px solid rgba(24,62,99,.10);
+        background:linear-gradient(180deg, rgba(241,246,251,.96) 0%, rgba(226,236,247,.98) 100%);
+        box-shadow:0 10px 18px rgba(27,42,63,.08), inset 0 1px 0 rgba(255,255,255,.78);
+        color:var(--accent-strong);
+        font-size:1rem;
+        font-weight:800;
+        letter-spacing:.04em;
+        text-transform:uppercase;
+        cursor:pointer;
+      }
+      .account-badge:hover { transform:translateY(-1px); box-shadow:0 12px 22px rgba(22,80,140,.10), inset 0 1px 0 rgba(255,255,255,.78); }
+      .account-badge:focus-visible { outline:2px solid rgba(31,111,179,.32); outline-offset:3px; }
       .panel { padding:28px; }
       .stage-shell,.stack,.tile-grid,.form-grid,.contents-grid,.photos-grid { display:grid; gap:16px; }
       .stage-head { align-items:flex-start; padding:0 2px 18px; border-bottom:1px solid rgba(24,32,42,.08); }
@@ -171,6 +203,8 @@ export function renderApp(initialContainerId) {
       .item-photo-chip img { width:100%; height:100%; object-fit:cover; }
       .section { border:1px solid rgba(24,62,99,.08); border-radius:24px; background:linear-gradient(180deg, rgba(241,246,251,.92) 0%, rgba(250,252,255,.98) 100%); padding:24px; display:grid; gap:20px; box-shadow:var(--shadow-soft), inset 0 1px 0 rgba(255,255,255,.65); }
       .section.items-section { background:linear-gradient(180deg, rgba(234,243,252,.98) 0%, rgba(246,250,255,.98) 100%); padding:20px 24px 22px; gap:16px; }
+      .section.items-section.clean { padding:8px 0 0; background:transparent; border:0; border-radius:0; box-shadow:none; }
+      .section.items-section.clean .section-head { padding:0 2px 2px; }
       .section.detail-tone-1 { background:linear-gradient(180deg, rgba(238,247,255,.98) 0%, rgba(248,252,255,.98) 100%); border-color:rgba(22,80,140,.14); }
       .section.detail-tone-2 { background:linear-gradient(180deg, rgba(239,250,249,.98) 0%, rgba(248,253,252,.98) 100%); border-color:rgba(15,109,115,.14); }
       .section.detail-tone-3 { background:linear-gradient(180deg, rgba(255,249,238,.98) 0%, rgba(255,253,248,.98) 100%); border-color:rgba(176,125,31,.15); }
@@ -318,12 +352,11 @@ export function renderApp(initialContainerId) {
       @media (max-width:900px) { .tile-grid { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); } .contents-grid { grid-template-columns:repeat(auto-fit,minmax(200px,232px)); } }
       @media (max-width:720px) {
         .shell { padding:14px; gap:16px; }
-        .topbar,.panel,.modal-shell,.hero,.tile,.section { border-radius:20px; }
-        .topbar { padding:18px; display:grid; grid-template-columns:1fr; }
+        .panel,.modal-shell,.hero,.tile,.section { border-radius:20px; }
+        .topbar { padding:0 0 4px; display:grid; grid-template-columns:1fr; gap:12px; }
         .brand, .searchbar, .topbar-nav { width:100%; max-width:none; }
         .topbar-nav { justify-self:stretch; }
-        .topbar-nav .action-cluster { width:100%; justify-content:space-between; }
-        .session-badge { flex:1 1 auto; min-width:0; }
+        .top-actions { width:100%; justify-content:flex-end; }
         .stage-head { align-items:flex-start; grid-template-columns:1fr; gap:14px; }
           .stage-actions,.hero-actions,.hero-top { justify-content:flex-start; }
           .hero.hero-compact .hero-top { position:static; margin:0 0 -2px; }
@@ -360,7 +393,7 @@ export function renderApp(initialContainerId) {
       @media (max-width:420px) {
         .tile-grid { grid-template-columns:1fr; }
         .tile-card,.tile-open { aspect-ratio:auto; min-height:150px; }
-        .topbar { padding:16px; }
+        .topbar { padding:0; }
         .panel,.section,.hero { padding:18px; }
       }
     </style>
@@ -663,34 +696,62 @@ export function renderApp(initialContainerId) {
         renderTopbarNav();
       }
 
+      function getAccountInitials(user) {
+        const name = String(user?.name || "").trim();
+        if (name) {
+          const words = name.split(/\\s+/).filter(Boolean);
+          if (words.length >= 2) {
+            const first = words[0].replace(/[^a-z]/gi, "");
+            const last = words[words.length - 1].replace(/[^a-z]/gi, "");
+            if (first && last) {
+              return (first.charAt(0) + last.charAt(0)).toUpperCase();
+            }
+          }
+          const compact = name.replace(/[^a-z]/gi, "");
+          if (compact) {
+            return compact.slice(0, 2).toUpperCase();
+          }
+        }
+        const email = String(user?.email || "").trim().toLowerCase();
+        if (!email) {
+          return "TT";
+        }
+        const local = email.replace(/@.*$/, "");
+        const words = local.split(/[._-]+/).filter(Boolean);
+        if (words.length >= 2) {
+          return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+        }
+        return local.slice(0, 2).toUpperCase() || "TT";
+      }
+
       function renderTopbarNav() {
         if (!state.bootstrap.authenticated) {
           els.topbarNav.innerHTML = "";
           return;
         }
         const user = state.bootstrap.currentUser || {};
-        const sessionBadgeHtml =
-          '<button id="topbar-account-button" class="session-badge" type="button" aria-label="Account">' +
-            '<div class="session-name">' + escapeHtml(user.name || "Signed in") + '</div>' +
-            '<div class="session-email">' + escapeHtml(user.email || "") + '</div>' +
-          '</button>';
+        const accountButtonHtml =
+          '<button id="topbar-account-button" class="account-badge" type="button" aria-label="Account settings" title="Account settings">' + escapeHtml(getAccountInitials(user)) + '</button>';
+        const homeButtonHtml =
+          '<button id="topbar-home-button" class="secondary icon-button nav-icon home-icon" type="button" aria-label="Start" title="Start"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 3.2 2.8 10.6a1 1 0 0 0 .62 1.78H5v7.1c0 .83.67 1.5 1.5 1.5h3.8a.7.7 0 0 0 .7-.7V15.2c0-.39.31-.7.7-.7h1.6c.39 0 .7.31.7.7v5.05a.7.7 0 0 0 .7.7h3.8c.83 0 1.5-.67 1.5-1.5v-7.1h1.58a1 1 0 0 0 .62-1.78L12 3.2Z"/></svg></button>';
         const showBack = state.stage === "containers" || state.stage === "container" || state.stage === "simulatedScan";
         if (!showBack) {
           els.topbarNav.innerHTML =
-            '<div class="action-cluster">' +
-              sessionBadgeHtml +
+            '<div class="top-actions">' +
+              homeButtonHtml +
+              accountButtonHtml +
             '</div>';
+          document.getElementById("topbar-home-button").addEventListener("click", () => {
+            window.location.href = "/";
+          });
           document.getElementById("topbar-account-button").addEventListener("click", openAccountModal);
           return;
         }
-        const showHome = state.stage === "container";
         els.topbarNav.innerHTML =
-          '<div class="action-cluster">' +
-            sessionBadgeHtml +
-            (showHome
-              ? '<button id="topbar-home-button" class="secondary icon-button nav-icon home-icon" type="button" aria-label="Home" title="Home"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 3.2 2.8 10.6a1 1 0 0 0 .62 1.78H5v7.1c0 .83.67 1.5 1.5 1.5h3.8a.7.7 0 0 0 .7-.7V15.2c0-.39.31-.7.7-.7h1.6c.39 0 .7.31.7.7v5.05a.7.7 0 0 0 .7.7h3.8c.83 0 1.5-.67 1.5-1.5v-7.1h1.58a1 1 0 0 0 .62-1.78L12 3.2Z"/></svg></button>'
-              : '') +
+          '<div class="top-actions">' +
+            homeButtonHtml +
             '<button id="topbar-back-button" class="secondary icon-button nav-icon back-icon" type="button" aria-label="Back" title="Back">&#8617;</button>' +
+            accountButtonHtml +
           '</div>';
         document.getElementById("topbar-back-button").addEventListener("click", () => {
           if (state.stage === "simulatedScan") {
@@ -718,7 +779,7 @@ export function renderApp(initialContainerId) {
         const homeButton = document.getElementById("topbar-home-button");
         if (homeButton) {
           homeButton.addEventListener("click", () => {
-            goToLocations(true);
+            window.location.href = "/";
           });
         }
         document.getElementById("topbar-account-button").addEventListener("click", openAccountModal);
@@ -921,7 +982,7 @@ export function renderApp(initialContainerId) {
         state.scanToken = null;
         state.pendingScanAction = null;
         if (push) {
-          history.pushState({}, "", "/");
+          history.pushState({}, "", "/arca");
         }
         renderStage();
       }
@@ -936,7 +997,7 @@ export function renderApp(initialContainerId) {
         state.scanToken = null;
         state.pendingScanAction = null;
         if (push) {
-          history.pushState({}, "", "/");
+          history.pushState({}, "", locationId ? "/arca?location=" + encodeURIComponent(locationId) : "/arca?location=__none__");
         }
         renderStage();
       }
@@ -963,6 +1024,19 @@ export function renderApp(initialContainerId) {
           const id = extractRecordIdFromSlug(containerMatch[1]);
           if (id) {
             await openContainer(id, false);
+            return;
+          }
+        }
+        const currentUrl = new URL(window.location.href);
+        if (currentUrl.pathname === "/arca" || currentUrl.pathname === "/") {
+          const itemId = currentUrl.searchParams.get("item") || "";
+          if (itemId) {
+            await revealItemInContainer(itemId, { pushUrl: false });
+            return;
+          }
+          if (currentUrl.searchParams.has("location")) {
+            const locationId = currentUrl.searchParams.get("location");
+            openLocation(locationId === "__none__" ? null : locationId, false);
             return;
           }
         }
@@ -1716,7 +1790,7 @@ export function renderApp(initialContainerId) {
           : '<div class="empty-state"><h3>No items yet</h3><div class="mini-note">Add the first item to this container.</div></div>';
 
           els.stageContent.innerHTML =
-          '<div class="section items-section">' +
+          '<div class="section items-section clean">' +
             '<div class="section-head">' +
               '<div style="display:flex; gap:12px; align-items:baseline; flex-wrap:wrap;">' +
                 '<h3>Items</h3>' +
@@ -2092,7 +2166,7 @@ export function renderApp(initialContainerId) {
                 state.activeItemId = null;
                 state.activeItemDetail = null;
                 state.revealedItemId = null;
-                history.pushState({}, "", "/");
+                history.pushState({}, "", saved.location_id ? "/arca?location=" + encodeURIComponent(saved.location_id) : "/arca?location=__none__");
                 await refreshAll();
               } finally {
                 setFormSaving(formElement, false);
@@ -2919,7 +2993,7 @@ export function renderApp(initialContainerId) {
         state.activeItemDetail = null;
         state.revealedItemId = null;
         state.searchResults = null;
-        history.pushState({}, "", "/");
+        history.pushState({}, "", "/arca");
         renderOverview();
         renderStage();
         showMessage("Signed out.");
@@ -2971,6 +3045,731 @@ export function renderApp(initialContainerId) {
           hour: "numeric",
           minute: "2-digit"
         });
+      }
+    </script>
+  </body>
+</html>`;
+}
+
+export function renderTethrHome() {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>Tethr</title>
+    <style>
+      :root {
+        --bg:#e4ebf3;
+        --panel:#fbfdff;
+        --ink:#18202b;
+        --muted:#5f6b7b;
+        --accent:#16508c;
+        --accent-strong:#123a64;
+        --line:rgba(24,32,43,.09);
+        --shadow:0 28px 68px rgba(20,38,64,.14);
+        --shadow-soft:0 14px 28px rgba(20,38,64,.10);
+        --heading-font:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+        --body-font:"Aptos","Segoe UI","Trebuchet MS",sans-serif;
+      }
+      * { box-sizing:border-box; }
+      body {
+        margin:0;
+        font-family:var(--body-font);
+        color:var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(15,109,115,.18), transparent 22%),
+          radial-gradient(circle at top center, rgba(176,125,31,.15), transparent 24%),
+          radial-gradient(circle at top right, rgba(22,80,140,.18), transparent 24%),
+          linear-gradient(180deg, #f5f9ff 0%, #e9f0f8 34%, var(--bg) 70%, #cfd9e6 100%);
+      }
+      a { color:inherit; text-decoration:none; }
+      button, input { font:inherit; }
+      .shell { max-width:1280px; margin:0 auto; padding:36px 28px 42px; display:grid; gap:20px; }
+      .topbar { display:flex; justify-content:flex-end; }
+      .top-actions { display:flex; align-items:center; gap:12px; justify-content:flex-end; }
+      .nav-pill {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:56px;
+        padding:0 22px;
+        border-radius:999px;
+        border:1px solid rgba(24,62,99,.08);
+        background:rgba(255,255,255,.62);
+        color:var(--accent-strong);
+        font-size:.95rem;
+        font-weight:700;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.72);
+        cursor:pointer;
+      }
+      .account-badge {
+        width:56px;
+        height:56px;
+        display:grid;
+        place-items:center;
+        padding:0;
+        border-radius:999px;
+        border:1px solid rgba(24,62,99,.10);
+        background:linear-gradient(180deg, rgba(241,246,251,.96) 0%, rgba(226,236,247,.98) 100%);
+        box-shadow:0 10px 18px rgba(27,42,63,.08), inset 0 1px 0 rgba(255,255,255,.78);
+        color:var(--accent-strong);
+        font-size:1rem;
+        font-weight:800;
+        letter-spacing:.04em;
+        text-transform:uppercase;
+        cursor:pointer;
+      }
+      .account-badge:focus-visible,
+      .nav-pill:focus-visible,
+      input:focus-visible,
+      .result-card:focus-visible,
+      .branch-chip:focus-visible {
+        outline:2px solid rgba(31,111,179,.32);
+        outline-offset:3px;
+      }
+      .panel {
+        background:linear-gradient(180deg, rgba(252,253,255,.98) 0%, rgba(246,249,253,.97) 100%);
+        border:1px solid rgba(255,255,255,.65);
+        border-radius:28px;
+        box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.72);
+        backdrop-filter:blur(12px);
+      }
+      .panel.search-launch {
+        min-height:clamp(420px, 58vh, 640px);
+        display:grid;
+        align-content:center;
+        justify-items:center;
+        text-align:center;
+        gap:24px;
+        padding:48px clamp(24px, 6vw, 72px);
+      }
+      .panel.has-query {
+        padding:20px 24px 22px;
+        display:grid;
+        gap:14px;
+      }
+      .panel.has-query .launch-copy {
+        gap:10px;
+        width:min(100%, 980px);
+      }
+      .panel.has-query .launch-copy h1 {
+        font-size:clamp(2.8rem, 6vw, 4.8rem);
+        line-height:.94;
+      }
+      .panel.has-query .field-grid {
+        width:min(100%, 980px);
+      }
+      .panel.has-query .search-input {
+        min-height:64px;
+        font-size:1.1rem;
+        padding:16px 22px;
+      }
+      .launch-copy {
+        display:grid;
+        gap:18px;
+        width:min(100%, 860px);
+        justify-items:center;
+      }
+      .launch-copy h1 {
+        margin:0;
+        font-family:var(--heading-font);
+        font-size:clamp(3.1rem, 8vw, 5.6rem);
+        line-height:.92;
+        letter-spacing:-.07em;
+      }
+      .field-grid {
+        width:min(100%, 860px);
+        display:grid;
+        gap:14px;
+      }
+      .field-grid label {
+        position:absolute;
+        width:1px;
+        height:1px;
+        padding:0;
+        margin:-1px;
+        overflow:hidden;
+        clip:rect(0, 0, 0, 0);
+        border:0;
+      }
+      .search-input {
+        width:100%;
+        min-height:74px;
+        border-radius:24px;
+        border:1px solid rgba(24,62,99,.12);
+        background:#fcfdff;
+        color:var(--ink);
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.80);
+        font-size:1.25rem;
+        padding:20px 26px;
+        text-align:center;
+      }
+      #message {
+        display:grid;
+        justify-items:flex-end;
+      }
+      #message:empty { display:none; }
+      .results-panel {
+        padding:18px 20px 20px;
+        display:grid;
+        gap:14px;
+      }
+      .results-panel[hidden] { display:none !important; }
+      .result-summary {
+        min-height:1.2rem;
+        color:var(--muted);
+        font-size:.98rem;
+      }
+      .result-summary:empty { display:none; }
+      .branch-row {
+        display:flex;
+        flex-wrap:wrap;
+        gap:10px;
+        align-items:center;
+      }
+      .branch-row:empty { display:none; }
+      .branch-chip {
+        width:auto;
+        padding:10px 14px;
+        border-radius:999px;
+        border:1px solid rgba(24,62,99,.10);
+        background:linear-gradient(180deg, #f7fbff 0%, #dfeafb 100%);
+        color:var(--accent-strong);
+        font-weight:800;
+        box-shadow:0 8px 18px rgba(22,80,140,.08);
+        cursor:pointer;
+      }
+      .branch-chip.current {
+        background:linear-gradient(180deg, #edf3fa 0%, #d0dfef 100%);
+      }
+      .result-stack {
+        display:grid;
+        gap:16px;
+      }
+      .result-block {
+        display:grid;
+        gap:12px;
+      }
+      .result-block h3 {
+        margin:0;
+        font-family:var(--heading-font);
+        font-size:1.3rem;
+        letter-spacing:-.04em;
+        color:var(--accent-strong);
+      }
+      .result-grid {
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+        gap:14px;
+      }
+      .result-card {
+        width:100%;
+        text-align:left;
+        padding:18px 20px;
+        border-radius:22px;
+        border:1px solid rgba(24,62,99,.07);
+        background:linear-gradient(180deg, rgba(253,254,255,.98) 0%, rgba(240,245,251,.96) 100%);
+        display:grid;
+        gap:8px;
+        color:inherit;
+        box-shadow:var(--shadow-soft), inset 0 1px 0 rgba(255,255,255,.70);
+        cursor:pointer;
+      }
+      .result-card:hover {
+        transform:translateY(-3px);
+        border-color:rgba(24,62,99,.18);
+        box-shadow:0 22px 36px rgba(27,42,63,.12);
+      }
+      .result-name {
+        font-family:var(--heading-font);
+        font-size:1.48rem;
+        line-height:.96;
+        letter-spacing:-.05em;
+        color:var(--ink);
+      }
+      .result-subtitle {
+        color:var(--muted);
+        font-size:.96rem;
+        line-height:1.5;
+      }
+      .empty-shell {
+        padding:30px 22px;
+        border:1px dashed rgba(22,80,140,.18);
+        border-radius:24px;
+        text-align:center;
+        color:var(--muted);
+        background:linear-gradient(180deg,#f8fbff 0%,#e6eef8 100%);
+      }
+      .notice {
+        width:auto;
+        max-width:min(100%, 420px);
+        padding:10px 14px;
+        border-radius:16px;
+        border:1px solid rgba(21,94,82,.10);
+        background:#dfeafb;
+        color:var(--accent-strong);
+        box-shadow:0 8px 18px rgba(22,80,140,.08);
+        font-size:.94rem;
+      }
+      .notice.error {
+        border-color:rgba(162,63,50,.12);
+        background:#f1ddd9;
+        color:#8d3a31;
+      }
+      .modal-root[hidden] { display:none !important; }
+      .modal-root {
+        position:fixed;
+        inset:0;
+        z-index:40;
+        display:grid;
+        place-items:center;
+        padding:20px;
+        background:rgba(23,31,43,.28);
+        backdrop-filter:blur(8px);
+      }
+      .modal-shell {
+        width:min(100%, 540px);
+        display:grid;
+        gap:18px;
+        padding:22px 24px 24px;
+        border-radius:28px;
+        background:linear-gradient(180deg, rgba(252,253,255,.98) 0%, rgba(246,249,253,.97) 100%);
+        border:1px solid rgba(255,255,255,.70);
+        box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.72);
+      }
+      .modal-header {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+      }
+      .modal-header h2 {
+        margin:0;
+        font-family:var(--heading-font);
+        font-size:clamp(2rem,4vw,3rem);
+        letter-spacing:-.05em;
+      }
+      .close-button {
+        width:auto;
+        padding:12px 18px;
+        border-radius:999px;
+        border:0;
+        background:linear-gradient(180deg, #f7fbff 0%, #dfeafb 100%);
+        color:var(--ink);
+        font-weight:700;
+        box-shadow:0 8px 18px rgba(22,80,140,.08);
+        cursor:pointer;
+      }
+      .modal-body { display:grid; gap:16px; }
+      .detail-card {
+        display:grid;
+        gap:8px;
+        padding:18px 20px;
+        border-radius:22px;
+        border:1px solid rgba(24,62,99,.08);
+        background:linear-gradient(180deg, rgba(253,254,255,.98) 0%, rgba(240,245,251,.96) 100%);
+      }
+      .detail-card strong { font-size:1.05rem; }
+      .save-row {
+        display:flex;
+        justify-content:flex-end;
+        gap:12px;
+      }
+      .save-row button {
+        width:auto;
+        padding:14px 20px;
+        border-radius:999px;
+        border:0;
+        background:linear-gradient(180deg, #f7fbff 0%, #dfeafb 100%);
+        color:var(--ink);
+        font-weight:700;
+        box-shadow:0 8px 18px rgba(22,80,140,.08);
+        cursor:pointer;
+      }
+      @media (max-width: 720px) {
+        .shell { padding:24px 16px 28px; }
+        .panel.search-launch { min-height:calc(100vh - 180px); padding:40px 22px; }
+        .panel.has-query,
+        .results-panel { padding:20px; }
+        .result-grid { grid-template-columns:1fr; }
+        .launch-copy h1 { font-size:clamp(2.8rem, 14vw, 4.4rem); }
+        .search-input { min-height:66px; font-size:1.08rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div id="message"></div>
+      <header class="topbar">
+        <div class="top-actions">
+          <button id="nav-my-aura" class="nav-pill" type="button">My Aura</button>
+          <button id="account" class="account-badge" type="button" hidden></button>
+        </div>
+      </header>
+      <section id="home-panel" class="panel search-launch">
+        <div class="launch-copy">
+          <h1>Tethr Your World</h1>
+        </div>
+        <form id="tethr-search-form" class="field-grid" autocomplete="off">
+          <label for="tethr-search">Search</label>
+          <input id="tethr-search" class="search-input" type="search" placeholder="Let&#39;s begin" title="What would you like to Tethr?" spellcheck="false" autocomplete="off">
+        </form>
+      </section>
+      <section id="results-panel" class="panel results-panel" hidden>
+        <div id="result-summary" class="result-summary"></div>
+        <div id="branch-row" class="branch-row"></div>
+        <div id="branch-results" class="result-stack"></div>
+      </section>
+      <div id="tethr-modal-root" class="modal-root" hidden></div>
+    </div>
+    <script>
+      const state = {
+        bootstrap: { authenticated: false },
+        searchResults: null,
+        selectedBranch: "",
+        searchTimer: null,
+        searchRequestId: 0
+      };
+
+      const els = {
+        message: document.getElementById("message"),
+        navMyAura: document.getElementById("nav-my-aura"),
+        account: document.getElementById("account"),
+        homePanel: document.getElementById("home-panel"),
+        searchForm: document.getElementById("tethr-search-form"),
+        search: document.getElementById("tethr-search"),
+        resultsPanel: document.getElementById("results-panel"),
+        resultSummary: document.getElementById("result-summary"),
+        branchRow: document.getElementById("branch-row"),
+        branchResults: document.getElementById("branch-results"),
+        modalRoot: document.getElementById("tethr-modal-root")
+      };
+
+      boot();
+
+      function boot() {
+        window.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && !els.modalRoot.hidden) {
+            closeModal();
+          }
+        });
+        els.searchForm.addEventListener("submit", onSearchSubmit);
+        els.search.addEventListener("input", onSearchInput);
+        els.navMyAura.addEventListener("click", () => {
+          window.location.href = "/aura/whiskies?view=mine";
+        });
+        els.account.addEventListener("click", () => {
+          if (state.bootstrap.authenticated) {
+            openAccountModal();
+          }
+        });
+        loadBootstrap().catch((error) => {
+          setMessage(error.message || "Could not load Tethr.", true);
+        });
+        renderResults();
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function setMessage(message, isError = false) {
+        els.message.innerHTML = message
+          ? '<div class="notice' + (isError ? ' error' : '') + '">' + escapeHtml(message) + '</div>'
+          : "";
+      }
+
+      function cleanSummary(value) {
+        return String(value || "")
+          .replaceAll("Â·", "/")
+          .replaceAll("·", "/")
+          .replaceAll(" /  / ", " / ")
+          .replace(/\\s+/g, " ")
+          .trim();
+      }
+
+      function getAccountInitials(user) {
+        const name = String(user?.name || "").trim();
+        if (name) {
+          const words = name.split(/\\s+/).filter(Boolean);
+          if (words.length >= 2) {
+            const first = words[0].replace(/[^a-z]/gi, "");
+            const last = words[words.length - 1].replace(/[^a-z]/gi, "");
+            if (first && last) {
+              return (first.charAt(0) + last.charAt(0)).toUpperCase();
+            }
+          }
+          const compact = name.replace(/[^a-z]/gi, "");
+          return compact.slice(0, 2).toUpperCase() || "TT";
+        }
+        const email = String(user?.email || "").trim().toLowerCase();
+        if (!email) {
+          return "TT";
+        }
+        const local = email.replace(/@.*$/, "");
+        const words = local.split(/[._-]+/).filter(Boolean);
+        if (words.length >= 2) {
+          return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+        }
+        return local.slice(0, 2).toUpperCase();
+      }
+
+      async function api(url, options = {}) {
+        const response = await fetch(url, {
+          headers: {
+            "content-type": "application/json",
+            ...(options.headers || {})
+          },
+          ...options
+        });
+        let body = {};
+        try {
+          body = await response.json();
+        } catch {
+          body = {};
+        }
+        if (!response.ok) {
+          throw new Error(body.error || "Request failed");
+        }
+        return body;
+      }
+
+      function closeModal() {
+        els.modalRoot.hidden = true;
+        els.modalRoot.innerHTML = "";
+      }
+
+      function openModal(title, contentHtml, onOpen) {
+        els.modalRoot.hidden = false;
+        els.modalRoot.innerHTML =
+          '<div class="modal-shell">' +
+            '<div class="modal-header">' +
+              '<h2>' + escapeHtml(title) + '</h2>' +
+              '<button class="close-button" type="button" data-close-modal>Close</button>' +
+            '</div>' +
+            '<div class="modal-body">' + contentHtml + '</div>' +
+          '</div>';
+
+        els.modalRoot.querySelector("[data-close-modal]")?.addEventListener("click", closeModal);
+        els.modalRoot.addEventListener("click", (event) => {
+          if (event.target === els.modalRoot) {
+            closeModal();
+          }
+        }, { once: true });
+        els.modalRoot.querySelector(".modal-shell")?.addEventListener("click", (event) => {
+          event.stopPropagation();
+        });
+        onOpen?.(els.modalRoot);
+      }
+
+      async function loadBootstrap() {
+        state.bootstrap = await api("/api/bootstrap");
+        renderAccount();
+      }
+
+      function renderAccount() {
+        if (!state.bootstrap.authenticated || !state.bootstrap.currentUser) {
+          els.account.hidden = true;
+          els.account.textContent = "";
+          return;
+        }
+        els.account.hidden = false;
+        els.account.textContent = getAccountInitials(state.bootstrap.currentUser);
+        els.account.title = "Account settings";
+        els.account.setAttribute("aria-label", "Account settings");
+      }
+
+      async function logout() {
+        await api("/api/auth/logout", { method: "POST" });
+        closeModal();
+        window.location.href = "/";
+      }
+
+      function openAccountModal() {
+        const user = state.bootstrap?.currentUser || {};
+        openModal(
+          "Account settings",
+          '<div class="detail-card">' +
+            '<strong>' + escapeHtml(user.name || user.email || "Signed in") + '</strong>' +
+            (user.email ? '<div>' + escapeHtml(user.email) + '</div>' : '') +
+          '</div>' +
+          '<div class="save-row">' +
+            '<button id="account-logout-button" type="button">Log Out</button>' +
+          '</div>',
+          (modal) => {
+            modal.querySelector("#account-logout-button")?.addEventListener("click", async () => {
+              try {
+                await logout();
+              } catch (error) {
+                setMessage(error.message || "Could not log out.", true);
+              }
+            });
+          }
+        );
+      }
+
+      function onSearchInput() {
+        if (state.searchTimer) {
+          clearTimeout(state.searchTimer);
+        }
+        state.searchTimer = setTimeout(() => {
+          state.searchTimer = null;
+          runSearch().catch((error) => {
+            setMessage(error.message || "Could not search Tethr.", true);
+          });
+        }, 180);
+      }
+
+      async function onSearchSubmit(event) {
+        event.preventDefault();
+        await runSearch();
+      }
+
+      async function runSearch() {
+        const query = els.search.value.trim();
+        const requestId = ++state.searchRequestId;
+        if (!query) {
+          state.searchResults = null;
+          state.selectedBranch = "";
+          renderResults();
+          return;
+        }
+        const results = await api("/api/tethr-search?q=" + encodeURIComponent(query));
+        if (requestId !== state.searchRequestId) {
+          return;
+        }
+        state.searchResults = results;
+        const branches = Array.isArray(results.branches) ? results.branches : [];
+        if (branches.length === 1) {
+          state.selectedBranch = branches[0].key;
+        } else if (!branches.some((branch) => branch.key === state.selectedBranch)) {
+          state.selectedBranch = "";
+        }
+        renderResults();
+      }
+
+      function renderBranchCards(items) {
+        return '<div class="result-grid">' + items.map((item) => (
+          '<button class="result-card" type="button" data-result-path="' + escapeHtml(item.path || "") + '">' +
+            '<div class="result-name">' + escapeHtml(item.name || "") + '</div>' +
+            (item.summary ? '<div class="result-subtitle">' + escapeHtml(cleanSummary(item.summary)) + '</div>' : '') +
+          '</button>'
+        )).join("") + '</div>';
+      }
+
+      function renderArcaBranch(branch) {
+        const blocks = [];
+        if (branch.locations?.length) {
+          blocks.push(
+            '<section class="result-block">' +
+              '<h3>Places</h3>' +
+              renderBranchCards(branch.locations) +
+            '</section>'
+          );
+        }
+        if (branch.containers?.length) {
+          blocks.push(
+            '<section class="result-block">' +
+              '<h3>Containers</h3>' +
+              renderBranchCards(branch.containers) +
+            '</section>'
+          );
+        }
+        if (branch.items?.length) {
+          blocks.push(
+            '<section class="result-block">' +
+              '<h3>Items</h3>' +
+              renderBranchCards(branch.items) +
+            '</section>'
+          );
+        }
+        return blocks.join("");
+      }
+
+      function renderAuraBranch(branch) {
+        if (!branch.items?.length) {
+          return '<div class="empty-shell">No Aura matches.</div>';
+        }
+        return renderBranchCards(branch.items);
+      }
+
+      function wireResultClicks() {
+        els.branchRow.querySelectorAll("[data-branch-key]").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.selectedBranch = button.dataset.branchKey || "";
+            renderResults();
+          });
+        });
+        els.branchResults.querySelectorAll("[data-result-path]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const path = button.dataset.resultPath || "";
+            if (path) {
+              window.location.href = path;
+            }
+          });
+        });
+      }
+
+      function renderResults() {
+        const query = els.search.value.trim();
+        const hasQuery = Boolean(query);
+        els.homePanel.classList.toggle("search-launch", !hasQuery);
+        els.homePanel.classList.toggle("has-query", hasQuery);
+        els.resultsPanel.hidden = !hasQuery;
+
+        if (!hasQuery) {
+          els.resultSummary.textContent = "";
+          els.branchRow.innerHTML = "";
+          els.branchResults.innerHTML = "";
+          return;
+        }
+
+        if (!state.searchResults) {
+          els.resultSummary.textContent = "Searching...";
+          els.branchRow.innerHTML = "";
+          els.branchResults.innerHTML = "";
+          return;
+        }
+
+        const branches = Array.isArray(state.searchResults.branches) ? state.searchResults.branches : [];
+        if (!branches.length) {
+          els.resultSummary.textContent = 'No matches for "' + query + '".';
+          els.branchRow.innerHTML = "";
+          els.branchResults.innerHTML = '<div class="empty-shell">Try a different name.</div>';
+          return;
+        }
+
+        const showBranchChooser = branches.length > 1;
+        els.branchRow.innerHTML = showBranchChooser
+          ? branches.map((branch) => (
+              '<button class="branch-chip' + (branch.key === state.selectedBranch ? ' current' : '') + '" type="button" data-branch-key="' + escapeHtml(branch.key) + '">' +
+                escapeHtml(branch.label + " " + branch.count) +
+              '</button>'
+            )).join("")
+          : "";
+
+        if (showBranchChooser && !state.selectedBranch) {
+          els.resultSummary.textContent = "Choose where to look.";
+          els.branchResults.innerHTML = "";
+          wireResultClicks();
+          return;
+        }
+
+        els.resultSummary.textContent = "";
+        if (state.selectedBranch === "arca") {
+          els.branchResults.innerHTML = renderArcaBranch(state.searchResults.arca || {});
+        } else if (state.selectedBranch === "aura") {
+          els.branchResults.innerHTML = renderAuraBranch(state.searchResults.aura || {});
+        } else {
+          els.branchResults.innerHTML = "";
+        }
+        wireResultClicks();
       }
     </script>
   </body>
@@ -3219,21 +4018,40 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
         box-shadow:none;
         backdrop-filter:none;
       }
-      .top-actions { display:flex; align-items:center; gap:12px; justify-content:flex-end; }
-      .aura-nav { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+      .top-actions { display:flex; align-items:center; gap:10px; justify-content:flex-end; flex-wrap:nowrap; }
+      .aura-nav { display:flex; align-items:center; gap:10px; flex-wrap:nowrap; }
+      .nav-icon-badge {
+        width:56px;
+        height:56px;
+        display:grid;
+        place-items:center;
+        padding:0;
+        border-radius:999px;
+        border:1px solid rgba(24,62,99,.10);
+        background:linear-gradient(180deg, rgba(241,246,251,.96) 0%, rgba(226,236,247,.98) 100%);
+        box-shadow:0 10px 18px rgba(27,42,63,.08), inset 0 1px 0 rgba(255,255,255,.78);
+        color:var(--accent-strong);
+        cursor:pointer;
+      }
+      .nav-icon-badge svg {
+        width:24px;
+        height:24px;
+        fill:currentColor;
+      }
       .nav-pill {
         display:inline-flex;
         align-items:center;
         justify-content:center;
-        min-height:42px;
-        padding:10px 14px;
+        min-height:56px;
+        padding:0 22px;
         border-radius:999px;
         border:1px solid rgba(24,62,99,.08);
         background:rgba(255,255,255,.62);
         color:var(--muted);
-        font-size:.9rem;
+        font-size:.95rem;
         font-weight:700;
         box-shadow:inset 0 1px 0 rgba(255,255,255,.72);
+        cursor:pointer;
       }
       .nav-pill.current {
         background:linear-gradient(180deg, #edf3fa 0%, #dde7f2 100%);
@@ -3257,16 +4075,32 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
         text-transform:uppercase;
         cursor:pointer;
       }
-      .account-badge:focus-visible {
+      .nav-icon-badge:hover,
+      .account-badge:hover,
+      .nav-pill:hover {
+        transform:translateY(-1px);
+        box-shadow:0 12px 22px rgba(22,80,140,.10), inset 0 1px 0 rgba(255,255,255,.78);
+      }
+      .account-badge:focus-visible,
+      .nav-icon-badge:focus-visible {
         outline:2px solid rgba(31,111,179,.32);
         outline-offset:3px;
       }
+      #message {
+        display:grid;
+        justify-items:flex-end;
+      }
+      #message:empty { display:none; }
       .notice {
-        padding:15px 17px;
-        border-radius:18px;
+        width:auto;
+        max-width:min(100%, 420px);
+        padding:10px 14px;
+        border-radius:16px;
         border:1px solid rgba(21,94,82,.10);
         background:var(--accent-soft);
         color:var(--accent-strong);
+        box-shadow:0 8px 18px rgba(22,80,140,.08);
+        font-size:.94rem;
       }
       .notice.error {
         border-color:rgba(162,63,50,.12);
@@ -3346,6 +4180,11 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
       .panel h2 { font-size:2rem; }
       .stack { display:grid; gap:14px; }
       .field-grid { display:grid; gap:14px; }
+      #catalog-panel .field-grid > label {
+        gap:0;
+        font-size:0;
+        color:transparent;
+      }
       .section-head {
         display:flex;
         align-items:flex-end;
@@ -3474,11 +4313,11 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
       .result-grid {
         display:grid;
         grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
-        gap:16px;
+        gap:14px;
       }
       .result-card {
-        padding:22px 24px;
-        border-radius:24px;
+        padding:18px 20px;
+        border-radius:22px;
         border:1px solid rgba(24,62,99,.07);
         background:linear-gradient(180deg, rgba(253,254,255,.98) 0%, rgba(240,245,251,.96) 100%);
         display:grid;
@@ -3499,7 +4338,7 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
         background:linear-gradient(180deg, #f8fbff 0%, #eaf1f8 100%);
         box-shadow:0 20px 34px rgba(24,62,99,.11);
       }
-      .result-name { font-size:1.15rem; font-weight:800; letter-spacing:-.02em; color:var(--accent-strong); }
+      .result-name { font-size:1.08rem; font-weight:800; letter-spacing:-.02em; color:var(--accent-strong); }
       .result-subtitle { color:var(--muted); font-size:.95rem; }
       .chip-row { display:flex; flex-wrap:wrap; gap:8px; }
       .chip {
@@ -3647,6 +4486,12 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
         gap:8px;
         box-shadow:0 12px 24px rgba(27,42,63,.06), inset 0 1px 0 rgba(255,255,255,.72);
       }
+      .entry-card-head {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+      }
       .entry-card time {
         color:var(--gold);
         font-size:.82rem;
@@ -3654,18 +4499,42 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
         text-transform:uppercase;
         font-weight:700;
       }
+      .entry-card-actions {
+        display:flex;
+        align-items:center;
+        gap:8px;
+        flex-wrap:wrap;
+      }
+      .entry-card-actions button {
+        width:auto;
+        padding:0;
+        border:0;
+        background:none;
+        box-shadow:none;
+        color:var(--muted);
+        font-size:.86rem;
+        font-weight:700;
+        cursor:pointer;
+      }
+      .entry-card-actions button:hover {
+        color:var(--accent-strong);
+      }
+      .entry-card-actions button.danger:hover {
+        color:var(--danger);
+      }
       .entry-card p {
         margin:0;
         white-space:pre-wrap;
         line-height:1.6;
       }
       .entry-empty {
-        padding:18px;
-        border-radius:18px;
-        border:1px dashed rgba(22,80,140,.18);
+        padding:4px 2px 0;
+        border:0;
+        border-radius:0;
         color:var(--muted);
-        text-align:center;
-        background:linear-gradient(180deg,#f8fbff 0%,#e6eef8 100%);
+        text-align:left;
+        background:none;
+        font-size:.98rem;
       }
       .empty-shell {
         min-height:420px;
@@ -3786,6 +4655,7 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
       <div class="shell">
         <header class="topbar">
           <div class="top-actions">
+            <button id="nav-home" class="nav-icon-badge" type="button" title="Start page" aria-label="Start page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 2.8 10.6a1 1 0 0 0 .62 1.78H5v7.1c0 .83.67 1.5 1.5 1.5h3.8a.7.7 0 0 0 .7-.7V15.2c0-.39.31-.7.7-.7h1.6c.39 0 .7.31.7.7v5.05a.7.7 0 0 0 .7.7h3.8c.83 0 1.5-.67 1.5-1.5v-7.1h1.58a1 1 0 0 0 .62-1.78L12 3.2Z"/></svg></button>
             <div class="aura-nav" hidden>
               <button id="nav-mine" class="nav-pill" type="button">My Aura</button>
               <button id="nav-search" class="nav-pill" type="button" hidden>Search</button>
@@ -3834,6 +4704,7 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
 
       const els = {
         message: document.getElementById("message"),
+        navHome: document.getElementById("nav-home"),
         account: document.getElementById("account"),
         authGate: document.getElementById("auth-gate"),
         app: document.getElementById("aura-app"),
@@ -4205,17 +5076,26 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
         }
         return '<div class="entry-list">' + list.map((entry) =>
           '<article class="entry-card">' +
-            '<time datetime="' + escapeHtml(entry.createdAt || "") + '">' + escapeHtml(formatEntryTimestamp(entry.createdAt)) + '</time>' +
+            '<div class="entry-card-head">' +
+              '<time datetime="' + escapeHtml(entry.createdAt || "") + '">' + escapeHtml(formatEntryTimestamp(entry.createdAt)) + '</time>' +
+              '<div class="entry-card-actions">' +
+                '<button type="button" data-entry-edit="' + escapeHtml(entry.id) + '">Edit</button>' +
+                '<button type="button" class="danger" data-entry-archive="' + escapeHtml(entry.id) + '">Archive</button>' +
+              '</div>' +
+            '</div>' +
             '<p>' + escapeHtml(entry.entryText || "") + '</p>' +
           '</article>'
         ).join("") + '</div>';
       }
 
-      function openAddEntryModal(whisky) {
+      function openEntryEditorModal(whisky, entry = null) {
+        const isEditing = Boolean(entry?.id);
+        const title = isEditing ? "Edit Entry" : "Create Entry";
+        const saveLabel = isEditing ? "Save Changes" : "Save Entry";
         openModal(
-          "Create Entry",
-          '<label>Aura Entry<textarea id="aura-entry-text" placeholder="Type whatever you want to remember about this item..."></textarea></label>' +
-          '<div class="save-row"><button id="save-aura-entry" type="button">Save Entry</button></div>',
+          title,
+          '<label>Aura Entry<textarea id="aura-entry-text" placeholder="Type whatever you want to remember about this item...">' + escapeHtml(entry?.entryText || "") + '</textarea></label>' +
+          '<div class="save-row"><button id="save-aura-entry" type="button">' + saveLabel + '</button></div>',
           (modal) => {
             const textarea = modal.querySelector("#aura-entry-text");
             const button = modal.querySelector("#save-aura-entry");
@@ -4229,30 +5109,77 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
               button.disabled = true;
               button.textContent = "Saving...";
               try {
-                const saved = await api("/api/aura/whiskies/" + encodeURIComponent(whisky.id) + "/entries", {
-                  method: "POST",
-                  body: JSON.stringify({ entryText })
-                });
+                const saved = isEditing
+                  ? await api("/api/aura/whiskies/" + encodeURIComponent(whisky.id) + "/entries/" + encodeURIComponent(entry.id), {
+                      method: "PATCH",
+                      body: JSON.stringify({ entryText })
+                    })
+                  : await api("/api/aura/whiskies/" + encodeURIComponent(whisky.id) + "/entries", {
+                      method: "POST",
+                      body: JSON.stringify({ entryText })
+                    });
                 if (!state.detail?.entries) {
                   state.detail.entries = [];
                 }
-                state.detail.entries.unshift({
+                const nextEntry = {
                   id: saved.id,
                   whiskyId: saved.whiskyId,
                   workspaceId: saved.workspaceId,
                   userId: saved.userId,
                   entryText: saved.entryText || "",
+                  archivedAt: saved.archivedAt || "",
                   createdAt: saved.createdAt,
                   updatedAt: saved.updatedAt
-                });
+                };
+                if (isEditing) {
+                  state.detail.entries = state.detail.entries.map((existing) => existing.id === nextEntry.id ? nextEntry : existing);
+                } else {
+                  state.detail.entries.unshift(nextEntry);
+                }
                 closeModal();
                 renderDetail();
                 focusAuraSection();
-                setMessage("Aura entry saved.");
+                setMessage(isEditing ? "Aura entry updated." : "Aura entry saved.");
               } catch (error) {
                 setMessage(error.message || "Could not save that Aura entry.", true);
                 button.disabled = false;
-                button.textContent = "Save Entry";
+                button.textContent = saveLabel;
+              } finally {
+                state.entrySaveInFlight = false;
+              }
+            });
+          }
+        );
+      }
+
+      function openArchiveEntryModal(whisky, entry) {
+        openModal(
+          "Archive Entry",
+          '<div class="detail-card">Archive this Aura entry? It will be removed from the current timeline but not permanently deleted.</div>' +
+          '<div class="save-row"><button id="confirm-archive-entry" type="button">Archive Entry</button></div>',
+          (modal) => {
+            const button = modal.querySelector("#confirm-archive-entry");
+            button?.addEventListener("click", async () => {
+              if (state.entrySaveInFlight) {
+                return;
+              }
+              state.entrySaveInFlight = true;
+              button.disabled = true;
+              button.textContent = "Archiving...";
+              try {
+                await api("/api/aura/whiskies/" + encodeURIComponent(whisky.id) + "/entries/" + encodeURIComponent(entry.id), {
+                  method: "PATCH",
+                  body: JSON.stringify({ archived: true })
+                });
+                state.detail.entries = (state.detail.entries || []).filter((existing) => existing.id !== entry.id);
+                closeModal();
+                renderDetail();
+                focusAuraSection();
+                setMessage("Aura entry archived.");
+              } catch (error) {
+                setMessage(error.message || "Could not archive that Aura entry.", true);
+                button.disabled = false;
+                button.textContent = "Archive Entry";
               } finally {
                 state.entrySaveInFlight = false;
               }
@@ -4268,7 +5195,7 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
             icon: compassIcon("notes"),
             run: async () => {
               await openWhisky(whisky.id, whiskyReferencePath(whisky), false);
-              openAddEntryModal(whisky);
+              openEntryEditorModal(whisky);
             }
           },
           left: {
@@ -4410,15 +5337,7 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
           els.catalogTitle.title = "";
         }
         if (els.catalogHint) {
-          if (state.browseView === "mine") {
-            els.catalogHint.textContent = hasQuery
-              ? 'Your Aura results for "' + browse.query + '".'
-              : "Things you have already connected with.";
-          } else {
-            els.catalogHint.textContent = hasQuery
-              ? 'Open the item you want.'
-              : "";
-          }
+          els.catalogHint.textContent = "";
         }
         if (els.search) {
           els.search.placeholder = state.browseView === "mine"
@@ -4437,12 +5356,7 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
         if (document.activeElement !== els.search) {
           els.search.value = browse.query || "";
         }
-        els.resultMeta.textContent =
-          hasQuery || state.browseView === "mine"
-            ? (browse.whiskies.length === 1
-              ? (state.browseView === "mine" ? "1 item" : "1 match")
-              : browse.whiskies.length + (state.browseView === "mine" ? " items" : " matches"))
-            : "";
+        els.resultMeta.textContent = "";
 
         if (!hasQuery && state.browseView !== "mine") {
           els.results.innerHTML = "";
@@ -4485,36 +5399,35 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
         els.catalogPanel.hidden = true;
         const whisky = state.detail.whisky;
         const entries = Array.isArray(state.detail.entries) ? state.detail.entries : [];
-        const summaryLine = [
-          whisky.distillery || "Unknown distillery",
-          whisky.country,
-          whisky.region,
-          whisky.style,
-          whisky.abv ? whisky.abv + " ABV" : "",
-          whisky.ageStatement
-        ].filter(Boolean).join(" / ");
         const priceLine = whisky.priceUsd != null
           ? "Approx. retail: $" + Number(whisky.priceUsd).toFixed(0)
           : "";
+        const metaBits = [
+          whisky.style,
+          whisky.country,
+          whisky.region,
+          whisky.distillery || "Unknown distillery",
+          priceLine
+        ].filter(Boolean);
+        const metaLineHtml = metaBits.length
+          ? metaBits.map((value, index) =>
+              (index ? '<span class="stage-meta-separator">/</span>' : "") +
+              '<span>' + escapeHtml(value) + '</span>'
+            ).join("")
+          : '<span>No shared details yet.</span>';
 
         els.detail.innerHTML =
           '<div class="stage-header">' +
             '<div class="stage-path">' +
-              '<button class="inline-link" type="button" id="back-to-whiskies">Search</button>' +
+              '<button class="inline-link" type="button" id="back-to-start">Start</button>' +
+              '<span class="stage-meta-separator">/</span>' +
+              '<button class="inline-link" type="button" id="back-to-whiskies">' + escapeHtml(state.browseView === "mine" ? "My Aura" : "Search") + '</button>' +
             '</div>' +
             '<div class="stage-title-row">' +
               '<h2 class="stage-title">' + escapeHtml(whisky.displayName) + '</h2>' +
             '</div>' +
             '<div id="detail-action-surface" class="detail-summary-strip">' +
-              '<div class="stage-meta-line">' +
-                '<span class="stage-current-chip">' + whiskyImageMarkupVariant(whisky, "compact") + '<strong>' + escapeHtml(whisky.distillery || "Unknown distillery") + '</strong></span>' +
-                (whisky.country ? '<span class="stage-meta-separator">/</span><span>' + escapeHtml(whisky.country) + '</span>' : '') +
-                (whisky.region ? '<span class="stage-meta-separator">/</span><span>' + escapeHtml(whisky.region) + '</span>' : '') +
-                (whisky.style ? '<span class="stage-meta-separator">/</span><span>' + escapeHtml(whisky.style) + '</span>' : '') +
-                (whisky.ageStatement ? '<span class="stage-meta-separator">/</span><span>' + escapeHtml(whisky.ageStatement) + '</span>' : '') +
-                (whisky.abv ? '<span class="stage-meta-separator">/</span><span>' + escapeHtml(whisky.abv + ' ABV') + '</span>' : '') +
-                (priceLine ? '<span class="stage-meta-separator">/</span><span>' + escapeHtml(priceLine) + '</span>' : '') +
-              '</div>' +
+              '<div class="stage-meta-line">' + metaLineHtml + '</div>' +
               '<p class="stage-subtitle">' + escapeHtml(whisky.referenceNotes || "No shared overview yet.") + '</p>' +
             '</div>' +
           "</div>" +
@@ -4529,7 +5442,28 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
           "</div>";
 
         document.getElementById("add-aura-entry").addEventListener("click", () => {
-          openAddEntryModal(whisky);
+          openEntryEditorModal(whisky);
+        });
+        els.detail.querySelectorAll("[data-entry-edit]").forEach((button) => {
+          const entry = entries.find((candidate) => candidate.id === button.dataset.entryEdit);
+          if (!entry) {
+            return;
+          }
+          button.addEventListener("click", () => {
+            openEntryEditorModal(whisky, entry);
+          });
+        });
+        els.detail.querySelectorAll("[data-entry-archive]").forEach((button) => {
+          const entry = entries.find((candidate) => candidate.id === button.dataset.entryArchive);
+          if (!entry) {
+            return;
+          }
+          button.addEventListener("click", () => {
+            openArchiveEntryModal(whisky, entry);
+          });
+        });
+        document.getElementById("back-to-start").addEventListener("click", () => {
+          window.location.href = "/";
         });
         document.getElementById("back-to-whiskies").addEventListener("click", () => {
           history.pushState({}, "", buildBrowsePath(state.browseView));
@@ -4647,6 +5581,10 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
 
         els.navMine?.addEventListener("click", async () => {
           await switchBrowseView("mine");
+        });
+
+        els.navHome?.addEventListener("click", () => {
+          window.location.href = "/";
         });
 
         els.account?.addEventListener("click", () => {

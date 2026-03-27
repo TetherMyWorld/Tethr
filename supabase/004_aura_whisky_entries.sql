@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS public.aura_whisky_entries (
   workspace_id text NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
   user_id text NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   entry_text text NOT NULL DEFAULT '',
+  archived_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );

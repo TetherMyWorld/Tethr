@@ -240,6 +240,7 @@ db.exec(`
     workspace_id TEXT NOT NULL,
     user_id TEXT NOT NULL,
     entry_text TEXT NOT NULL DEFAULT '',
+    archived_at TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     FOREIGN KEY (whisky_id) REFERENCES aura_whiskies(id) ON DELETE CASCADE,
@@ -263,6 +264,7 @@ ensureColumn("tags", "source", "TEXT NOT NULL DEFAULT 'generated'");
 ensureColumn("aura_whiskies", "canonical_name", "TEXT NOT NULL DEFAULT ''");
 ensureColumn("aura_whiskies", "style", "TEXT NOT NULL DEFAULT ''");
 ensureColumn("aura_whiskies", "price_usd", "REAL");
+ensureColumn("aura_whisky_entries", "archived_at", "TEXT NOT NULL DEFAULT ''");
 db.exec(`
   DROP INDEX IF EXISTS idx_aura_whiskies_name;
   CREATE INDEX IF NOT EXISTS idx_locations_workspace ON locations (workspace_id, name);
@@ -1010,14 +1012,15 @@ export function hydrateWorkspaceSnapshot(snapshot = {}) {
     for (const entry of auraWhiskyEntries) {
       db.prepare(
         `INSERT INTO aura_whisky_entries (
-           id, whisky_id, workspace_id, user_id, entry_text, created_at, updated_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+           id, whisky_id, workspace_id, user_id, entry_text, archived_at, created_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         entry.id,
         entry.whisky_id || entry.whiskyId,
         workspaceIdValue,
         user.id,
         entry.entry_text || entry.entryText || "",
+        entry.archived_at || entry.archivedAt || "",
         entry.created_at || entry.createdAt || now(),
         entry.updated_at || entry.updatedAt || now()
       );
@@ -1102,6 +1105,7 @@ function mapAuraWhiskyEntry(row) {
     workspaceId: row.workspace_id,
     userId: row.user_id,
     entryText: row.entry_text || "",
+    archivedAt: row.archived_at || "",
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -1150,11 +1154,24 @@ function listAuraWhiskyEntryRows(whiskyId, workspaceIdValue = workspaceId(), use
     return [];
   }
   return db.prepare(
-    `SELECT id, whisky_id, workspace_id, user_id, entry_text, created_at, updated_at
+    `SELECT id, whisky_id, workspace_id, user_id, entry_text, archived_at, created_at, updated_at
      FROM aura_whisky_entries
      WHERE whisky_id = ? AND workspace_id = ? AND user_id = ?
+       AND TRIM(COALESCE(archived_at, '')) = ''
      ORDER BY created_at DESC, updated_at DESC, id DESC`
   ).all(whiskyId, workspaceIdValue, userIdValue);
+}
+
+function getAuraWhiskyEntryRow(entryId, whiskyId, workspaceIdValue = workspaceId(), userIdValue = currentUserId()) {
+  if (!entryId || !whiskyId || !workspaceIdValue || !userIdValue) {
+    return null;
+  }
+  return db.prepare(
+    `SELECT id, whisky_id, workspace_id, user_id, entry_text, archived_at, created_at, updated_at
+     FROM aura_whisky_entries
+     WHERE id = ? AND whisky_id = ? AND workspace_id = ? AND user_id = ?
+     LIMIT 1`
+  ).get(entryId, whiskyId, workspaceIdValue, userIdValue);
 }
 
 function listAllAuraWhiskyRows() {
@@ -1173,20 +1190,11 @@ function listAuraWhiskyTouchedIds(workspaceIdValue = workspaceId(), userIdValue 
   const entryIds = db.prepare(
     `SELECT DISTINCT whisky_id
      FROM aura_whisky_entries
-     WHERE workspace_id = ? AND user_id = ?`
-  ).all(workspaceIdValue, userIdValue).map((row) => row.whisky_id);
-
-  const noteIds = db.prepare(
-    `SELECT DISTINCT whisky_id
-     FROM aura_whisky_user_notes
      WHERE workspace_id = ? AND user_id = ?
-       AND (
-         TRIM(COALESCE(tasting_notes, '')) <> ''
-         OR TRIM(COALESCE(personal_notes, '')) <> ''
-       )`
+       AND TRIM(COALESCE(archived_at, '')) = ''`
   ).all(workspaceIdValue, userIdValue).map((row) => row.whisky_id);
 
-  return new Set([...entryIds, ...noteIds].filter(Boolean));
+  return new Set(entryIds.filter(Boolean));
 }
 
 function filterAuraWhiskyRows(rows, filters = {}) {
@@ -1321,15 +1329,53 @@ export function createAuraWhiskyEntry(whiskyId, input = {}) {
   const id = randomUUID();
   db.prepare(
     `INSERT INTO aura_whisky_entries (
-       id, whisky_id, workspace_id, user_id, entry_text, created_at, updated_at
-     ) VALUES (?, ?, ?, ?, ?, ?, ?)`
-  ).run(id, whisky.id, workspaceIdValue, userIdValue, entryText, timestamp, timestamp);
+       id, whisky_id, workspace_id, user_id, entry_text, archived_at, created_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(id, whisky.id, workspaceIdValue, userIdValue, entryText, "", timestamp, timestamp);
   return mapAuraWhiskyEntry(
     db.prepare(
-      `SELECT id, whisky_id, workspace_id, user_id, entry_text, created_at, updated_at
+      `SELECT id, whisky_id, workspace_id, user_id, entry_text, archived_at, created_at, updated_at
        FROM aura_whisky_entries
        WHERE id = ?`
     ).get(id)
+  );
+}
+
+export function updateAuraWhiskyEntry(whiskyId, entryId, input = {}) {
+  const whisky = getAuraWhiskyRow(requireText(whiskyId, "Whisky is required"));
+  if (!whisky) {
+    throw new Error("Whisky not found");
+  }
+  const workspaceIdValue = workspaceId();
+  const userIdValue = currentUserId();
+  if (!userIdValue) {
+    throw new Error("Please sign in.");
+  }
+  const existing = getAuraWhiskyEntryRow(requireText(entryId, "Entry is required"), whisky.id, workspaceIdValue, userIdValue);
+  if (!existing) {
+    throw new Error("Aura entry not found");
+  }
+  const nextEntryText = Object.prototype.hasOwnProperty.call(input, "entryText")
+    ? auraNormalizeText(input.entryText)
+    : existing.entry_text;
+  if (!nextEntryText) {
+    throw new Error("Please write something for this Aura entry.");
+  }
+  const archiveRequested = Object.prototype.hasOwnProperty.call(input, "archived")
+    ? Boolean(input.archived)
+    : Boolean(String(existing.archived_at || "").trim());
+  const timestamp = now();
+  db.prepare(
+    `UPDATE aura_whisky_entries
+     SET entry_text = ?, archived_at = ?, updated_at = ?
+     WHERE id = ?`
+  ).run(nextEntryText, archiveRequested ? timestamp : "", timestamp, existing.id);
+  return mapAuraWhiskyEntry(
+    db.prepare(
+      `SELECT id, whisky_id, workspace_id, user_id, entry_text, archived_at, created_at, updated_at
+       FROM aura_whisky_entries
+       WHERE id = ?`
+    ).get(existing.id)
   );
 }
 
@@ -2743,6 +2789,99 @@ export function searchRecords(query) {
        ORDER BY i.name
        LIMIT 50`
     ).all(workspaceId(), term, term, term)
+  };
+}
+
+export function searchTethrRecords(query) {
+  const cleanQuery = String(query || "").trim();
+  if (!cleanQuery) {
+    return {
+      query: "",
+      counts: { aura: 0, arca: 0, terra: 0 },
+      branches: [],
+      aura: { total: 0, items: [] },
+      arca: { total: 0, locations: [], containers: [], items: [] },
+      terra: { total: 0, items: [] }
+    };
+  }
+
+  const arca = searchRecords(cleanQuery);
+  const aura = listAuraWhiskies({ q: cleanQuery });
+
+  const arcaLocations = arca.locations.map((location) => ({
+    id: location.id,
+    kind: "location",
+    name: location.name,
+    summary: "Place",
+    path: `/arca?location=${location.id}`
+  }));
+
+  const arcaContainers = arca.containers.map((container) => ({
+    id: container.id,
+    kind: "container",
+    name: container.name,
+    summary: [
+      container.location_name || "No Place",
+      `${container.item_count ?? 0} item${(container.item_count ?? 0) === 1 ? "" : "s"}`
+    ].filter(Boolean).join(" · "),
+    path: `/containers/${container.slug}-${container.id}`
+  }));
+
+  const arcaItems = arca.items.map((item) => ({
+    id: item.id,
+    kind: "item",
+    name: item.name,
+    summary: [
+      item.container_name || "Unknown container",
+      `Qty ${item.quantity}`,
+      item.location_name || ""
+    ].filter(Boolean).join(" · "),
+    path: `/arca?item=${item.id}`
+  }));
+
+  const auraItems = (aura.whiskies || []).map((item) => ({
+    id: item.id,
+    kind: "aura",
+    name: item.displayName,
+    summary: [
+      item.distillery || "",
+      item.country || "",
+      item.region || "",
+      item.style || ""
+    ].filter(Boolean).join(" · "),
+    path: item.path
+  }));
+
+  const arcaTotal = arcaLocations.length + arcaContainers.length + arcaItems.length;
+  const auraTotal = auraItems.length;
+
+  const branches = [
+    auraTotal ? { key: "aura", label: "Aura", count: auraTotal } : null,
+    arcaTotal ? { key: "arca", label: "Arca", count: arcaTotal } : null
+  ].filter(Boolean);
+
+  return {
+    query: cleanQuery,
+    counts: {
+      aura: auraTotal,
+      arca: arcaTotal,
+      terra: 0
+    },
+    branches,
+    aura: {
+      total: auraTotal,
+      items: auraItems
+    },
+    arca: {
+      total: arcaTotal,
+      locations: arcaLocations,
+      containers: arcaContainers,
+      items: arcaItems
+    },
+    terra: {
+      total: 0,
+      items: []
+    }
   };
 }
 
