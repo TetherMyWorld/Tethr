@@ -25,10 +25,23 @@
       padding: 20px;
     }
 
+    h1 {
+      margin-top: 0;
+    }
+
+    .meta {
+      margin-bottom: 20px;
+      color: #aaa;
+    }
+
     img {
       max-width: 100%;
       border-radius: 8px;
-      margin-top: 10px;
+      margin-top: 12px;
+    }
+
+    .photo {
+      margin-top: 20px;
     }
 
     .error {
@@ -79,19 +92,34 @@
           return;
         }
 
-        // 🔥 THIS IS THE KEY LINE
+        // Set tab title
         setDynamicTitle(item.name);
 
+        // Set header title
         document.getElementById("title").innerText = item.name;
 
         let html = `
-          <p>${item.notes || ""}</p>
+          <div class="meta">
+            <div><strong>Notes:</strong> ${item.notes || "—"}</div>
+            <div><strong>Description:</strong> ${item.description || "—"}</div>
+            <div><strong>Item ID:</strong> ${item.id}</div>
+            <div><strong>Container ID:</strong> ${item.container_id}</div>
+          </div>
         `;
 
         if (item.photos && item.photos.length > 0) {
+          html += `<div><strong>Photos:</strong></div>`;
+
           html += item.photos.map(p => `
-            <img src="${p.signed_url}" />
+            <div class="photo">
+              <img src="${p.signed_url}" />
+              <div style="color:#aaa; font-size:12px;">
+                ${p.file_name || ""}
+              </div>
+            </div>
           `).join("");
+        } else {
+          html += `<div>No photos available</div>`;
         }
 
         document.getElementById("content").innerHTML = html;
