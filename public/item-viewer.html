@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tethr Item Viewer</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #171a21;
+      --panel-2: #1d212b;
+      --text: #f3f4f6;
+      --muted: #a6adbb;
+      --accent: #7dd3fc;
+      --border: #2b3140;
+      --danger: #f87171;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #0b0d12 0%, #12161f 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 18px 48px;
+    }
+
+    .card {
+      background: rgba(23, 26, 33, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand .eyebrow {
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .brand .title {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin: 0;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .section {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .meta-box {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .meta-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .meta-value {
+      font-size: 15px;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .photos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .photo-card {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .photo-card img {
+      width: 100%;
+      display: block;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      background: #0b0d12;
+    }
+
+    .photo-body {
+      padding: 12px 14px 14px;
+    }
+
+    .photo-name {
+      font-weight: 700;
+      margin: 0 0 8px;
+      font-size: 14px;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .photo-meta {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .empty,
+    .error {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      line-height: 1.5;
+    }
+
+    .error {
+      border-color: rgba(248, 113, 113, 0.35);
+      color: #ffd6d6;
+    }
+
+    .hint {
+      color: var(--muted);
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      word-break: break-all;
+    }
+
+    .loading {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    a.inline-link {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a.inline-link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 640px) {
+      .wrap {
+        padding: 18px 12px 36px;
+      }
+
+      .brand .title {
+        font-size: 24px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="topbar">
+        <div class="brand">
+          <div class="eyebrow">Tethr</div>
+          <h1 class="title">Item Viewer</h1>
+        </div>
+        <div id="status" class="status">Loading…</div>
+      </div>
+
+      <div id="content">
+        <div class="loading">Fetching item data…</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "https://kyihwtasfjkwcevtdtbp.supabase.co/functions/v1/gpt-bridge";
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatBytes(bytes) {
+      const num = Number(bytes);
+      if (!Number.isFinite(num) || num <= 0) return "Unknown size";
+      const units = ["B", "KB", "MB", "GB"];
+      let value = num;
+      let unitIndex = 0;
+      while (value >= 1024 && unitIndex < units.length - 1) {
+        value /= 1024;
+        unitIndex += 1;
+      }
+      return `${value.toFixed(value >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+    }
+
+    function formatDate(value) {
+      if (!value) return "Unknown";
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return value;
+      return d.toLocaleString();
+    }
+
+    function getItemId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("id") || params.get("item_id");
+    }
+
+    function renderError(message, details = "") {
+      const content = document.getElementById("content");
+      const status = document.getElementById("status");
+      status.textContent = "Error";
+      content.innerHTML = `
+        <div class="error">
+          <strong>${escapeHtml(message)}</strong>
+          ${details ? `<div class="hint mono">${escapeHtml(details)}</div>` : ""}
+          <div class="hint">
+            Use a URL like:
+            <div class="mono">item-viewer.html?id=YOUR_ITEM_ID</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderEmpty(message) {
+      const content = document.getElementById("content");
+      const status = document.getElementById("status");
+      status.textContent = "Not found";
+      content.innerHTML = `<div class="empty">${escapeHtml(message)}</div>`;
+    }
+
+    function renderItem(item) {
+      const content = document.getElementById("content");
+      const status = document.getElementById("status");
+      status.textContent = "Loaded";
+
+      const photos = Array.isArray(item.photos) ? item.photos : [];
+      const photoHtml = photos.length
+        ? `
+          <div class="section">
+            <div class="meta-label">Photos</div>
+            <div class="photos-grid">
+              ${photos.map((photo) => `
+                <div class="photo-card">
+                  ${
+                    photo.signed_url
+                      ? `<img src="${escapeHtml(photo.signed_url)}" alt="${escapeHtml(photo.file_name || item.name || "Item photo")}" />`
+                      : `<div class="empty" style="margin:0;border:none;border-radius:0;">No viewable image URL available.</div>`
+                  }
+                  <div class="photo-body">
+                    <p class="photo-name">${escapeHtml(photo.file_name || "Unnamed photo")}</p>
+                    <div class="photo-meta">
+                      <div>Caption: ${escapeHtml(photo.caption || "—")}</div>
+                      <div>Type: ${escapeHtml(photo.mime_type || "—")}</div>
+                      <div>Size: ${escapeHtml(formatBytes(photo.size_bytes))}</div>
+                      <div>Added: ${escapeHtml(formatDate(photo.created_at))}</div>
+                      ${
+                        photo.signed_url
+                          ? `<div style="margin-top:8px;"><a class="inline-link" href="${escapeHtml(photo.signed_url)}" target="_blank" rel="noopener noreferrer">Open full image</a></div>`
+                          : ""
+                      }
+                    </div>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `
+        : `
+          <div class="section">
+            <div class="meta-label">Photos</div>
+            <div class="empty">This item does not have any photos yet.</div>
+          </div>
+        `;
+
+      content.innerHTML = `
+        <div>
+          <div class="meta-label">Item</div>
+          <div style="font-size:32px;font-weight:800;line-height:1.1;">${escapeHtml(item.name || "Unnamed item")}</div>
+        </div>
+
+        <div class="meta-grid">
+          <div class="meta-box">
+            <div class="meta-label">Description</div>
+            <div class="meta-value">${escapeHtml(item.description || "—")}</div>
+          </div>
+
+          <div class="meta-box">
+            <div class="meta-label">Notes</div>
+            <div class="meta-value">${escapeHtml(item.notes || "—")}</div>
+          </div>
+
+          <div class="meta-box">
+            <div class="meta-label">Item ID</div>
+            <div class="meta-value mono">${escapeHtml(item.id || "—")}</div>
+          </div>
+
+          <div class="meta-box">
+            <div class="meta-label">Workspace ID</div>
+            <div class="meta-value mono">${escapeHtml(item.workspace_id || "—")}</div>
+          </div>
+
+          <div class="meta-box">
+            <div class="meta-label">Container ID</div>
+            <div class="meta-value mono">${escapeHtml(item.container_id || "—")}</div>
+          </div>
+
+          <div class="meta-box">
+            <div class="meta-label">Photo Count</div>
+            <div class="meta-value">${photos.length}</div>
+          </div>
+        </div>
+
+        ${photoHtml}
+      `;
+    }
+
+    async function loadItem() {
+      const itemId = getItemId();
+
+      if (!itemId) {
+        renderError("No item ID was provided.");
+        return;
+      }
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+
+        const rawText = await response.text();
+        let payload;
+
+        try {
+          payload = JSON.parse(rawText);
+        } catch {
+          renderError("The API returned invalid JSON.", rawText);
+          return;
+        }
+
+        if (!response.ok) {
+          renderError("The API request failed.", JSON.stringify(payload, null, 2));
+          return;
+        }
+
+        const items = Array.isArray(payload.data) ? payload.data : [];
+        const item = items.find((entry) => entry.id === itemId);
+
+        if (!item) {
+          renderEmpty(`No item found for ID: ${itemId}`);
+          return;
+        }
+
+        renderItem(item);
+      } catch (error) {
+        renderError("Failed to load item.", String(error));
+      }
+    }
+
+    loadItem();
+  </script>
+</body>
+</html>
