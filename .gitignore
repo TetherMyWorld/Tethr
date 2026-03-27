@@ -2,3 +2,4 @@ data/
 .env.local
 server-*.log
 *.zip
+.playwright-cli/

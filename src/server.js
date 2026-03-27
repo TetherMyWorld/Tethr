@@ -6,6 +6,7 @@ import { Readable } from "node:stream";
 import { pathToFileURL } from "node:url";
 import {
   assignTag,
+  createAuraWhiskyEntry,
   createContainer,
   createItem,
   createLocation,
@@ -13,6 +14,7 @@ import {
   deleteContainer,
   deleteItem,
   deleteLocation,
+  getAuraWhiskyDetail,
   getBootstrap,
   getContainerDetail,
   getContainerFromRoute,
@@ -21,6 +23,8 @@ import {
   getPhotoFile,
   getSessionByToken,
   hydrateWorkspaceSnapshot,
+  listAuraWhiskies,
+  upsertAuraWhiskyUserNotes,
   normalizeUserEmail,
   getTag,
   runWithRequestContext,
@@ -38,7 +42,7 @@ import {
   updateItem,
   updateLocation
 } from "./db.js";
-import { renderApp, renderPrintLabelPage } from "./ui.js";
+import { renderApp, renderAuraApp, renderAuraHome, renderPrintLabelPage } from "./ui.js";
 
 loadLocalEnvFile();
 
@@ -211,6 +215,14 @@ export async function handleRequest(req, res) {
         return sendHtml(res, renderPrintLabelPage({ name, entityType, qrUrl, size }));
       }
 
+      if (req.method === "GET" && url.pathname === "/aura") {
+        return sendHtml(res, renderAuraHome());
+      }
+
+      if (req.method === "GET" && (url.pathname === "/aura/whiskies" || url.pathname.startsWith("/aura/whiskies/"))) {
+        return sendHtml(res, renderAuraApp(url.pathname));
+      }
+
       if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/simulate-scan" || url.pathname.startsWith("/containers/") || url.pathname.startsWith("/scan/"))) {
         const selectedContainer = session && url.pathname.startsWith("/containers/")
           ? getContainerFromRoute(url.pathname.split("/").pop())
@@ -230,6 +242,47 @@ export async function handleRequest(req, res) {
       }
 
       ensureAuthenticated(session);
+
+      if (req.method === "GET" && url.pathname === "/api/aura/whiskies") {
+        return sendJson(res, 200, listAuraWhiskies({
+          q: url.searchParams.get("q") || "",
+          view: url.searchParams.get("view") || "",
+          country: url.searchParams.get("country") || "",
+          region: url.searchParams.get("region") || "",
+          distillery: url.searchParams.get("distillery") || "",
+          whiskyId: url.searchParams.get("whiskyId") || ""
+        }));
+      }
+
+      if (req.method === "GET" && url.pathname.startsWith("/api/aura/whiskies/") && !url.pathname.endsWith("/my-notes")) {
+        const id = url.pathname.split("/")[4];
+        const detail = getAuraWhiskyDetail(id);
+        return detail ? sendJson(res, 200, detail) : sendJson(res, 404, { error: "Whisky not found" });
+      }
+
+      if (req.method === "POST" && url.pathname.startsWith("/api/aura/whiskies/") && url.pathname.endsWith("/entries")) {
+        const id = url.pathname.split("/")[4];
+        const entry = createAuraWhiskyEntry(id, await readJson(req));
+        const syncStatus = session
+          ? await syncAuraWhiskyEntryToSupabase(session, entry)
+          : { synced: false, reason: "No signed-in session." };
+        return sendJson(res, 201, {
+          ...entry,
+          supabaseSync: syncStatus
+        });
+      }
+
+      if (req.method === "PUT" && url.pathname.startsWith("/api/aura/whiskies/") && url.pathname.endsWith("/my-notes")) {
+        const id = url.pathname.split("/")[4];
+        const notes = upsertAuraWhiskyUserNotes(id, await readJson(req));
+        const syncStatus = session
+          ? await syncAuraWhiskyUserNotesToSupabase(session, id)
+          : { synced: false, reason: "No signed-in session." };
+        return sendJson(res, 200, {
+          ...notes,
+          supabaseSync: syncStatus
+        });
+      }
 
       if (req.method === "POST" && url.pathname === "/api/tags") {
         const tag = createTag(await readJson(req));
@@ -782,6 +835,9 @@ async function createHostedSession(userRow) {
 async function hydrateHostedWorkspace(session) {
   const workspaceId = session.workspace.id;
   const [
+    auraWhiskies,
+    auraWhiskyUserNotes,
+    auraWhiskyEntries,
     locations,
     containers,
     items,
@@ -793,6 +849,15 @@ async function hydrateHostedWorkspace(session) {
     containerEventLog,
     containerActivityLog
   ] = await Promise.all([
+    supabaseSelect("aura_whiskies", "?select=*"),
+    supabaseSelect(
+      "aura_whisky_user_notes",
+      `?workspace_id=eq.${encodeURIComponent(workspaceId)}&user_id=eq.${encodeURIComponent(session.user.id)}&select=*`
+    ),
+    supabaseSelect(
+      "aura_whisky_entries",
+      `?workspace_id=eq.${encodeURIComponent(workspaceId)}&user_id=eq.${encodeURIComponent(session.user.id)}&select=*`
+    ),
     supabaseSelect("locations", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`),
     supabaseSelect("containers", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`),
     supabaseSelect("items", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`),
@@ -807,6 +872,9 @@ async function hydrateHostedWorkspace(session) {
 
   hydrateWorkspaceSnapshot({
     session,
+    auraWhiskies,
+    auraWhiskyUserNotes,
+    auraWhiskyEntries,
     locations,
     containers,
     items,
@@ -1393,6 +1461,64 @@ async function syncItemToSupabase(session, item) {
     return { synced: true };
   } catch (error) {
     console.error("Supabase item sync failed:", error);
+    return {
+      synced: false,
+      reason: String(error.message || error)
+    };
+  }
+}
+
+async function syncAuraWhiskyUserNotesToSupabase(session, whiskyId) {
+  if (!supabaseConfigured) {
+    return { synced: false, reason: "Supabase is not configured." };
+  }
+
+  try {
+    const detail = getAuraWhiskyDetail(whiskyId);
+    if (!detail) {
+      return { synced: false, reason: "Whisky not found." };
+    }
+
+    await upsertSupabaseRow("aura_whisky_user_notes", {
+      id: detail.myNotes.id,
+      whisky_id: whiskyId,
+      workspace_id: session.workspace.id,
+      user_id: session.user.id,
+      tasting_notes: detail.myNotes.tastingNotes || "",
+      personal_notes: detail.myNotes.personalNotes || "",
+      created_at: detail.myNotes.createdAt || new Date().toISOString(),
+      updated_at: detail.myNotes.updatedAt || new Date().toISOString()
+    }, "whisky_id,workspace_id,user_id");
+
+    return { synced: true };
+  } catch (error) {
+    console.error("Supabase Aura notes sync failed:", error);
+    return {
+      synced: false,
+      reason: String(error.message || error)
+    };
+  }
+}
+
+async function syncAuraWhiskyEntryToSupabase(session, entry) {
+  if (!supabaseConfigured) {
+    return { synced: false, reason: "Supabase is not configured." };
+  }
+
+  try {
+    await upsertSupabaseRow("aura_whisky_entries", {
+      id: entry.id,
+      whisky_id: entry.whiskyId,
+      workspace_id: session.workspace.id,
+      user_id: session.user.id,
+      entry_text: entry.entryText || "",
+      created_at: entry.createdAt || new Date().toISOString(),
+      updated_at: entry.updatedAt || new Date().toISOString()
+    }, "id");
+
+    return { synced: true };
+  } catch (error) {
+    console.error("Supabase Aura entry sync failed:", error);
     return {
       synced: false,
       reason: String(error.message || error)

@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "node src/server.js",
+    "import:aura-whiskies": "node scripts/import-aura-whiskies.js",
+    "replace:aura-whiskies": "node scripts/import-aura-whiskies.js --replace",
     "test": "node --test"
   }
 }

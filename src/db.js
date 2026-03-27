@@ -199,6 +199,53 @@ db.exec(`
     updated_at TEXT NOT NULL,
     FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS aura_whiskies (
+    id TEXT PRIMARY KEY,
+    slug TEXT NOT NULL,
+    name TEXT NOT NULL,
+    canonical_name TEXT NOT NULL DEFAULT '',
+    distillery TEXT NOT NULL,
+    expression TEXT NOT NULL DEFAULT '',
+    country TEXT NOT NULL DEFAULT '',
+    region TEXT NOT NULL DEFAULT '',
+    style TEXT NOT NULL DEFAULT '',
+    age_statement TEXT NOT NULL DEFAULT '',
+    abv TEXT NOT NULL DEFAULT '',
+    cask_type TEXT NOT NULL DEFAULT '',
+    price_usd REAL,
+    reference_notes TEXT NOT NULL DEFAULT '',
+    image_url TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS aura_whisky_user_notes (
+    id TEXT PRIMARY KEY,
+    whisky_id TEXT NOT NULL,
+    workspace_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    tasting_notes TEXT NOT NULL DEFAULT '',
+    personal_notes TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (whisky_id) REFERENCES aura_whiskies(id) ON DELETE CASCADE,
+    FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS aura_whisky_entries (
+    id TEXT PRIMARY KEY,
+    whisky_id TEXT NOT NULL,
+    workspace_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    entry_text TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (whisky_id) REFERENCES aura_whiskies(id) ON DELETE CASCADE,
+    FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
 `);
 
 ensureWorkspace();
@@ -213,7 +260,11 @@ ensureColumn("move_log", "to_location_id", "TEXT");
 ensureContainerActivityLogShape();
 flattenLegacyHierarchy();
 ensureColumn("tags", "source", "TEXT NOT NULL DEFAULT 'generated'");
+ensureColumn("aura_whiskies", "canonical_name", "TEXT NOT NULL DEFAULT ''");
+ensureColumn("aura_whiskies", "style", "TEXT NOT NULL DEFAULT ''");
+ensureColumn("aura_whiskies", "price_usd", "REAL");
 db.exec(`
+  DROP INDEX IF EXISTS idx_aura_whiskies_name;
   CREATE INDEX IF NOT EXISTS idx_locations_workspace ON locations (workspace_id, name);
   CREATE INDEX IF NOT EXISTS idx_containers_workspace_location ON containers (workspace_id, location_id, name);
   CREATE INDEX IF NOT EXISTS idx_items_workspace_container ON items (workspace_id, container_id, name);
@@ -227,6 +278,12 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON workspace_members (user_id, workspace_id);
   CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions (token);
   CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions (user_id, expires_at);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_aura_whiskies_name_unique ON aura_whiskies (name, distillery);
+  CREATE INDEX IF NOT EXISTS idx_aura_whiskies_slug ON aura_whiskies (slug);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_aura_whisky_user_notes_unique ON aura_whisky_user_notes (whisky_id, workspace_id, user_id);
+  CREATE INDEX IF NOT EXISTS idx_aura_whisky_user_notes_workspace_user ON aura_whisky_user_notes (workspace_id, user_id, updated_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_aura_whisky_entries_workspace_user_created ON aura_whisky_entries (workspace_id, user_id, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_aura_whisky_entries_whisky_created ON aura_whisky_entries (whisky_id, created_at DESC);
 `);
 
 function now() {
@@ -656,6 +713,9 @@ export function hydrateWorkspaceSnapshot(snapshot = {}) {
   const itemEventLog = Array.isArray(snapshot.itemEventLog) ? snapshot.itemEventLog : [];
   const containerEventLog = Array.isArray(snapshot.containerEventLog) ? snapshot.containerEventLog : [];
   const containerActivityLog = Array.isArray(snapshot.containerActivityLog) ? snapshot.containerActivityLog : [];
+  const auraWhiskies = Array.isArray(snapshot.auraWhiskies) ? snapshot.auraWhiskies : [];
+  const auraWhiskyUserNotes = Array.isArray(snapshot.auraWhiskyUserNotes) ? snapshot.auraWhiskyUserNotes : [];
+  const auraWhiskyEntries = Array.isArray(snapshot.auraWhiskyEntries) ? snapshot.auraWhiskyEntries : [];
 
   db.exec("BEGIN");
   try {
@@ -722,6 +782,9 @@ export function hydrateWorkspaceSnapshot(snapshot = {}) {
     db.prepare("DELETE FROM items WHERE workspace_id = ?").run(workspaceIdValue);
     db.prepare("DELETE FROM containers WHERE workspace_id = ?").run(workspaceIdValue);
     db.prepare("DELETE FROM locations WHERE workspace_id = ?").run(workspaceIdValue);
+    db.prepare("DELETE FROM aura_whisky_entries WHERE workspace_id = ? AND user_id = ?").run(workspaceIdValue, user.id);
+    db.prepare("DELETE FROM aura_whisky_user_notes WHERE workspace_id = ? AND user_id = ?").run(workspaceIdValue, user.id);
+    db.exec("DELETE FROM aura_whiskies");
 
     for (const location of locations) {
       db.prepare(
@@ -900,6 +963,66 @@ export function hydrateWorkspaceSnapshot(snapshot = {}) {
       );
     }
 
+    for (const whisky of auraWhiskies) {
+      db.prepare(
+        `INSERT INTO aura_whiskies (
+           id, slug, name, canonical_name, distillery, expression, country, region, style, age_statement, abv, cask_type,
+           price_usd, reference_notes, image_url, created_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        whisky.id,
+        whisky.slug || slugify(buildAuraWhiskyDisplayName(whisky)),
+        whisky.name || "",
+        whisky.canonical_name || whisky.canonicalName || "",
+        whisky.distillery || "",
+        whisky.expression || "",
+        whisky.country || "",
+        whisky.region || "",
+        whisky.style || "",
+        whisky.age_statement || "",
+        whisky.abv || "",
+        whisky.cask_type || "",
+        whisky.price_usd ?? whisky.priceUsd ?? null,
+        whisky.reference_notes || "",
+        whisky.image_url || "",
+        whisky.created_at || whisky.createdAt || now(),
+        whisky.updated_at || whisky.updatedAt || now()
+      );
+    }
+
+    for (const notes of auraWhiskyUserNotes) {
+      db.prepare(
+        `INSERT INTO aura_whisky_user_notes (
+           id, whisky_id, workspace_id, user_id, tasting_notes, personal_notes, created_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        notes.id,
+        notes.whisky_id,
+        notes.workspace_id || workspaceIdValue,
+        notes.user_id || user.id,
+        notes.tasting_notes || "",
+        notes.personal_notes || "",
+        notes.created_at || notes.createdAt || now(),
+        notes.updated_at || notes.updatedAt || now()
+      );
+    }
+
+    for (const entry of auraWhiskyEntries) {
+      db.prepare(
+        `INSERT INTO aura_whisky_entries (
+           id, whisky_id, workspace_id, user_id, entry_text, created_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        entry.id,
+        entry.whisky_id || entry.whiskyId,
+        workspaceIdValue,
+        user.id,
+        entry.entry_text || entry.entryText || "",
+        entry.created_at || entry.createdAt || now(),
+        entry.updated_at || entry.updatedAt || now()
+      );
+    }
+
     db.exec("COMMIT");
   } catch (error) {
     db.exec("ROLLBACK");
@@ -910,6 +1033,493 @@ export function hydrateWorkspaceSnapshot(snapshot = {}) {
 function currentSession() {
   const ctx = requestContext();
   return ctx?.session || null;
+}
+
+function auraWhiskyCanonicalPath(row) {
+  return `/aura/whiskies/${row.slug}-${row.id}`;
+}
+
+function buildAuraWhiskyDisplayName(row) {
+  const canonicalName = String(row?.canonical_name || row?.canonicalName || "").trim();
+  if (canonicalName) {
+    return canonicalName;
+  }
+  const name = String(row?.name || "").trim();
+  const expression = String(row?.expression || "").trim();
+  return expression ? `${name} ${expression}`.trim() : name;
+}
+
+function mapAuraWhisky(row) {
+  if (!row) {
+    return null;
+  }
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    canonicalName: row.canonical_name || "",
+    distillery: row.distillery,
+    expression: row.expression || "",
+    displayName: buildAuraWhiskyDisplayName(row),
+    country: row.country || "",
+    region: row.region || "",
+    style: row.style || "",
+    ageStatement: row.age_statement || "",
+    abv: row.abv || "",
+    caskType: row.cask_type || "",
+    priceUsd: row.price_usd == null || row.price_usd === "" ? null : Number(row.price_usd),
+    referenceNotes: row.reference_notes || "",
+    imageUrl: row.image_url || "",
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    path: auraWhiskyCanonicalPath(row)
+  };
+}
+
+function mapAuraWhiskyUserNotes(row) {
+  if (!row) {
+    return null;
+  }
+  return {
+    id: row.id,
+    whiskyId: row.whisky_id,
+    workspaceId: row.workspace_id,
+    userId: row.user_id,
+    tastingNotes: row.tasting_notes || "",
+    personalNotes: row.personal_notes || "",
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+function mapAuraWhiskyEntry(row) {
+  if (!row) {
+    return null;
+  }
+  return {
+    id: row.id,
+    whiskyId: row.whisky_id,
+    workspaceId: row.workspace_id,
+    userId: row.user_id,
+    entryText: row.entry_text || "",
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+function defaultAuraWhiskyUserNotes(whiskyId) {
+  return {
+    id: "",
+    whiskyId,
+    workspaceId: workspaceId(),
+    userId: currentUserId(),
+    tastingNotes: "",
+    personalNotes: "",
+    createdAt: "",
+    updatedAt: ""
+  };
+}
+
+function auraNormalizeText(value) {
+  return String(value || "").trim();
+}
+
+function getAuraWhiskyRow(id) {
+  return db.prepare(
+    `SELECT id, slug, name, canonical_name, distillery, expression, country, region, style,
+            age_statement, abv, cask_type, price_usd, reference_notes, image_url, created_at, updated_at
+     FROM aura_whiskies
+     WHERE id = ?`
+  ).get(id);
+}
+
+function getAuraWhiskyUserNotesRow(whiskyId, workspaceIdValue = workspaceId(), userIdValue = currentUserId()) {
+  if (!whiskyId || !workspaceIdValue || !userIdValue) {
+    return null;
+  }
+  return db.prepare(
+    `SELECT id, whisky_id, workspace_id, user_id, tasting_notes, personal_notes, created_at, updated_at
+     FROM aura_whisky_user_notes
+     WHERE whisky_id = ? AND workspace_id = ? AND user_id = ?
+     LIMIT 1`
+  ).get(whiskyId, workspaceIdValue, userIdValue);
+}
+
+function listAuraWhiskyEntryRows(whiskyId, workspaceIdValue = workspaceId(), userIdValue = currentUserId()) {
+  if (!whiskyId || !workspaceIdValue || !userIdValue) {
+    return [];
+  }
+  return db.prepare(
+    `SELECT id, whisky_id, workspace_id, user_id, entry_text, created_at, updated_at
+     FROM aura_whisky_entries
+     WHERE whisky_id = ? AND workspace_id = ? AND user_id = ?
+     ORDER BY created_at DESC, updated_at DESC, id DESC`
+  ).all(whiskyId, workspaceIdValue, userIdValue);
+}
+
+function listAllAuraWhiskyRows() {
+  return db.prepare(
+    `SELECT id, slug, name, canonical_name, distillery, expression, country, region, style,
+            age_statement, abv, cask_type, price_usd, reference_notes, image_url, created_at, updated_at
+     FROM aura_whiskies
+     ORDER BY COALESCE(NULLIF(canonical_name, ''), name) COLLATE NOCASE, expression COLLATE NOCASE, distillery COLLATE NOCASE`
+  ).all();
+}
+
+function listAuraWhiskyTouchedIds(workspaceIdValue = workspaceId(), userIdValue = currentUserId()) {
+  if (!workspaceIdValue || !userIdValue) {
+    return new Set();
+  }
+  const entryIds = db.prepare(
+    `SELECT DISTINCT whisky_id
+     FROM aura_whisky_entries
+     WHERE workspace_id = ? AND user_id = ?`
+  ).all(workspaceIdValue, userIdValue).map((row) => row.whisky_id);
+
+  const noteIds = db.prepare(
+    `SELECT DISTINCT whisky_id
+     FROM aura_whisky_user_notes
+     WHERE workspace_id = ? AND user_id = ?
+       AND (
+         TRIM(COALESCE(tasting_notes, '')) <> ''
+         OR TRIM(COALESCE(personal_notes, '')) <> ''
+       )`
+  ).all(workspaceIdValue, userIdValue).map((row) => row.whisky_id);
+
+  return new Set([...entryIds, ...noteIds].filter(Boolean));
+}
+
+function filterAuraWhiskyRows(rows, filters = {}) {
+  const query = auraNormalizeText(filters.q).toLowerCase();
+  const country = auraNormalizeText(filters.country);
+  const region = auraNormalizeText(filters.region);
+  const distillery = auraNormalizeText(filters.distillery);
+  const whiskyId = auraNormalizeText(filters.whiskyId || filters.whisky);
+
+  return rows.filter((row) => {
+    const displayName = buildAuraWhiskyDisplayName(row).toLowerCase();
+    const rowCountry = auraNormalizeText(row.country);
+    const rowRegion = auraNormalizeText(row.region);
+    const rowDistillery = auraNormalizeText(row.distillery);
+    if (query) {
+      const haystack = [
+        row.name,
+        row.canonical_name,
+        row.expression,
+        row.distillery,
+        row.country,
+        row.region,
+        row.style,
+        row.age_statement,
+        row.cask_type,
+        row.price_usd,
+        row.reference_notes
+      ].join(" ").toLowerCase();
+      if (!haystack.includes(query) && !displayName.includes(query)) {
+        return false;
+      }
+    }
+    if (country && rowCountry !== country) {
+      return false;
+    }
+    if (region && rowRegion !== region) {
+      return false;
+    }
+    if (distillery && rowDistillery !== distillery) {
+      return false;
+    }
+    if (whiskyId && row.id !== whiskyId) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function uniqueSortedValues(values) {
+  return Array.from(new Set(values.filter(Boolean))).sort((left, right) => left.localeCompare(right));
+}
+
+export function listAuraWhiskies(filters = {}) {
+  const allRows = listAllAuraWhiskyRows();
+  const view = auraNormalizeText(filters.view);
+  const touchedIds = view === "mine" ? listAuraWhiskyTouchedIds() : null;
+  const scopedRows = touchedIds ? allRows.filter((row) => touchedIds.has(row.id)) : allRows;
+  const query = auraNormalizeText(filters.q);
+  const country = auraNormalizeText(filters.country);
+  const region = auraNormalizeText(filters.region);
+  const distillery = auraNormalizeText(filters.distillery);
+  const whiskyId = auraNormalizeText(filters.whiskyId || filters.whisky);
+
+  const qRows = filterAuraWhiskyRows(scopedRows, { q: query });
+  const countryRows = filterAuraWhiskyRows(qRows, { country });
+  const regionRows = filterAuraWhiskyRows(qRows, { country, region });
+  const distilleryRows = filterAuraWhiskyRows(qRows, { country, region, distillery });
+  const results = filterAuraWhiskyRows(qRows, { country, region, distillery, whiskyId });
+
+  return {
+    query,
+    selected: {
+      country,
+      region,
+      distillery,
+      whiskyId,
+      view: view === "mine" ? "mine" : "search"
+    },
+    filters: {
+      countries: uniqueSortedValues(qRows.map((row) => auraNormalizeText(row.country))),
+      regions: uniqueSortedValues(countryRows.map((row) => auraNormalizeText(row.region))),
+      distilleries: uniqueSortedValues(regionRows.map((row) => auraNormalizeText(row.distillery))),
+      whiskies: distilleryRows.map((row) => ({
+        id: row.id,
+        label: buildAuraWhiskyDisplayName(row),
+        distillery: row.distillery || "",
+        path: auraWhiskyCanonicalPath(row)
+      }))
+    },
+    whiskies: results.map(mapAuraWhisky)
+  };
+}
+
+export function getAuraWhisky(id) {
+  return mapAuraWhisky(getAuraWhiskyRow(id));
+}
+
+export function getAuraWhiskyFromRoute(slugId) {
+  const id = extractRecordIdFromSlugId(slugId);
+  return id ? getAuraWhisky(id) : null;
+}
+
+export function getAuraWhiskyDetail(id) {
+  const whisky = getAuraWhisky(id);
+  if (!whisky) {
+    return null;
+  }
+  const myNotes = mapAuraWhiskyUserNotes(getAuraWhiskyUserNotesRow(id)) || defaultAuraWhiskyUserNotes(id);
+  const entries = listAuraWhiskyEntryRows(id).map(mapAuraWhiskyEntry);
+  return {
+    whisky,
+    myNotes,
+    entries
+  };
+}
+
+export function createAuraWhiskyEntry(whiskyId, input = {}) {
+  const whisky = getAuraWhiskyRow(requireText(whiskyId, "Whisky is required"));
+  if (!whisky) {
+    throw new Error("Whisky not found");
+  }
+  const workspaceIdValue = workspaceId();
+  const userIdValue = currentUserId();
+  if (!userIdValue) {
+    throw new Error("Please sign in.");
+  }
+  const entryText = auraNormalizeText(input.entryText);
+  if (!entryText) {
+    throw new Error("Please write something for this Aura entry.");
+  }
+  const timestamp = now();
+  const id = randomUUID();
+  db.prepare(
+    `INSERT INTO aura_whisky_entries (
+       id, whisky_id, workspace_id, user_id, entry_text, created_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).run(id, whisky.id, workspaceIdValue, userIdValue, entryText, timestamp, timestamp);
+  return mapAuraWhiskyEntry(
+    db.prepare(
+      `SELECT id, whisky_id, workspace_id, user_id, entry_text, created_at, updated_at
+       FROM aura_whisky_entries
+       WHERE id = ?`
+    ).get(id)
+  );
+}
+
+export function upsertAuraWhiskyUserNotes(whiskyId, input = {}) {
+  const whisky = getAuraWhiskyRow(requireText(whiskyId, "Whisky is required"));
+  if (!whisky) {
+    throw new Error("Whisky not found");
+  }
+  const workspaceIdValue = workspaceId();
+  const userIdValue = currentUserId();
+  if (!userIdValue) {
+    throw new Error("Please sign in.");
+  }
+  const timestamp = now();
+  const existing = getAuraWhiskyUserNotesRow(whisky.id, workspaceIdValue, userIdValue);
+  const tastingNotes = auraNormalizeText(input.tastingNotes);
+  const personalNotes = auraNormalizeText(input.personalNotes);
+
+  if (existing) {
+    db.prepare(
+      `UPDATE aura_whisky_user_notes
+       SET tasting_notes = ?, personal_notes = ?, updated_at = ?
+       WHERE id = ?`
+    ).run(tastingNotes, personalNotes, timestamp, existing.id);
+  } else {
+    db.prepare(
+      `INSERT INTO aura_whisky_user_notes (
+         id, whisky_id, workspace_id, user_id, tasting_notes, personal_notes, created_at, updated_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(randomUUID(), whisky.id, workspaceIdValue, userIdValue, tastingNotes, personalNotes, timestamp, timestamp);
+  }
+
+  return getAuraWhiskyDetail(whisky.id).myNotes;
+}
+
+function findAuraWhiskyByStableKey(name, distillery) {
+  const key = auraStableKey(name, distillery);
+  return listAllAuraWhiskyRows().find((row) => auraStableKey(row.canonical_name || row.name, row.distillery) === key) || null;
+}
+
+function normalizeAuraWhiskyImportRow(row = {}) {
+  const canonicalName = auraNormalizeText(row.canonical_name || row.name);
+  const name = auraNormalizeText(row.name || canonicalName);
+  const distillery = auraNormalizeText(row.distillery || row.brand);
+  if (!name) {
+    throw new Error("Each whisky row must include a name.");
+  }
+  if (!distillery) {
+    throw new Error(`Whisky "${name}" is missing a distillery.`);
+  }
+  const expression = auraNormalizeText(row.expression);
+  const displayName = buildAuraWhiskyDisplayName({
+    canonical_name: canonicalName,
+    name,
+    expression
+  });
+  const priceUsdRaw = auraNormalizeText(row.price_usd);
+  const priceUsd = priceUsdRaw ? Number(priceUsdRaw) : null;
+  return {
+    name,
+    canonicalName: canonicalName || displayName,
+    distillery,
+    expression,
+    country: auraNormalizeText(row.country),
+    region: auraNormalizeText(row.region || row.location),
+    style: auraNormalizeText(row.style),
+    ageStatement: auraNormalizeText(row.age_statement),
+    abv: auraNormalizeText(row.abv),
+    caskType: auraNormalizeText(row.cask_type),
+    referenceNotes: auraNormalizeText(row.reference_notes),
+    priceUsd: Number.isFinite(priceUsd) ? priceUsd : null,
+    imageUrl: auraNormalizeText(row.image_url),
+    slug: slugify(displayName)
+  };
+}
+
+function auraStableValue(value) {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u2018\u2019']/g, "")
+    .toLowerCase()
+    .replace(/\b(\d+)\s*(?:years?\s*old|year\s*old|yo)\b/g, "$1")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+function auraStableKey(name, distillery) {
+  return `${auraStableValue(distillery)}::${auraStableValue(name)}`;
+}
+
+export function importAuraWhiskies(rows = [], options = {}) {
+  const preparedRows = Array.isArray(rows) ? rows : [];
+  const replace = Boolean(options.replace);
+  const imported = [];
+  const existingRows = replace ? [] : listAllAuraWhiskyRows();
+  const existingByKey = new Map(
+    existingRows.map((row) => [auraStableKey(row.canonical_name || row.name, row.distillery), row])
+  );
+  const importedKeys = new Set();
+
+  db.exec("BEGIN");
+  try {
+    if (replace) {
+      db.exec("DELETE FROM aura_whisky_user_notes;");
+      db.exec("DELETE FROM aura_whiskies;");
+    }
+
+    for (const rawRow of preparedRows) {
+      const row = normalizeAuraWhiskyImportRow(rawRow);
+      const stableKey = auraStableKey(row.canonicalName || row.name, row.distillery);
+      if (!stableKey || importedKeys.has(stableKey)) {
+        continue;
+      }
+      importedKeys.add(stableKey);
+      const timestamp = now();
+      const existing = existingByKey.get(stableKey) || findAuraWhiskyByStableKey(row.canonicalName || row.name, row.distillery);
+      if (existing) {
+        db.prepare(
+          `UPDATE aura_whiskies
+           SET slug = ?, name = ?, canonical_name = ?, expression = ?, country = ?, region = ?, style = ?,
+               age_statement = ?, abv = ?, cask_type = ?, price_usd = ?, reference_notes = ?, image_url = ?, updated_at = ?
+           WHERE id = ?`
+        ).run(
+          row.slug,
+          row.name,
+          row.canonicalName,
+          row.expression,
+          row.country,
+          row.region,
+          row.style,
+          row.ageStatement,
+          row.abv,
+          row.caskType,
+          row.priceUsd,
+          row.referenceNotes,
+          row.imageUrl,
+          timestamp,
+          existing.id
+        );
+        existingByKey.set(stableKey, { ...existing, id: existing.id, name: row.name, canonical_name: row.canonicalName, distillery: row.distillery });
+        imported.push(mapAuraWhisky(getAuraWhiskyRow(existing.id)));
+        continue;
+      }
+
+      const id = randomUUID();
+      db.prepare(
+        `INSERT INTO aura_whiskies (
+           id, slug, name, canonical_name, distillery, expression, country, region, style, age_statement, abv, cask_type,
+           price_usd, reference_notes, image_url, created_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        id,
+        row.slug,
+        row.name,
+        row.canonicalName,
+        row.distillery,
+        row.expression,
+        row.country,
+        row.region,
+        row.style,
+        row.ageStatement,
+        row.abv,
+        row.caskType,
+        row.priceUsd,
+        row.referenceNotes,
+        row.imageUrl,
+        timestamp,
+        timestamp
+      );
+      existingByKey.set(stableKey, { id, name: row.name, canonical_name: row.canonicalName, distillery: row.distillery });
+      imported.push(mapAuraWhisky(getAuraWhiskyRow(id)));
+    }
+
+    if (!replace) {
+      for (const existing of existingRows) {
+        const stableKey = auraStableKey(existing.canonical_name || existing.name, existing.distillery);
+        if (importedKeys.has(stableKey)) {
+          continue;
+        }
+        db.prepare("DELETE FROM aura_whiskies WHERE id = ?").run(existing.id);
+      }
+    }
+
+    db.exec("COMMIT");
+    return imported;
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
 }
 
 function allLocations() {

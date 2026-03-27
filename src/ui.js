@@ -1177,11 +1177,10 @@ export function renderApp(initialContainerId) {
         return Boolean(window.matchMedia?.("(hover: none), (pointer: coarse)")?.matches);
       }
 
-      function getTileActionHint(noun) {
-        const label = noun || "tile";
+      function getTileActionHint() {
         return usesTouchTileActions()
-          ? "Press and hold a " + label + " for actions."
-          : "Right-click a " + label + " for actions.";
+          ? "Press and hold for actions."
+          : "Right-click for actions.";
       }
 
       function combineStageHint(primaryText, noun = "tile") {
@@ -2973,6 +2972,1716 @@ export function renderApp(initialContainerId) {
           minute: "2-digit"
         });
       }
+    </script>
+  </body>
+</html>`;
+}
+
+export function renderAuraHome() {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>TethrAura</title>
+    <style>
+      :root {
+        --bg:#0e1725;
+        --panel:rgba(17,29,46,.92);
+        --line:rgba(173,194,224,.12);
+        --ink:#f5f8ff;
+        --muted:#9fb0ca;
+        --accent:#7bc0ff;
+        --gold:#e2bf63;
+        --heading-font:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+        --body-font:"Aptos","Segoe UI","Trebuchet MS",sans-serif;
+        --shadow:0 28px 68px rgba(0,0,0,.28);
+      }
+      * { box-sizing:border-box; }
+      body {
+        margin:0;
+        font-family:var(--body-font);
+        color:var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(123,192,255,.12), transparent 24%),
+          radial-gradient(circle at top right, rgba(226,191,99,.10), transparent 22%),
+          linear-gradient(180deg, #0f1a2a 0%, #0d1624 100%);
+      }
+      a { color:inherit; text-decoration:none; }
+      .shell { max-width:1240px; margin:0 auto; padding:36px 28px 42px; display:grid; gap:20px; }
+      .panel,
+      .topbar {
+        background:linear-gradient(180deg, rgba(19,31,48,.95) 0%, rgba(15,24,38,.94) 100%);
+        border:1px solid rgba(255,255,255,.06);
+        border-radius:28px;
+        box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.05);
+        backdrop-filter:blur(12px);
+      }
+      .topbar {
+        padding:24px 26px;
+        display:flex;
+        justify-content:space-between;
+        gap:16px;
+        align-items:flex-start;
+        flex-wrap:wrap;
+      }
+      .brand { display:grid; gap:8px; }
+      .eyebrow { color:var(--gold); letter-spacing:.18em; text-transform:uppercase; font-size:.78rem; font-weight:800; }
+      .brand h1 { margin:0; font-family:var(--heading-font); font-size:clamp(2.6rem,4vw,3.7rem); line-height:.95; letter-spacing:-.06em; }
+      .brand p { margin:0; color:var(--muted); font-size:1rem; max-width:44rem; }
+      .top-actions { display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end; }
+      .pill,
+      .cta {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:50px;
+        padding:12px 18px;
+        border-radius:999px;
+        border:1px solid rgba(255,255,255,.08);
+        background:rgba(255,255,255,.04);
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+        font-weight:700;
+      }
+      .cta.primary {
+        background:linear-gradient(180deg, #ead077 0%, #d2a95b 100%);
+        color:#18202b;
+        border-color:transparent;
+      }
+      .hero {
+        padding:28px;
+        display:grid;
+        gap:20px;
+      }
+      .hero h2 {
+        margin:0;
+        font-family:var(--heading-font);
+        font-size:clamp(2.4rem,4vw,3.6rem);
+        line-height:.95;
+        letter-spacing:-.06em;
+      }
+      .hero-copy {
+        display:grid;
+        gap:12px;
+        max-width:50rem;
+      }
+      .hero-copy p {
+        margin:0;
+        color:var(--muted);
+        line-height:1.6;
+        font-size:1.05rem;
+      }
+      .hero-actions {
+        display:flex;
+        gap:12px;
+        flex-wrap:wrap;
+      }
+      .domain-grid {
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+        gap:16px;
+      }
+      .domain-card {
+        padding:22px;
+        border-radius:24px;
+        border:1px solid rgba(255,255,255,.06);
+        background:linear-gradient(180deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,.03) 100%);
+        display:grid;
+        gap:10px;
+      }
+      .domain-card.active {
+        border-color:rgba(123,192,255,.24);
+        background:linear-gradient(180deg, rgba(123,192,255,.13) 0%, rgba(255,255,255,.04) 100%);
+      }
+      .domain-card h3 {
+        margin:0;
+        font-family:var(--heading-font);
+        font-size:1.75rem;
+        letter-spacing:-.04em;
+      }
+      .domain-card p {
+        margin:0;
+        color:var(--muted);
+        line-height:1.6;
+      }
+      .domain-kicker {
+        color:var(--gold);
+        font-size:.78rem;
+        letter-spacing:.18em;
+        text-transform:uppercase;
+        font-weight:800;
+      }
+      @media (max-width: 720px) {
+        .shell { padding:24px 16px 28px; }
+        .panel, .topbar { padding:20px; border-radius:24px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="eyebrow">Tethr</div>
+          <h1>Aura</h1>
+          <p>A separate knowledge layer inside Tethr, starting with a whisky reference catalog and private tasting notes.</p>
+        </div>
+        <div class="top-actions">
+          <a class="pill" href="/">Back to Arca</a>
+          <a class="cta primary" href="/aura/whiskies">Open Whiskies</a>
+        </div>
+      </header>
+      <section class="panel hero">
+        <div class="hero-copy">
+          <div class="eyebrow">First Domain</div>
+          <h2>Whiskies now. More Aura domains later.</h2>
+          <p>This first pass keeps Aura separate from Arca on purpose. Arca answers where something is. Aura answers what it is. For now, Aura is a direct destination for reference browsing and personal notes.</p>
+        </div>
+        <div class="hero-actions">
+          <a class="cta primary" href="/aura/whiskies">Browse Whisky Catalog</a>
+          <a class="pill" href="/">Return to Arca</a>
+        </div>
+        <div class="domain-grid">
+          <article class="domain-card active">
+            <div class="domain-kicker">Live</div>
+            <h3>Whiskies</h3>
+            <p>Shared reference entries with private per-user tasting notes and stable detail routes for future deep links.</p>
+          </article>
+          <article class="domain-card">
+            <div class="domain-kicker">Next Later</div>
+            <h3>Other Aura Domains</h3>
+            <p>Wine, watches, fragrances, records, books, or anything else where the object profile matters as much as the place it lives.</p>
+          </article>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>`;
+}
+
+export function renderAuraApp(initialPath = "/aura/whiskies") {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>TethrAura</title>
+    <style>
+      :root {
+        --bg:#e4ebf3;
+        --bg-soft:#eef4fb;
+        --panel:#fbfdff;
+        --panel-soft:#eef4fb;
+        --line:rgba(24,32,43,.09);
+        --line-strong:rgba(24,32,43,.16);
+        --ink:#18202b;
+        --muted:#5f6b7b;
+        --accent:#16508c;
+        --accent-soft:#dfeafb;
+        --accent-strong:#123a64;
+        --gold:#b07d1f;
+        --success:#2f8a63;
+        --danger:#8d3a31;
+        --danger-soft:#f1ddd9;
+        --heading-font:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+        --body-font:"Aptos","Segoe UI","Trebuchet MS",sans-serif;
+        --shadow:0 28px 68px rgba(20,38,64,.14);
+        --shadow-soft:0 14px 28px rgba(20,38,64,.10);
+      }
+      * { box-sizing:border-box; }
+      body {
+        margin:0;
+        font-family:var(--body-font);
+        color:var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(15,109,115,.18), transparent 22%),
+          radial-gradient(circle at top center, rgba(176,125,31,.15), transparent 24%),
+          radial-gradient(circle at top right, rgba(22,80,140,.18), transparent 24%),
+          linear-gradient(180deg, #f5f9ff 0%, #e9f0f8 34%, var(--bg) 70%, #cfd9e6 100%);
+      }
+      a { color:var(--accent); text-decoration:none; }
+      .shell { max-width:1280px; margin:0 auto; padding:36px 28px 42px; display:grid; gap:20px; }
+      .panel,
+      .topbar {
+        background:linear-gradient(180deg, rgba(252,253,255,.98) 0%, rgba(246,249,253,.97) 100%);
+        border:1px solid rgba(255,255,255,.65);
+        border-radius:28px;
+        box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.72);
+        backdrop-filter:blur(12px);
+      }
+      .topbar {
+        padding:0;
+        display:flex;
+        justify-content:flex-end;
+        gap:16px;
+        align-items:flex-start;
+        background:none;
+        border:0;
+        box-shadow:none;
+        backdrop-filter:none;
+      }
+      .top-actions { display:flex; align-items:center; gap:12px; justify-content:flex-end; }
+      .aura-nav { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+      .nav-pill {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:42px;
+        padding:10px 14px;
+        border-radius:999px;
+        border:1px solid rgba(24,62,99,.08);
+        background:rgba(255,255,255,.62);
+        color:var(--muted);
+        font-size:.9rem;
+        font-weight:700;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.72);
+      }
+      .nav-pill.current {
+        background:linear-gradient(180deg, #edf3fa 0%, #dde7f2 100%);
+        border-color:rgba(24,62,99,.10);
+        color:var(--accent-strong);
+      }
+      .account-badge {
+        width:56px;
+        height:56px;
+        display:grid;
+        place-items:center;
+        padding:0;
+        border-radius:999px;
+        border:1px solid rgba(24,62,99,.10);
+        background:linear-gradient(180deg, rgba(241,246,251,.96) 0%, rgba(226,236,247,.98) 100%);
+        box-shadow:0 10px 18px rgba(27,42,63,.08), inset 0 1px 0 rgba(255,255,255,.78);
+        color:var(--accent-strong);
+        font-size:1rem;
+        font-weight:800;
+        letter-spacing:.04em;
+        text-transform:uppercase;
+        cursor:pointer;
+      }
+      .account-badge:focus-visible {
+        outline:2px solid rgba(31,111,179,.32);
+        outline-offset:3px;
+      }
+      .notice {
+        padding:15px 17px;
+        border-radius:18px;
+        border:1px solid rgba(21,94,82,.10);
+        background:var(--accent-soft);
+        color:var(--accent-strong);
+      }
+      .notice.error {
+        border-color:rgba(162,63,50,.12);
+        background:var(--danger-soft);
+        color:var(--danger);
+      }
+      .hero-strip {
+        padding:24px;
+        display:grid;
+        grid-template-columns:minmax(0, 1fr) auto;
+        gap:18px;
+        align-items:end;
+      }
+      .hero-copy {
+        display:grid;
+        gap:10px;
+      }
+      .hero-copy h2 {
+        margin:0;
+        font-family:var(--heading-font);
+        font-size:clamp(2.1rem,4vw,3rem);
+        line-height:.95;
+        letter-spacing:-.05em;
+      }
+      .hero-copy p {
+        margin:0;
+        color:var(--muted);
+        line-height:1.6;
+        max-width:44rem;
+      }
+      .stats-grid {
+        display:grid;
+        grid-template-columns:repeat(3, minmax(120px, 1fr));
+        gap:12px;
+        min-width:min(100%, 420px);
+      }
+      .stat-card {
+        padding:16px 18px;
+        border-radius:20px;
+        border:1px solid rgba(255,255,255,.06);
+        background:linear-gradient(180deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,.03) 100%);
+        display:grid;
+        gap:4px;
+      }
+      .stat-value {
+        font-family:var(--heading-font);
+        font-size:2rem;
+        line-height:.95;
+        letter-spacing:-.05em;
+      }
+      .stat-label {
+        color:var(--muted);
+        font-size:.82rem;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+        font-weight:700;
+      }
+      .app-layout { display:grid; gap:20px; align-items:start; }
+      .panel { padding:24px; display:grid; gap:18px; }
+      .panel[hidden] { display:none !important; }
+      .sr-only {
+        position:absolute;
+        width:1px;
+        height:1px;
+        padding:0;
+        margin:-1px;
+        overflow:hidden;
+        clip:rect(0, 0, 0, 0);
+        border:0;
+      }
+      .panel h2,
+      .detail-title {
+        margin:0;
+        font-family:var(--heading-font);
+        letter-spacing:-.05em;
+      }
+      .panel h2 { font-size:2rem; }
+      .stack { display:grid; gap:14px; }
+      .field-grid { display:grid; gap:14px; }
+      .section-head {
+        display:flex;
+        align-items:flex-end;
+        justify-content:space-between;
+        gap:16px;
+        flex-wrap:wrap;
+      }
+      .section-head-copy {
+        display:grid;
+        gap:8px;
+      }
+      .panel.search-launch {
+        min-height:clamp(420px, 58vh, 640px);
+        align-content:center;
+        justify-items:center;
+        text-align:center;
+        padding:48px clamp(24px, 6vw, 72px);
+      }
+      .panel.search-launch .section-head {
+        width:100%;
+        justify-content:center;
+      }
+      .panel.search-launch .section-head-copy {
+        width:min(100%, 780px);
+        justify-items:center;
+        gap:18px;
+      }
+      .panel.search-launch #catalog-title {
+        font-size:clamp(3.1rem, 8vw, 5.6rem);
+        line-height:.92;
+        letter-spacing:-.07em;
+      }
+      .panel.search-launch #catalog-hint {
+        font-size:1.05rem;
+        max-width:42rem;
+      }
+      .panel.search-launch #catalog-hint:empty {
+        display:none;
+      }
+      .panel.search-launch .field-grid {
+        width:min(100%, 860px);
+      }
+      .panel.search-launch label {
+        gap:0;
+        font-size:0;
+        color:transparent;
+      }
+      .panel.search-launch input {
+        min-height:74px;
+        border-radius:24px;
+        font-size:1.25rem;
+        padding:20px 26px;
+        text-align:center;
+      }
+      .panel.search-launch #result-meta,
+      .panel.search-launch .result-grid {
+        display:none;
+      }
+      label { display:grid; gap:6px; font-size:.88rem; color:var(--muted); }
+      input,
+      textarea,
+      select,
+      button {
+        font:inherit;
+        width:100%;
+      }
+      input,
+      textarea,
+      select {
+        border-radius:16px;
+        border:1px solid rgba(24,62,99,.12);
+        padding:14px 16px;
+        background:#fcfdff;
+        color:var(--ink);
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.80);
+        font-size:16px;
+      }
+      option,
+      optgroup {
+        color:var(--ink);
+        background:#f4f7fc;
+      }
+      textarea { min-height:120px; resize:vertical; }
+      input:focus,
+      textarea:focus,
+      select:focus {
+        outline:none;
+        border-color:rgba(24,62,99,.42);
+        box-shadow:0 0 0 4px rgba(24,62,99,.08);
+      }
+      button {
+        border:0;
+        border-radius:999px;
+        padding:14px 20px;
+        cursor:pointer;
+        font-weight:700;
+        letter-spacing:-.01em;
+        background:linear-gradient(180deg, #2060a5 0%, #16508c 100%);
+        color:#fff;
+        box-shadow:0 10px 20px rgba(22,80,140,.18);
+      }
+      button.secondary {
+        background:linear-gradient(180deg, #f7fbff 0%, #dfeafb 100%);
+        color:var(--ink);
+        border:0;
+        box-shadow:0 8px 18px rgba(22,80,140,.08);
+      }
+      button.inline-link {
+        width:auto;
+        padding:0;
+        background:none;
+        border:0;
+        border-radius:0;
+        color:var(--accent);
+        box-shadow:none;
+      }
+      button:disabled,
+      select:disabled,
+      input:disabled,
+      textarea:disabled {
+        opacity:.58;
+        cursor:not-allowed;
+      }
+      .filter-row { display:grid; gap:12px; }
+      .small-meta { color:var(--muted); font-size:.9rem; }
+      .result-grid {
+        display:grid;
+        grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+        gap:16px;
+      }
+      .result-card {
+        padding:22px 24px;
+        border-radius:24px;
+        border:1px solid rgba(24,62,99,.07);
+        background:linear-gradient(180deg, rgba(253,254,255,.98) 0%, rgba(240,245,251,.96) 100%);
+        display:grid;
+        gap:8px;
+        text-align:left;
+        color:inherit;
+        min-height:0;
+        align-content:start;
+        box-shadow:var(--shadow-soft), inset 0 1px 0 rgba(255,255,255,.70);
+      }
+      .result-card:hover {
+        transform:translateY(-3px);
+        border-color:rgba(24,62,99,.18);
+        box-shadow:0 22px 36px rgba(27,42,63,.12);
+      }
+      .result-card.selected {
+        border-color:rgba(24,62,99,.24);
+        background:linear-gradient(180deg, #f8fbff 0%, #eaf1f8 100%);
+        box-shadow:0 20px 34px rgba(24,62,99,.11);
+      }
+      .result-name { font-size:1.15rem; font-weight:800; letter-spacing:-.02em; color:var(--accent-strong); }
+      .result-subtitle { color:var(--muted); font-size:.95rem; }
+      .chip-row { display:flex; flex-wrap:wrap; gap:8px; }
+      .chip {
+        display:inline-flex;
+        align-items:center;
+        padding:6px 10px;
+        border-radius:999px;
+        background:rgba(123,192,255,.12);
+        color:var(--accent-strong);
+        font-size:.82rem;
+        font-weight:700;
+      }
+      .detail-shell { display:grid; gap:18px; }
+      .stage-path {
+        display:flex;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+        color:var(--muted);
+        font-size:.9rem;
+        font-weight:700;
+      }
+      .stage-path-current { color:#1d8c55; }
+      .stage-header { display:grid; gap:10px; }
+      .stage-title-row {
+        display:flex;
+        align-items:center;
+        gap:14px;
+        flex-wrap:wrap;
+      }
+      .stage-title {
+        margin:0;
+        font-family:var(--heading-font);
+        font-size:clamp(2.4rem,4vw,3.8rem);
+        line-height:.95;
+        letter-spacing:-.05em;
+      }
+      .stage-title-separator,
+      .stage-meta-separator { color:rgba(24,32,43,.38); }
+      .stage-current-chip {
+        display:inline-flex;
+        align-items:center;
+        gap:10px;
+        padding:10px 14px;
+        border-radius:999px;
+        background:linear-gradient(180deg, #edf3fa 0%, #dde7f2 100%);
+        border:1px solid rgba(24,62,99,.08);
+        color:var(--accent-strong);
+        font-weight:800;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.70);
+      }
+      .stage-current-chip strong { font-weight:800; }
+      .stage-meta-line {
+        display:flex;
+        align-items:center;
+        gap:12px;
+        flex-wrap:wrap;
+        color:var(--muted);
+        font-size:1rem;
+      }
+      .detail-summary-strip { display:grid; gap:8px; padding:2px 0 6px; }
+      .stage-subtitle {
+        color:var(--muted);
+        font-size:1rem;
+        line-height:1.5;
+        margin:0;
+      }
+      .stage-sections { display:grid; gap:16px; }
+      .detail-title { font-size:clamp(2.3rem,4vw,3.4rem); line-height:.95; }
+      .detail-image {
+        width:160px;
+        aspect-ratio:1 / 1;
+        border-radius:24px;
+        overflow:hidden;
+        border:1px solid rgba(24,62,99,.10);
+        background:rgba(255,255,255,.55);
+        box-shadow:0 8px 16px rgba(27,42,63,.08);
+        flex:0 0 auto;
+      }
+      .detail-image img {
+        width:100%;
+        height:100%;
+        object-fit:cover;
+        display:block;
+      }
+      .detail-placeholder {
+        width:100%;
+        height:100%;
+        display:grid;
+        place-items:center;
+        color:rgba(214,236,255,.84);
+        font-size:3.2rem;
+        font-weight:700;
+      }
+      .detail-image.compact {
+        width:54px;
+        border-radius:16px;
+        box-shadow:0 8px 16px rgba(27,42,63,.08);
+      }
+      .detail-image.compact .detail-placeholder {
+        font-size:1.4rem;
+      }
+      .detail-copy { display:grid; gap:10px; min-width:0; flex:1 1 320px; }
+      .detail-subtitle { color:var(--muted); font-size:1.02rem; line-height:1.45; }
+      .detail-section {
+        padding:22px;
+        border-radius:22px;
+        border:1px solid rgba(24,62,99,.08);
+        background:linear-gradient(180deg, rgba(241,246,251,.92) 0%, rgba(250,252,255,.98) 100%);
+        display:grid;
+        gap:12px;
+        box-shadow:var(--shadow-soft), inset 0 1px 0 rgba(255,255,255,.65);
+      }
+      .detail-section.secondary {
+        background:linear-gradient(180deg, rgba(247,250,253,.96) 0%, rgba(252,253,255,.99) 100%);
+      }
+      .detail-section h3 {
+        margin:0;
+        font-family:var(--heading-font);
+        font-size:1.5rem;
+        letter-spacing:-.04em;
+        color:var(--accent-strong);
+      }
+      .detail-section p {
+        margin:0;
+        color:var(--ink);
+        line-height:1.6;
+      }
+      .notes-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:14px; }
+      .entry-row {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:14px;
+        flex-wrap:wrap;
+      }
+      .entry-row button { width:auto; }
+      .entry-list { display:grid; gap:12px; }
+      .entry-card {
+        padding:16px;
+        border-radius:18px;
+        border:1px solid rgba(24,62,99,.08);
+        background:#fcfdff;
+        display:grid;
+        gap:8px;
+        box-shadow:0 12px 24px rgba(27,42,63,.06), inset 0 1px 0 rgba(255,255,255,.72);
+      }
+      .entry-card time {
+        color:var(--gold);
+        font-size:.82rem;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+        font-weight:700;
+      }
+      .entry-card p {
+        margin:0;
+        white-space:pre-wrap;
+        line-height:1.6;
+      }
+      .entry-empty {
+        padding:18px;
+        border-radius:18px;
+        border:1px dashed rgba(22,80,140,.18);
+        color:var(--muted);
+        text-align:center;
+        background:linear-gradient(180deg,#f8fbff 0%,#e6eef8 100%);
+      }
+      .empty-shell {
+        min-height:420px;
+        display:grid;
+        place-items:center;
+        text-align:center;
+        border-radius:24px;
+        border:1px dashed rgba(22,80,140,.18);
+        color:var(--muted);
+        padding:28px;
+        background:linear-gradient(180deg,#f8fbff 0%,#e6eef8 100%);
+      }
+      .auth-card {
+        padding:26px;
+        border-radius:26px;
+        background:linear-gradient(180deg, rgba(241,246,251,.92) 0%, rgba(250,252,255,.98) 100%);
+        border:1px solid rgba(24,62,99,.08);
+        display:grid;
+        gap:12px;
+        box-shadow:var(--shadow-soft), inset 0 1px 0 rgba(255,255,255,.65);
+      }
+      .auth-card h2 { margin:0; font-size:2rem; }
+      .save-row { display:flex; justify-content:flex-end; }
+      .save-row button { width:auto; }
+      .action-compass { display:grid; gap:32px; justify-items:center; padding:12px 0 10px; }
+      .action-compass-row { width:100%; display:grid; grid-template-columns:1fr; justify-items:center; }
+      .action-compass-middle { width:100%; display:grid; grid-template-columns:minmax(0,1fr) 112px minmax(0,1fr); gap:20px; align-items:center; justify-items:center; }
+      .action-compass-spacer { width:96px; height:96px; }
+      .action-compass-button,
+      .action-compass-center {
+        width:96px;
+        height:96px;
+        border-radius:999px;
+        display:grid;
+        place-items:center;
+        background:linear-gradient(180deg, #f7fbff 0%, #dfeafb 100%);
+        border:1px solid rgba(24,62,99,.08);
+        box-shadow:0 12px 24px rgba(27,42,63,.10), inset 0 1px 0 rgba(255,255,255,.72);
+        color:var(--ink);
+      }
+      .action-compass-button {
+        width:96px;
+        padding:0;
+      }
+      .action-compass-button:disabled { opacity:.46; cursor:default; box-shadow:none; }
+      .action-compass-button svg { width:34px; height:34px; display:block; stroke:currentColor; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+      .action-compass-center {
+        padding:10px;
+        color:rgba(24,32,43,.48);
+        font-weight:800;
+        font-size:1.3rem;
+        letter-spacing:.08em;
+      }
+      .mini-tip { color:var(--muted); font-size:.88rem; }
+      .modal-root {
+        position:fixed;
+        inset:0;
+        display:grid;
+        place-items:center;
+        padding:24px 16px;
+        background:rgba(7,12,21,.58);
+        backdrop-filter:blur(14px);
+        z-index:40;
+      }
+      .modal-root[hidden] { display:none !important; }
+      .modal-backdrop { width:min(100%, 560px); }
+      .modal-shell {
+        background:linear-gradient(180deg, rgba(252,253,255,.98) 0%, rgba(246,249,253,.97) 100%);
+        border:1px solid rgba(255,255,255,.65);
+        border-radius:28px;
+        box-shadow:var(--shadow);
+        padding:26px;
+        display:grid;
+        gap:18px;
+      }
+      .modal-header {
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:16px;
+      }
+      .modal-title {
+        margin:0;
+        font-family:var(--heading-font);
+        font-size:2rem;
+        letter-spacing:-.05em;
+      }
+      .close-button {
+        width:auto;
+        background:linear-gradient(180deg, #f7fbff 0%, #dfeafb 100%);
+        color:var(--ink);
+        border:0;
+        box-shadow:0 8px 18px rgba(22,80,140,.08);
+        padding:12px 16px;
+      }
+      .modal-body { display:grid; gap:16px; }
+      @media (max-width: 980px) {
+        .hero-strip { grid-template-columns:1fr; }
+        .stats-grid { min-width:0; }
+        .stage-title-row { align-items:flex-start; }
+        .detail-image { width:132px; }
+        .action-compass { gap:24px; }
+        .action-compass-middle { grid-template-columns:minmax(0,1fr) 98px minmax(0,1fr); gap:14px; }
+        .action-compass-button,
+        .action-compass-center,
+        .action-compass-spacer { width:82px; height:82px; }
+        .action-compass-button svg { width:30px; height:30px; }
+      }
+      @media (max-width: 720px) {
+        .shell { padding:24px 16px 28px; }
+        .panel { padding:20px; border-radius:24px; }
+        .topbar { padding:0; gap:18px; }
+        .top-actions { width:100%; justify-content:flex-end; }
+      }
+    </style>
+  </head>
+  <body>
+      <div class="shell">
+        <header class="topbar">
+          <div class="top-actions">
+            <div class="aura-nav" hidden>
+              <button id="nav-mine" class="nav-pill" type="button">My Aura</button>
+              <button id="nav-search" class="nav-pill" type="button" hidden>Search</button>
+            </div>
+            <button id="account" class="account-badge" type="button" title="Account settings" aria-label="Account settings" hidden></button>
+          </div>
+        </header>
+      <div id="message"></div>
+      <div id="auth-gate"></div>
+      <div id="aura-app" class="app-layout" hidden>
+        <section id="whisky-stage-panel" class="panel" hidden>
+          <div id="detail" class="detail-shell"></div>
+        </section>
+        <section id="catalog-panel" class="panel">
+          <div class="section-head">
+            <div class="section-head-copy">
+              <h2 id="catalog-title">Search</h2>
+              <div id="catalog-hint" class="small-meta">Search for an Aura item.</div>
+            </div>
+            <div id="result-meta" class="small-meta"></div>
+          </div>
+          <div class="field-grid">
+            <label>
+              Search
+              <input id="aura-search" placeholder="Search for an Aura item">
+            </label>
+          </div>
+          <div id="results" class="result-grid"></div>
+        </section>
+      </div>
+      <div id="aura-modal-root" class="modal-root" hidden></div>
+    </div>
+    <script>
+      const initialAuraPath = ${JSON.stringify(initialPath || "/aura/whiskies")};
+      const state = {
+        bootstrap: { authenticated: false },
+        browse: null,
+        browseView: "search",
+        selectedWhiskyId: "",
+        detail: null,
+        searchTimer: null,
+        saveInFlight: false,
+        entrySaveInFlight: false,
+        browseRequestId: 0
+      };
+
+      const els = {
+        message: document.getElementById("message"),
+        account: document.getElementById("account"),
+        authGate: document.getElementById("auth-gate"),
+        app: document.getElementById("aura-app"),
+        navSearch: document.getElementById("nav-search"),
+        navMine: document.getElementById("nav-mine"),
+        catalogHint: document.getElementById("catalog-hint"),
+        search: document.getElementById("aura-search"),
+        catalogTitle: document.getElementById("catalog-title"),
+        resultMeta: document.getElementById("result-meta"),
+        results: document.getElementById("results"),
+        stagePanel: document.getElementById("whisky-stage-panel"),
+        catalogPanel: document.getElementById("catalog-panel"),
+        detail: document.getElementById("detail"),
+        modalRoot: document.getElementById("aura-modal-root")
+      };
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function buildOptionList(values, labelKey = "label") {
+        return values.map((value) => {
+          if (typeof value === "string") {
+            return '<option value="' + escapeHtml(value) + '">' + escapeHtml(value) + '</option>';
+          }
+          return '<option value="' + escapeHtml(value.id) + '">' + escapeHtml(value[labelKey]) + "</option>";
+        }).join("");
+      }
+
+      function setMessage(message, isError = false) {
+        els.message.innerHTML = message
+          ? '<div class="notice' + (isError ? " error" : "") + '">' + escapeHtml(message) + "</div>"
+          : "";
+      }
+
+      function getBrowseViewFromLocation() {
+        try {
+          const currentUrl = new URL(window.location.href);
+          return currentUrl.searchParams.get("view") === "mine" ? "mine" : "search";
+        } catch {
+          return "search";
+        }
+      }
+
+      function buildBrowsePath(view = state.browseView) {
+        return view === "mine" ? "/aura/whiskies?view=mine" : "/aura/whiskies";
+      }
+
+      function renderAuraNav() {
+        const navWrap = els.navMine?.parentElement;
+        const showNav = true;
+        if (navWrap) {
+          navWrap.hidden = !showNav;
+        }
+        if (els.navSearch) {
+          els.navSearch.hidden = !showNav || state.browseView !== "mine";
+          els.navSearch.style.display = els.navSearch.hidden ? "none" : "";
+          els.navSearch.classList.toggle("current", state.browseView !== "mine");
+        }
+        if (els.navMine) {
+          els.navMine.hidden = !showNav || state.browseView === "mine";
+          els.navMine.style.display = els.navMine.hidden ? "none" : "";
+          els.navMine.classList.toggle("current", state.browseView === "mine");
+        }
+      }
+
+      function getAccountInitials(user) {
+        const name = (user?.name || "").trim();
+        const email = (user?.email || "").trim().toLowerCase();
+        if (name) {
+          const words = name
+            .split(/\\s+/)
+            .filter(Boolean);
+          if (words.length >= 2) {
+            const lastWord = words[words.length - 1].replace(/[^a-z]/gi, "");
+            if (lastWord) {
+              return (words[0].charAt(0) + lastWord.charAt(0)).toUpperCase();
+            }
+          }
+          return name.slice(0, 2).toUpperCase();
+        }
+        if (!email) {
+          return "TT";
+        }
+        const words = email
+          .replace(/@.*$/, "")
+          .split(/[\s._-]+/)
+          .filter(Boolean);
+        if (words.length >= 2) {
+          return (words[0][0] + words[1][0]).toUpperCase();
+        }
+        return email.slice(0, 2).toUpperCase();
+      }
+
+      function usesTouchTileActions() {
+        const hasDesktopHover = Boolean(window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches);
+        if (hasDesktopHover) {
+          return false;
+        }
+        return Boolean(window.matchMedia?.("(hover: none), (pointer: coarse)")?.matches);
+      }
+
+      function getTileActionHint(noun) {
+        const label = noun ? " " + noun : "";
+        return usesTouchTileActions()
+          ? "Press and hold" + label + " for actions."
+          : "Right-click" + label + " for actions.";
+      }
+
+      function closeModal() {
+        els.modalRoot.hidden = true;
+        els.modalRoot.innerHTML = "";
+      }
+
+      function openModal(title, contentHtml, onOpen) {
+        els.modalRoot.hidden = false;
+        els.modalRoot.innerHTML =
+          '<div class="modal-backdrop">' +
+            '<div class="modal-shell">' +
+              '<div class="modal-header">' +
+                '<h2 class="modal-title">' + escapeHtml(title) + '</h2>' +
+                '<button class="close-button" type="button" data-close-modal>Close</button>' +
+              '</div>' +
+              '<div class="modal-body">' + contentHtml + '</div>' +
+            '</div>' +
+          '</div>';
+
+        const closeButton = els.modalRoot.querySelector("[data-close-modal]");
+        closeButton?.addEventListener("click", closeModal);
+        els.modalRoot.addEventListener("click", (event) => {
+          if (event.target === els.modalRoot) {
+            closeModal();
+          }
+        }, { once: true });
+        els.modalRoot.querySelector(".modal-shell")?.addEventListener("click", (event) => {
+          event.stopPropagation();
+        });
+        onOpen?.(els.modalRoot);
+      }
+
+      function attachPressAndHoldAction(target, onHold, options = {}) {
+        if (!target || typeof onHold !== "function") {
+          return;
+        }
+        const holdDelay = options.holdDelay || 420;
+        let timer = null;
+        let holdTriggered = false;
+        let startPoint = null;
+
+        const pointForEvent = (event) => {
+          const touch = event.touches?.[0] || event.changedTouches?.[0];
+          return touch
+            ? { x: touch.clientX, y: touch.clientY }
+            : { x: event.clientX || 0, y: event.clientY || 0 };
+        };
+
+        const clearHold = () => {
+          if (timer) {
+            clearTimeout(timer);
+            timer = null;
+          }
+          startPoint = null;
+        };
+
+        const triggerHold = (event) => {
+          holdTriggered = true;
+          clearHold();
+          onHold(event);
+        };
+
+        const startHold = (event) => {
+          holdTriggered = false;
+          clearHold();
+          startPoint = pointForEvent(event);
+          timer = setTimeout(() => triggerHold(event), holdDelay);
+        };
+
+        const maybeCancelHold = (event) => {
+          if (!timer || !startPoint) {
+            return;
+          }
+          const point = pointForEvent(event);
+          if (Math.abs(point.x - startPoint.x) > 10 || Math.abs(point.y - startPoint.y) > 10) {
+            clearHold();
+          }
+        };
+
+        if (usesTouchTileActions()) {
+          target.addEventListener("touchstart", startHold, { passive: true });
+          target.addEventListener("touchmove", maybeCancelHold, { passive: true });
+          target.addEventListener("touchend", clearHold, { passive: true });
+          target.addEventListener("touchcancel", clearHold, { passive: true });
+        }
+        target.addEventListener("contextmenu", (event) => {
+          event.preventDefault();
+          onHold(event);
+        });
+        target.addEventListener("click", (event) => {
+          if (!holdTriggered) {
+            return;
+          }
+          holdTriggered = false;
+          event.preventDefault();
+          event.stopPropagation();
+        }, true);
+      }
+
+      function compassIcon(type) {
+        if (type === "notes") {
+          return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10-10a2.4 2.4 0 1 0-4-4L4 16v4Z"></path><path d="m13 7 4 4"></path></svg>';
+        }
+        if (type === "history") {
+          return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.7"></path><path d="M4 4v5h5"></path><path d="M12 8v5l3 2"></path></svg>';
+        }
+        if (type === "reference") {
+          return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5h9.5a2.5 2.5 0 0 1 2.5 2.5v12a.5.5 0 0 1-.8.4l-2.7-2.1a1 1 0 0 0-1.2 0L10.6 19a1 1 0 0 1-1.2 0l-2.7-2.1a.5.5 0 0 0-.8.4V7a2.5 2.5 0 0 1 2.5-2.5Z"></path><path d="M9 8.5h6"></path><path d="M9 12h5"></path></svg>';
+        }
+        if (type === "link") {
+          return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 13.5 13.5 10.5"></path><path d="M8.2 15.8 5.9 18.1a3.2 3.2 0 1 1-4.5-4.5l2.3-2.3a3.2 3.2 0 0 1 4.5 0"></path><path d="M15.8 8.2 18.1 5.9a3.2 3.2 0 1 1 4.5 4.5l-2.3 2.3a3.2 3.2 0 0 1-4.5 0"></path></svg>';
+        }
+        if (type === "open") {
+          return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"></path><path d="M9 7h8v8"></path></svg>';
+        }
+        return "";
+      }
+
+      function openActionCompass(title, actions = {}, options = {}) {
+        const buttonHtml = (action, position) => {
+          if (!action) {
+            return '<div class="action-compass-spacer"></div>';
+          }
+          const disabledAttr = options.requireRelease ? ' disabled' : '';
+          return '<button class="action-compass-button" type="button" data-action-compass="' + position + '" aria-label="' + escapeHtml(action.label) + '" title="' + escapeHtml(action.label) + '">' +
+            (action.icon || "") +
+            '<span class="sr-only">' + escapeHtml(action.label) + '</span>' +
+          '</button>'.replace('>', disabledAttr + '>');
+        };
+
+        openModal(
+          title,
+          '<div class="action-compass">' +
+            '<div class="action-compass-row">' + buttonHtml(actions.top, "top") + '</div>' +
+            '<div class="action-compass-middle">' +
+              buttonHtml(actions.left, "left") +
+              '<div class="action-compass-center" aria-hidden="true">Aura</div>' +
+              buttonHtml(actions.right, "right") +
+            '</div>' +
+            '<div class="action-compass-row">' + buttonHtml(actions.bottom, "bottom") + '</div>' +
+          '</div>' +
+          '<div class="mini-tip">' + getTileActionHint("tile") + '</div>',
+          (modal) => {
+            const compassButtons = Array.from(modal.querySelectorAll("[data-action-compass]"));
+            const armActions = () => {
+              compassButtons.forEach((button) => {
+                button.disabled = false;
+              });
+            };
+            if (options.requireRelease) {
+              ["pointerup", "touchend", "mouseup", "touchcancel"].forEach((eventName) => {
+                window.addEventListener(eventName, armActions, { once: true, capture: true });
+              });
+            }
+            compassButtons.forEach((button) => {
+              button.addEventListener("click", async () => {
+                const action = actions[button.dataset.actionCompass];
+                closeModal();
+                if (action?.run) {
+                  await action.run();
+                }
+              });
+            });
+          }
+        );
+      }
+
+      function extractWhiskyIdFromPath(pathname) {
+        const match = String(pathname || "").trim().match(/^\\/aura\\/whiskies\\/([^/]+)$/);
+        if (!match) {
+          return "";
+        }
+        const tail = match[1];
+        const idMatch = tail.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
+        return idMatch ? idMatch[1] : "";
+      }
+
+      async function api(url, options = {}) {
+        const response = await fetch(url, {
+          headers: {
+            "content-type": "application/json",
+            ...(options.headers || {})
+          },
+          ...options
+        });
+        let body = {};
+        try {
+          body = await response.json();
+        } catch {
+          body = {};
+        }
+        if (!response.ok) {
+          const error = body.error || "Request failed";
+          throw new Error(error);
+        }
+        return body;
+      }
+
+      function whiskyImageMarkup(whisky) {
+        return whiskyImageMarkupVariant(whisky, "");
+      }
+
+      function whiskyImageMarkupVariant(whisky, variantClass) {
+        const variant = variantClass ? " " + variantClass : "";
+        if (whisky.imageUrl) {
+          return '<div class="detail-image' + variant + '"><img src="' + escapeHtml(whisky.imageUrl) + '" alt="' + escapeHtml(whisky.displayName) + '"></div>';
+        }
+        return '<div class="detail-image' + variant + '"><div class="detail-placeholder">W</div></div>';
+      }
+
+      function whiskyReferencePath(whisky) {
+        return whisky.path || "/aura/whiskies/" + encodeURIComponent((whisky.slug || "whisky") + "-" + whisky.id);
+      }
+
+      function focusAuraSection() {
+        document.getElementById("aura-entries-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function focusReferenceSection() {
+        document.getElementById("detail-action-surface")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      async function copyWhiskyLink(whisky) {
+        const targetUrl = window.location.origin + whiskyReferencePath(whisky);
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(targetUrl);
+            setMessage("Copied Aura item link.");
+            return;
+          }
+        } catch {}
+        window.prompt("Copy this Aura item link", targetUrl);
+      }
+
+      function formatEntryTimestamp(timestamp) {
+        if (!timestamp) {
+          return "";
+        }
+        const value = new Date(timestamp);
+        if (Number.isNaN(value.getTime())) {
+          return String(timestamp);
+        }
+        return value.toLocaleString([], {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit"
+        });
+      }
+
+      function renderEntryList(entries) {
+        const list = Array.isArray(entries) ? entries : [];
+        if (!list.length) {
+          return '<div class="entry-empty">No Aura entries yet. Write the first one.</div>';
+        }
+        return '<div class="entry-list">' + list.map((entry) =>
+          '<article class="entry-card">' +
+            '<time datetime="' + escapeHtml(entry.createdAt || "") + '">' + escapeHtml(formatEntryTimestamp(entry.createdAt)) + '</time>' +
+            '<p>' + escapeHtml(entry.entryText || "") + '</p>' +
+          '</article>'
+        ).join("") + '</div>';
+      }
+
+      function openAddEntryModal(whisky) {
+        openModal(
+          "Create Entry",
+          '<label>Aura Entry<textarea id="aura-entry-text" placeholder="Type whatever you want to remember about this item..."></textarea></label>' +
+          '<div class="save-row"><button id="save-aura-entry" type="button">Save Entry</button></div>',
+          (modal) => {
+            const textarea = modal.querySelector("#aura-entry-text");
+            const button = modal.querySelector("#save-aura-entry");
+            textarea?.focus();
+            button?.addEventListener("click", async () => {
+              if (state.entrySaveInFlight) {
+                return;
+              }
+              const entryText = textarea?.value || "";
+              state.entrySaveInFlight = true;
+              button.disabled = true;
+              button.textContent = "Saving...";
+              try {
+                const saved = await api("/api/aura/whiskies/" + encodeURIComponent(whisky.id) + "/entries", {
+                  method: "POST",
+                  body: JSON.stringify({ entryText })
+                });
+                if (!state.detail?.entries) {
+                  state.detail.entries = [];
+                }
+                state.detail.entries.unshift({
+                  id: saved.id,
+                  whiskyId: saved.whiskyId,
+                  workspaceId: saved.workspaceId,
+                  userId: saved.userId,
+                  entryText: saved.entryText || "",
+                  createdAt: saved.createdAt,
+                  updatedAt: saved.updatedAt
+                });
+                closeModal();
+                renderDetail();
+                focusAuraSection();
+                setMessage("Aura entry saved.");
+              } catch (error) {
+                setMessage(error.message || "Could not save that Aura entry.", true);
+                button.disabled = false;
+                button.textContent = "Save Entry";
+              } finally {
+                state.entrySaveInFlight = false;
+              }
+            });
+          }
+        );
+      }
+
+      function buildWhiskyCompassActions(whisky) {
+        return {
+          top: {
+            label: "Create Entry",
+            icon: compassIcon("notes"),
+            run: async () => {
+              await openWhisky(whisky.id, whiskyReferencePath(whisky), false);
+              openAddEntryModal(whisky);
+            }
+          },
+          left: {
+            label: "Aura",
+            icon: compassIcon("history"),
+            run: async () => {
+              await openWhisky(whisky.id, whiskyReferencePath(whisky), false);
+              focusAuraSection();
+            }
+          },
+          right: {
+            label: "Copy Link",
+            icon: compassIcon("link"),
+            run: async () => {
+              await copyWhiskyLink(whisky);
+            }
+          },
+          bottom: {
+            label: "Open",
+            icon: compassIcon("open"),
+            run: async () => {
+              await openWhisky(whisky.id, whiskyReferencePath(whisky), false);
+            }
+          }
+        };
+      }
+
+      function openWhiskyActionCompass(whisky) {
+        openActionCompass(whisky.displayName, buildWhiskyCompassActions(whisky), { requireRelease: true });
+      }
+
+      function renderAccount() {
+        if (!state.bootstrap.authenticated || !state.bootstrap.currentUser) {
+          els.account.hidden = true;
+          els.account.textContent = "";
+          return;
+        }
+        els.account.hidden = false;
+        els.account.textContent = getAccountInitials(state.bootstrap.currentUser);
+        els.account.title = "Account settings";
+        els.account.setAttribute("aria-label", "Account settings");
+      }
+
+      async function logout() {
+        await api("/api/auth/logout", { method: "POST" });
+        closeModal();
+        setMessage("");
+        state.bootstrap = { authenticated: false };
+        state.browseView = "search";
+        state.selectedWhiskyId = "";
+        state.detail = null;
+        state.browse = null;
+        history.replaceState({}, "", "/aura/whiskies");
+        renderAccount();
+        renderAuraNav();
+        renderAuthGate();
+        renderDetail();
+        renderBrowse();
+      }
+
+      function openAuraAccountModal() {
+        const user = state.bootstrap?.currentUser || {};
+        openModal(
+          "Account settings",
+          '<div class="detail-section secondary">' +
+            '<div class="small-meta">' + escapeHtml(user.name || user.email || "Signed in") + '</div>' +
+            (user.email ? '<div>' + escapeHtml(user.email) + '</div>' : "") +
+          '</div>' +
+          '<div class="save-row">' +
+            '<button id="aura-account-logout-button" class="secondary" type="button">Log Out</button>' +
+          '</div>',
+          (modal) => {
+            modal.querySelector("#aura-account-logout-button")?.addEventListener("click", async () => {
+              try {
+                await logout();
+              } catch (error) {
+                setMessage(error.message || "Could not log out.", true);
+              }
+            });
+          }
+        );
+      }
+
+      function renderBrowseCards(whiskies) {
+        return whiskies.map((whisky) => {
+          const selected = whisky.id === state.selectedWhiskyId ? " selected" : "";
+          const detailBits = [
+            whisky.country,
+            whisky.region
+          ].filter(Boolean);
+          const subtitle = [
+            whisky.distillery || "Unknown distillery",
+            detailBits.length ? detailBits.join(" / ") : ""
+          ].filter(Boolean).join(" / ");
+          return (
+            '<button class="result-card' + selected + '" type="button" data-whisky-id="' + escapeHtml(whisky.id) + '">' +
+              '<div class="result-name">' + escapeHtml(whisky.displayName) + "</div>" +
+              '<div class="result-subtitle">' + escapeHtml(subtitle) + "</div>" +
+            "</button>"
+          );
+        }).join("");
+      }
+
+      function renderAuthGate() {
+        if (state.bootstrap.authenticated) {
+          els.authGate.innerHTML = "";
+          els.app.hidden = false;
+          return;
+        }
+        els.app.hidden = true;
+        els.authGate.innerHTML =
+          '<div class="panel">' +
+            '<div class="auth-card">' +
+              "<h2>Sign in required</h2>" +
+              '<div class="small-meta">TethrAura is private for the beta. Sign in through the main Tethr app first, then come back here.</div>' +
+              '<div><a class="back-link" href="/">Go to Sign-In</a></div>' +
+            "</div>" +
+          "</div>";
+      }
+
+      function renderBrowse() {
+        const browse = state.browse;
+        if (!browse) {
+          if (els.catalogTitle) {
+            els.catalogTitle.textContent = "Search";
+          }
+          els.resultMeta.textContent = "Searching...";
+          els.results.innerHTML = "";
+          return;
+        }
+
+        const hasQuery = Boolean((browse.query || "").trim());
+        if (els.catalogTitle) {
+          els.catalogTitle.textContent = state.browseView === "mine"
+            ? "My Aura"
+            : hasQuery
+            ? "Search"
+            : "Tethr Your World";
+          els.catalogTitle.title = "";
+        }
+        if (els.catalogHint) {
+          if (state.browseView === "mine") {
+            els.catalogHint.textContent = hasQuery
+              ? 'Your Aura results for "' + browse.query + '".'
+              : "Things you have already connected with.";
+          } else {
+            els.catalogHint.textContent = hasQuery
+              ? 'Open the item you want.'
+              : "";
+          }
+        }
+        if (els.search) {
+          els.search.placeholder = state.browseView === "mine"
+            ? "Find in My Aura"
+            : hasQuery
+            ? "Keep searching"
+            : "Let's begin";
+          els.search.title = state.browseView !== "mine" && !hasQuery
+            ? "What would you like to Tethr?"
+            : "";
+        }
+
+        const isSearchLaunch = !hasQuery && state.browseView !== "mine";
+        els.catalogPanel.classList.toggle("search-launch", isSearchLaunch);
+
+        if (document.activeElement !== els.search) {
+          els.search.value = browse.query || "";
+        }
+        els.resultMeta.textContent =
+          hasQuery || state.browseView === "mine"
+            ? (browse.whiskies.length === 1
+              ? (state.browseView === "mine" ? "1 item" : "1 match")
+              : browse.whiskies.length + (state.browseView === "mine" ? " items" : " matches"))
+            : "";
+
+        if (!hasQuery && state.browseView !== "mine") {
+          els.results.innerHTML = "";
+        } else if (!browse.whiskies.length) {
+          els.results.innerHTML = state.browseView === "mine"
+            ? '<div class="empty-shell">No Aura items yet.</div>'
+            : '<div class="empty-shell">No Aura items matched that search.</div>';
+        } else {
+          els.results.innerHTML = renderBrowseCards(browse.whiskies);
+        }
+
+        els.results.querySelectorAll("[data-whisky-id]").forEach((button) => {
+          const whisky = browse.whiskies.find((entry) => entry.id === button.dataset.whiskyId);
+          if (!whisky) {
+            return;
+          }
+          button.addEventListener("click", async () => {
+            await openWhisky(whisky.id, whisky.path, false);
+          });
+        });
+      }
+
+      function whiskyForTileElement(element) {
+        const tile = element?.closest?.("[data-whisky-id]");
+        if (!tile || !state.browse?.whiskies) {
+          return null;
+        }
+        return state.browse.whiskies.find((entry) => entry.id === tile.dataset.whiskyId) || null;
+      }
+
+      function renderDetail() {
+        if (!state.selectedWhiskyId || !state.detail) {
+          els.stagePanel.hidden = true;
+          els.catalogPanel.hidden = false;
+          els.detail.innerHTML = "";
+          return;
+        }
+
+        els.stagePanel.hidden = false;
+        els.catalogPanel.hidden = true;
+        const whisky = state.detail.whisky;
+        const entries = Array.isArray(state.detail.entries) ? state.detail.entries : [];
+        const summaryLine = [
+          whisky.distillery || "Unknown distillery",
+          whisky.country,
+          whisky.region,
+          whisky.style,
+          whisky.abv ? whisky.abv + " ABV" : "",
+          whisky.ageStatement
+        ].filter(Boolean).join(" / ");
+        const priceLine = whisky.priceUsd != null
+          ? "Approx. retail: $" + Number(whisky.priceUsd).toFixed(0)
+          : "";
+
+        els.detail.innerHTML =
+          '<div class="stage-header">' +
+            '<div class="stage-path">' +
+              '<button class="inline-link" type="button" id="back-to-whiskies">Search</button>' +
+            '</div>' +
+            '<div class="stage-title-row">' +
+              '<h2 class="stage-title">' + escapeHtml(whisky.displayName) + '</h2>' +
+            '</div>' +
+            '<div id="detail-action-surface" class="detail-summary-strip">' +
+              '<div class="stage-meta-line">' +
+                '<span class="stage-current-chip">' + whiskyImageMarkupVariant(whisky, "compact") + '<strong>' + escapeHtml(whisky.distillery || "Unknown distillery") + '</strong></span>' +
+                (whisky.country ? '<span class="stage-meta-separator">/</span><span>' + escapeHtml(whisky.country) + '</span>' : '') +
+                (whisky.region ? '<span class="stage-meta-separator">/</span><span>' + escapeHtml(whisky.region) + '</span>' : '') +
+                (whisky.style ? '<span class="stage-meta-separator">/</span><span>' + escapeHtml(whisky.style) + '</span>' : '') +
+                (whisky.ageStatement ? '<span class="stage-meta-separator">/</span><span>' + escapeHtml(whisky.ageStatement) + '</span>' : '') +
+                (whisky.abv ? '<span class="stage-meta-separator">/</span><span>' + escapeHtml(whisky.abv + ' ABV') + '</span>' : '') +
+                (priceLine ? '<span class="stage-meta-separator">/</span><span>' + escapeHtml(priceLine) + '</span>' : '') +
+              '</div>' +
+              '<p class="stage-subtitle">' + escapeHtml(whisky.referenceNotes || "No shared overview yet.") + '</p>' +
+            '</div>' +
+          "</div>" +
+          '<div class="stage-sections">' +
+            '<div id="aura-entries-section" class="detail-section">' +
+              '<div class="entry-row">' +
+                "<h3>Aura</h3>" +
+                '<button id="add-aura-entry" type="button">Add Entry</button>' +
+              "</div>" +
+              renderEntryList(entries) +
+            "</div>" +
+          "</div>";
+
+        document.getElementById("add-aura-entry").addEventListener("click", () => {
+          openAddEntryModal(whisky);
+        });
+        document.getElementById("back-to-whiskies").addEventListener("click", () => {
+          history.pushState({}, "", buildBrowsePath(state.browseView));
+          state.selectedWhiskyId = "";
+          state.detail = null;
+          renderDetail();
+          renderBrowse();
+        });
+      }
+
+      async function loadBootstrap() {
+        state.bootstrap = await api("/api/bootstrap");
+        renderAccount();
+        renderAuthGate();
+      }
+
+      async function loadBrowse() {
+        const requestId = ++state.browseRequestId;
+        const params = new URLSearchParams();
+        if (state.browseView === "mine") {
+          params.set("view", "mine");
+        }
+        if (els.search.value.trim()) {
+          params.set("q", els.search.value.trim());
+        }
+        const query = params.toString();
+        if (!query || (query === "view=mine" && state.browseView !== "mine")) {
+          state.browse = {
+            query: "",
+            selected: { whiskyId: state.selectedWhiskyId || "", view: state.browseView },
+            filters: { countries: [], regions: [], distilleries: [], whiskies: [] },
+            whiskies: []
+          };
+          renderBrowse();
+          return;
+        }
+        const nextBrowse = await api("/api/aura/whiskies" + (query ? "?" + query : ""));
+        if (requestId !== state.browseRequestId) {
+          return;
+        }
+        state.browse = nextBrowse;
+        renderBrowse();
+      }
+
+      async function loadDetailById(id) {
+        state.detail = await api("/api/aura/whiskies/" + encodeURIComponent(id));
+        state.selectedWhiskyId = id;
+        renderDetail();
+      }
+
+      async function openWhisky(id, path, replaceState) {
+        await loadDetailById(id);
+        const targetPath = path || state.detail?.whisky?.path || "/aura/whiskies";
+        if (replaceState) {
+          history.replaceState({}, "", targetPath);
+        } else {
+          history.pushState({}, "", targetPath);
+        }
+        if (state.browse?.selected) {
+          state.browse.selected.whiskyId = id;
+        }
+        renderBrowse();
+      }
+
+      async function switchBrowseView(view) {
+        state.browseView = view === "mine" ? "mine" : "search";
+        renderAuraNav();
+        els.search.value = "";
+        history.pushState({}, "", buildBrowsePath(state.browseView));
+        state.selectedWhiskyId = "";
+        state.detail = null;
+        renderDetail();
+        await loadBrowse();
+      }
+
+      async function syncRoute(replaceState = true) {
+        state.browseView = getBrowseViewFromLocation();
+        renderAuraNav();
+        const whiskyId = extractWhiskyIdFromPath(window.location.pathname || initialAuraPath);
+        if (!whiskyId) {
+          state.selectedWhiskyId = "";
+          state.detail = null;
+          if (state.browse?.selected) {
+            state.browse.selected.whiskyId = "";
+          }
+          renderDetail();
+          renderBrowse();
+          return;
+        }
+        try {
+          await openWhisky(whiskyId, window.location.pathname, replaceState);
+        } catch (error) {
+          setMessage(error.message || "That Aura item could not be opened.", true);
+          history.replaceState({}, "", buildBrowsePath(state.browseView));
+          state.selectedWhiskyId = "";
+          state.detail = null;
+          renderDetail();
+        }
+      }
+
+      function wireInputs() {
+        els.search.addEventListener("input", () => {
+          if (state.searchTimer) {
+            clearTimeout(state.searchTimer);
+          }
+          state.searchTimer = setTimeout(async () => {
+            state.searchTimer = null;
+            await loadBrowse();
+          }, 220);
+        });
+
+        els.navSearch?.addEventListener("click", async () => {
+          await switchBrowseView("search");
+        });
+
+        els.navMine?.addEventListener("click", async () => {
+          await switchBrowseView("mine");
+        });
+
+        els.account?.addEventListener("click", () => {
+          if (!state.bootstrap.authenticated) {
+            return;
+          }
+          openAuraAccountModal();
+        });
+
+        window.addEventListener("popstate", async () => {
+          state.browseView = getBrowseViewFromLocation();
+          renderAuraNav();
+          await loadBrowse();
+          await syncRoute(true);
+        });
+      }
+
+      async function initialize() {
+        try {
+          await loadBootstrap();
+          if (!state.bootstrap.authenticated) {
+            return;
+          }
+          state.browseView = getBrowseViewFromLocation();
+          renderAuraNav();
+          wireInputs();
+          await loadBrowse();
+          await syncRoute(true);
+          renderDetail();
+        } catch (error) {
+          setMessage(error.message || "Aura could not be loaded.", true);
+        }
+      }
+
+      initialize();
     </script>
   </body>
 </html>`;
