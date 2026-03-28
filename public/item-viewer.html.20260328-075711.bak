@@ -187,36 +187,11 @@
       refresh();
     }
 
-    function slugify(value) {
-  return String(value || "")
-    .toLowerCase()
-    .trim()
-    .replace(/['"]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "container";
-}
-
-function openItem(item) {
-  const container = item?.containers || null;
-  const containerId = container?.id || item?.container_id || "";
-  const containerSlug = container?.slug || slugify(container?.name || "");
-
-  if (!containerId) {
-    alert("This item does not have a container link yet.");
-    return;
-  }
-
-  window.location.href =
-    "https://tethr-blue.vercel.app/containers/" +
-    containerSlug +
-    "-" +
-    containerId +
-    "?item=" +
-    encodeURIComponent(item.id);
-}
+    function openItem(id) {
+      window.location.href = "https://tethr-blue.vercel.app/items/" + id;
+    }
 
     load();
   </script>
 </body>
 </html>
-
