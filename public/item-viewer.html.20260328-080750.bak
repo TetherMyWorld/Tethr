@@ -127,8 +127,6 @@
       const item = json.data.find(x => x.id === id);
       if (!item) return;
 
-      window.currentItem = item;
-
       document.title = item.name + " — Tethr";
       document.getElementById("title").innerText = item.name;
 
@@ -198,44 +196,27 @@
     .replace(/^-+|-+$/g, "") || "container";
 }
 
-function slugify(value) {
-      return String(value || "")
-        .toLowerCase()
-        .trim()
-        .replace(/['"]/g, "")
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "") || "container";
-    }
+function openItem(item) {
+  const container = item?.containers || null;
+  const containerId = container?.id || item?.container_id || "";
+  const containerSlug = container?.slug || slugify(container?.name || "");
 
-    function openItem() {
-      const item = window.currentItem || null;
-      const container = item?.containers || null;
-      const containerId = container?.id || "";
+  if (!containerId) {
+    alert("This item does not have a container link yet.");
+    return;
+  }
 
-      if (!item) {
-        alert("This item is not loaded yet.");
-        return;
-      }
-
-      if (!containerId) {
-        alert("This item does not have a container link yet.");
-        return;
-      }
-
-      const containerSlug = container?.slug || slugify(container?.name || "");
-
-      window.location.href =
-        "https://tethr-blue.vercel.app/containers/" +
-        containerSlug +
-        "-" +
-        containerId +
-        "?item=" +
-        encodeURIComponent(item.id);
-    }
+  window.location.href =
+    "https://tethr-blue.vercel.app/containers/" +
+    containerSlug +
+    "-" +
+    containerId +
+    "?item=" +
+    encodeURIComponent(item.id);
+}
 
     load();
   </script>
 </body>
 </html>
-
 
