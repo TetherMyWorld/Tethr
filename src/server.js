@@ -1882,28 +1882,29 @@ async function readMultipart(req) {
 
 async function readUploadPayload(req) {
   const contentType = String(req.headers["content-type"] || "");
+
   if (contentType.includes("application/json")) {
     const body = await readJson(req);
-   if (body.file_path) {
-  return {
-    fileName: String(body.fileName || "upload.jpg"),
-    mimeType: String(body.mimeType || "image/jpeg"),
-    buffer: fs.readFileSync(body.file_path),
-    caption: String(body.caption || "")
-  };
-}
 
-const base64 = String(body.base64 || "").trim();
-if (!base64) {
-  throw new Error("Photo upload requires image data");
-}
-return {
-  fileName: String(body.fileName || "upload.jpg"),
-  mimeType: String(body.mimeType || "image/jpeg"),
-  buffer: Buffer.from(base64, "base64"),
-  caption: String(body.caption || "")
-};
+    // 🚫 Disable file_path in production (Vercel cannot access local files)
+    if (body.file_path) {
+      throw new Error("file_path is only supported in local development");
+    }
+
+    const base64 = String(body.base64 || "").trim();
+    if (!base64) {
+      throw new Error("Photo upload requires image data");
+    }
+
+    return {
+      fileName: String(body.fileName || "upload.jpg"),
+      mimeType: String(body.mimeType || "image/jpeg"),
+      buffer: Buffer.from(base64, "base64"),
+      caption: String(body.caption || "")
     };
   }
+
+  // ✅ This is the correct production path (multipart upload)
   return readMultipart(req);
+}
 }
