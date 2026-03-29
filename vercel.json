@@ -1,8 +1,10 @@
 {
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api/index"
-    }
+    { "source": "/", "destination": "/api/index" },
+    { "source": "/simulate-scan", "destination": "/api/index" },
+    { "source": "/containers/:path*", "destination": "/api/index" },
+    { "source": "/scan/:path*", "destination": "/api/index" },
+    { "source": "/uploads/:path*", "destination": "/api/index" },
+    { "source": "/api/:path*", "destination": "/api/index" }
   ]
 }

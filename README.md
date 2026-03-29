@@ -28,17 +28,31 @@ Locations are optional.
 ## Local stack
 
 - `Node.js` server
-- built-in `node:sqlite` database
+- JSON state persisted under `data/state.local.json`
 - local file storage for photos under `data/uploads`
-- no external packages required
+- optional Vercel Blob storage for deployed persistence
 
 ## Run locally
 
-1. Run `node src/server.js`
-2. Open [http://127.0.0.1:3000](http://127.0.0.1:3000)
-3. Create a location if you want one
-4. Create a container
-5. Open the container and add items
+1. Run `npm install`
+2. Run `node src/server.js`
+3. Open [http://127.0.0.1:3000](http://127.0.0.1:3000)
+
+## Deploy to Vercel
+
+1. Create a Blob store and attach it to the project so `BLOB_READ_WRITE_TOKEN` is available.
+2. Deploy the repo to Vercel.
+3. The app entrypoint is `api/index.js`, and `vercel.json` rewrites the app routes there.
+
+## Seed data
+
+- The tracked deployment seed lives in `seed/state.json`
+- Seed images live in `seed/uploads`
+- To refresh the seed from the old local SQLite database, run `npm run seed:sqlite`
+- Local runtime writes still go to `data/`, which remains ignored
+4. Create a location if you want one
+5. Create a container
+6. Open the container and add items
 
 ## Important files
 
@@ -48,6 +62,6 @@ Locations are optional.
 
 ## Notes
 
-- The local SQLite database is created automatically at `data/tethrarca.sqlite`
-- Uploaded images are stored automatically in `data/uploads`
-- The old nested-container structure has been flattened to match the simpler model
+- Uploaded images are stored automatically in `data/uploads` locally
+- When deployed with Blob attached, state and uploads are persisted remotely
+- Without `BLOB_READ_WRITE_TOKEN` on Vercel, the app falls back to temporary `/tmp` storage

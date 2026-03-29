@@ -1,0 +1,817 @@
+{
+  "version": 1,
+  "exported_at": "2026-03-28T22:44:22.773Z",
+  "workspace": {
+    "id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+    "name": "Personal Inventory",
+    "created_at": "2026-03-13T15:45:16.980Z",
+    "updated_at": "2026-03-13T15:45:16.980Z"
+  },
+  "locations": [
+    {
+      "id": "cb4854ee-1dfa-4a40-8f99-26f4056ccf39",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "name": "Attic",
+      "description": "",
+      "notes": "",
+      "created_at": "2026-03-13T21:37:23.783Z",
+      "updated_at": "2026-03-15T13:27:48.705Z"
+    },
+    {
+      "id": "9422477b-17a4-40ba-80a3-4888a0369548",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "name": "Basement",
+      "description": "",
+      "notes": "",
+      "created_at": "2026-03-13T18:50:55.895Z",
+      "updated_at": "2026-03-13T18:50:55.895Z"
+    },
+    {
+      "id": "033d4b6a-c207-4b47-96a8-a338c687adfe",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "name": "Garage",
+      "description": "",
+      "notes": "",
+      "created_at": "2026-03-13T22:02:35.152Z",
+      "updated_at": "2026-03-13T22:02:35.152Z"
+    },
+    {
+      "id": "655b42e1-96a1-48e9-924e-d62175f4f224",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "name": "Garden Shed",
+      "description": "",
+      "notes": "",
+      "created_at": "2026-03-15T13:25:18.032Z",
+      "updated_at": "2026-03-15T13:25:18.032Z"
+    },
+    {
+      "id": "0d37edac-cd23-40ab-9404-c3cb92189bf5",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "name": "Test Location",
+      "description": "",
+      "notes": "",
+      "created_at": "2026-03-28T22:29:51.996Z",
+      "updated_at": "2026-03-28T22:29:51.996Z"
+    }
+  ],
+  "containers": [
+    {
+      "id": "a7d4ae24-312a-40f4-96ab-6996f0903802",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "parent_container_id": null,
+      "name": "Arca 2",
+      "slug": "arca-2",
+      "type": "Container",
+      "description": "",
+      "notes": "",
+      "rfid_tag_id": "",
+      "created_at": "2026-03-13T21:45:49.618Z",
+      "updated_at": "2026-03-13T22:09:01.942Z",
+      "location_id": "9422477b-17a4-40ba-80a3-4888a0369548",
+      "image_file_name": "",
+      "image_stored_name": "",
+      "image_mime_type": "",
+      "image_size_bytes": 0
+    },
+    {
+      "id": "39315d5d-97e4-438c-b459-61359dccba07",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "parent_container_id": null,
+      "name": "Arca 3",
+      "slug": "arca-3",
+      "type": "Container",
+      "description": "",
+      "notes": "Black box with a red lid",
+      "rfid_tag_id": "",
+      "created_at": "2026-03-13T21:45:57.212Z",
+      "updated_at": "2026-03-13T23:58:01.272Z",
+      "location_id": "cb4854ee-1dfa-4a40-8f99-26f4056ccf39",
+      "image_file_name": "Storage tote.jpg",
+      "image_stored_name": "9aa09d7a-cc18-442c-a634-a2fb9036324f.jpg",
+      "image_mime_type": "image/jpeg",
+      "image_size_bytes": 4736
+    },
+    {
+      "id": "698a8d89-d39e-40ff-b165-d30dbb8f673f",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "parent_container_id": null,
+      "name": "Arca 4",
+      "slug": "arca-4",
+      "type": "Container",
+      "description": "",
+      "notes": "",
+      "rfid_tag_id": "",
+      "created_at": "2026-03-13T22:39:08.037Z",
+      "updated_at": "2026-03-13T22:39:08.037Z",
+      "location_id": "033d4b6a-c207-4b47-96a8-a338c687adfe",
+      "image_file_name": "",
+      "image_stored_name": "",
+      "image_mime_type": "",
+      "image_size_bytes": 0
+    },
+    {
+      "id": "f7c80983-4874-4fe6-9603-f1eeed004269",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "parent_container_id": null,
+      "name": "Arca 5",
+      "slug": "arca-5",
+      "type": "Container",
+      "description": "",
+      "notes": "",
+      "rfid_tag_id": "",
+      "created_at": "2026-03-15T15:06:21.375Z",
+      "updated_at": "2026-03-15T15:06:51.733Z",
+      "location_id": null,
+      "image_file_name": "Storage tote.jpg",
+      "image_stored_name": "ece29ccf-cc75-46f6-9698-06b4679c9a7e.jpg",
+      "image_mime_type": "image/jpeg",
+      "image_size_bytes": 4736
+    },
+    {
+      "id": "8b77254b-a519-46a4-bd2b-e57f121e4e85",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "parent_container_id": null,
+      "name": "Test Container",
+      "slug": "test-container",
+      "type": "Box",
+      "description": "",
+      "notes": "",
+      "rfid_tag_id": "",
+      "created_at": "2026-03-28T22:29:52.028Z",
+      "updated_at": "2026-03-28T22:29:52.028Z",
+      "location_id": "0d37edac-cd23-40ab-9404-c3cb92189bf5",
+      "image_file_name": "",
+      "image_stored_name": "",
+      "image_mime_type": "",
+      "image_size_bytes": 0
+    }
+  ],
+  "items": [
+    {
+      "id": "ef4e2d13-4a7a-4860-8421-127384b7ceb8",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "f7c80983-4874-4fe6-9603-f1eeed004269",
+      "name": "Banana",
+      "description": "",
+      "notes": "These bananas are a little green",
+      "quantity": 4,
+      "created_at": "2026-03-13T21:46:06.428Z",
+      "updated_at": "2026-03-16T18:03:44.603Z"
+    },
+    {
+      "id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "a7d4ae24-312a-40f4-96ab-6996f0903802",
+      "name": "Banana",
+      "description": "",
+      "notes": "",
+      "quantity": 16,
+      "created_at": "2026-03-15T23:46:53.107Z",
+      "updated_at": "2026-03-16T00:17:46.225Z"
+    },
+    {
+      "id": "ec73feb3-0eab-4d68-8d7b-e61619a6f699",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "39315d5d-97e4-438c-b459-61359dccba07",
+      "name": "Naval Oranges",
+      "description": "",
+      "notes": "These oranges are a little overripe",
+      "quantity": 5,
+      "created_at": "2026-03-13T22:12:40.710Z",
+      "updated_at": "2026-03-15T23:50:45.542Z"
+    },
+    {
+      "id": "bdcae21a-8bcd-43b1-9692-913fae24c702",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "39315d5d-97e4-438c-b459-61359dccba07",
+      "name": "Pineapples",
+      "description": "",
+      "notes": "These pineapples are from Hawaii",
+      "quantity": 1,
+      "created_at": "2026-03-15T14:51:22.372Z",
+      "updated_at": "2026-03-15T14:51:22.372Z"
+    },
+    {
+      "id": "3bfdae18-7c1e-4689-a865-46feb2ddbff0",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "39315d5d-97e4-438c-b459-61359dccba07",
+      "name": "Ray Gun Man",
+      "description": "",
+      "notes": "He is wearing sunglasses",
+      "quantity": 2,
+      "created_at": "2026-03-15T14:56:49.952Z",
+      "updated_at": "2026-03-15T23:40:12.088Z"
+    },
+    {
+      "id": "1e630788-886b-432e-b1b2-2b88371c99ce",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "8b77254b-a519-46a4-bd2b-e57f121e4e85",
+      "name": "Test Item",
+      "description": "",
+      "notes": "",
+      "quantity": 1,
+      "created_at": "2026-03-28T22:29:52.047Z",
+      "updated_at": "2026-03-28T22:29:52.047Z"
+    }
+  ],
+  "photos": [
+    {
+      "id": "ff8d8c3e-bfdc-4ff6-9c69-5b772e7ab1f4",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "ef4e2d13-4a7a-4860-8421-127384b7ceb8",
+      "file_name": "bananas.jpg",
+      "stored_name": "ff8d8c3e-bfdc-4ff6-9c69-5b772e7ab1f4.jpg",
+      "mime_type": "image/jpeg",
+      "size_bytes": 6839,
+      "caption": "",
+      "created_at": "2026-03-13T22:35:46.326Z"
+    },
+    {
+      "id": "1cef309f-53d4-4107-8792-48b0d5d01419",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "ec73feb3-0eab-4d68-8d7b-e61619a6f699",
+      "file_name": "download.jpg",
+      "stored_name": "1cef309f-53d4-4107-8792-48b0d5d01419.jpg",
+      "mime_type": "image/jpeg",
+      "size_bytes": 9066,
+      "caption": "",
+      "created_at": "2026-03-13T22:52:32.957Z"
+    },
+    {
+      "id": "d9eae731-3a9b-465a-9be3-f640915c3f88",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "bdcae21a-8bcd-43b1-9692-913fae24c702",
+      "file_name": "Pineapples.jpg",
+      "stored_name": "d9eae731-3a9b-465a-9be3-f640915c3f88.jpg",
+      "mime_type": "image/jpeg",
+      "size_bytes": 19859,
+      "caption": "",
+      "created_at": "2026-03-15T14:51:22.399Z"
+    },
+    {
+      "id": "ab3c3c36-f069-40f3-bbca-6dca7e46362b",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "3bfdae18-7c1e-4689-a865-46feb2ddbff0",
+      "file_name": "gem-512x512-1-374x512.png",
+      "stored_name": "ab3c3c36-f069-40f3-bbca-6dca7e46362b.png",
+      "mime_type": "image/png",
+      "size_bytes": 30987,
+      "caption": "",
+      "created_at": "2026-03-15T14:56:50.018Z"
+    },
+    {
+      "id": "85ccca04-303f-4b04-ad14-b5780e484f04",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "file_name": "bananas.jpg",
+      "stored_name": "85ccca04-303f-4b04-ad14-b5780e484f04.jpg",
+      "mime_type": "image/jpeg",
+      "size_bytes": 6839,
+      "caption": "",
+      "created_at": "2026-03-15T23:46:53.190Z"
+    },
+    {
+      "id": "e1c1489d-b76e-49ea-985d-68c3059eb823",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "1e630788-886b-432e-b1b2-2b88371c99ce",
+      "file_name": "hello.txt",
+      "stored_name": "e1c1489d-b76e-49ea-985d-68c3059eb823.txt",
+      "mime_type": "text/plain",
+      "size_bytes": 11,
+      "caption": "",
+      "created_at": "2026-03-28T22:29:52.117Z"
+    }
+  ],
+  "move_log": [
+    {
+      "id": "744203b4-2aa6-4cfc-80c2-764f2d13de41",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "entity_type": "container",
+      "entity_id": "47cc97e4-e171-4cec-8b4a-061e35b2187b",
+      "from_container_id": null,
+      "to_container_id": null,
+      "notes": "",
+      "moved_at": "2026-03-13T16:21:44.167Z",
+      "from_location_id": null,
+      "to_location_id": null
+    },
+    {
+      "id": "b91e5739-20ca-4e5f-b9df-a4b33e7bd32d",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "entity_type": "container",
+      "entity_id": "47cc97e4-e171-4cec-8b4a-061e35b2187b",
+      "from_container_id": null,
+      "to_container_id": null,
+      "notes": "",
+      "moved_at": "2026-03-13T16:21:47.953Z",
+      "from_location_id": null,
+      "to_location_id": null
+    },
+    {
+      "id": "0b3a6478-9b35-4406-9d8c-61a77489fac8",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "entity_type": "container",
+      "entity_id": "47cc97e4-e171-4cec-8b4a-061e35b2187b",
+      "from_container_id": null,
+      "to_container_id": null,
+      "notes": "",
+      "moved_at": "2026-03-13T16:21:52.977Z",
+      "from_location_id": null,
+      "to_location_id": null
+    },
+    {
+      "id": "89ed95a8-0ef7-46eb-b8b8-f2d2fcc1c4e2",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "entity_type": "container",
+      "entity_id": "47cc97e4-e171-4cec-8b4a-061e35b2187b",
+      "from_container_id": null,
+      "to_container_id": null,
+      "notes": "",
+      "moved_at": "2026-03-13T16:22:04.129Z",
+      "from_location_id": null,
+      "to_location_id": null
+    },
+    {
+      "id": "b03ec79f-27c3-4889-82b5-febf75005ad1",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "entity_type": "container",
+      "entity_id": "47cc97e4-e171-4cec-8b4a-061e35b2187b",
+      "from_container_id": null,
+      "to_container_id": null,
+      "notes": "",
+      "moved_at": "2026-03-13T16:22:07.549Z",
+      "from_location_id": null,
+      "to_location_id": null
+    },
+    {
+      "id": "84de327c-6b5b-4668-bbb2-c8faa6683575",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "entity_type": "container",
+      "entity_id": "9b729f19-f328-4886-aa39-45bb64e95e82",
+      "from_container_id": "56306fe0-d19a-4d9e-be57-930f811929ec",
+      "to_container_id": "d76420d0-0cfc-43a2-afaa-a89294f2b627",
+      "notes": "test move",
+      "moved_at": "2026-03-13T16:23:29.252Z",
+      "from_location_id": null,
+      "to_location_id": null
+    },
+    {
+      "id": "8ba110b1-86b5-476e-bec5-664951383cf1",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "entity_type": "container",
+      "entity_id": "eaa9a7cd-9fd0-40bf-ad17-e558c823c308",
+      "from_container_id": null,
+      "to_container_id": null,
+      "notes": "",
+      "moved_at": "2026-03-13T19:26:23.781Z",
+      "from_location_id": null,
+      "to_location_id": "9422477b-17a4-40ba-80a3-4888a0369548"
+    },
+    {
+      "id": "bfe4a35f-a8a4-4b7d-b1dc-41d8ac2d8f79",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "entity_type": "container",
+      "entity_id": "505f42eb-b196-4117-a262-e4d2ec177a42",
+      "from_container_id": null,
+      "to_container_id": null,
+      "notes": "",
+      "moved_at": "2026-03-13T21:43:41.901Z",
+      "from_location_id": "cb4854ee-1dfa-4a40-8f99-26f4056ccf39",
+      "to_location_id": "9422477b-17a4-40ba-80a3-4888a0369548"
+    },
+    {
+      "id": "60e6c3a7-9654-4cf4-8eae-a26269a557be",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "entity_type": "item",
+      "entity_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "from_container_id": "39315d5d-97e4-438c-b459-61359dccba07",
+      "to_container_id": "a7d4ae24-312a-40f4-96ab-6996f0903802",
+      "notes": "Moved by scan",
+      "moved_at": "2026-03-16T00:17:46.233Z",
+      "from_location_id": null,
+      "to_location_id": null
+    },
+    {
+      "id": "acba38d6-bd5e-49b2-9db3-41cc1483a65b",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "entity_type": "item",
+      "entity_id": "ef4e2d13-4a7a-4860-8421-127384b7ceb8",
+      "from_container_id": "a7d4ae24-312a-40f4-96ab-6996f0903802",
+      "to_container_id": "f7c80983-4874-4fe6-9603-f1eeed004269",
+      "notes": "Moved by scan",
+      "moved_at": "2026-03-16T18:03:44.640Z",
+      "from_location_id": null,
+      "to_location_id": null
+    }
+  ],
+  "item_history": [
+    {
+      "id": "23825c74-56d7-4d4b-8d72-4683d053238e",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "ec73feb3-0eab-4d68-8d7b-e61619a6f699",
+      "event_type": "quantity_changed",
+      "from_quantity": 7,
+      "to_quantity": 5,
+      "notes": "",
+      "created_at": "2026-03-13T23:49:58.249Z"
+    },
+    {
+      "id": "ecf136a8-d394-49c2-98ea-6a0ea7013a24",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "ec73feb3-0eab-4d68-8d7b-e61619a6f699",
+      "event_type": "quantity_changed",
+      "from_quantity": 5,
+      "to_quantity": 3,
+      "notes": "",
+      "created_at": "2026-03-13T23:55:24.917Z"
+    },
+    {
+      "id": "e2c9fde8-5ba0-428f-b6fd-eeb1884bb85b",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "ec73feb3-0eab-4d68-8d7b-e61619a6f699",
+      "event_type": "quantity_changed",
+      "from_quantity": 3,
+      "to_quantity": 4,
+      "notes": "",
+      "created_at": "2026-03-15T14:58:43.596Z"
+    },
+    {
+      "id": "722bd42f-f68d-464e-82d2-49223ccb0c90",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "ec73feb3-0eab-4d68-8d7b-e61619a6f699",
+      "event_type": "quantity_changed",
+      "from_quantity": 4,
+      "to_quantity": 3,
+      "notes": "",
+      "created_at": "2026-03-15T14:58:44.322Z"
+    },
+    {
+      "id": "60a2c49c-75b3-45ef-9eb5-cd5e4cd50afd",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "ec73feb3-0eab-4d68-8d7b-e61619a6f699",
+      "event_type": "quantity_changed",
+      "from_quantity": 3,
+      "to_quantity": 4,
+      "notes": "",
+      "created_at": "2026-03-15T14:58:46.482Z"
+    },
+    {
+      "id": "e50e7bbd-5871-43f7-8142-1b16d193fb71",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "ec73feb3-0eab-4d68-8d7b-e61619a6f699",
+      "event_type": "quantity_changed",
+      "from_quantity": 4,
+      "to_quantity": 3,
+      "notes": "",
+      "created_at": "2026-03-15T14:58:47.006Z"
+    },
+    {
+      "id": "8f34cdab-3e08-45e1-8b6e-72d6a757b012",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "3bfdae18-7c1e-4689-a865-46feb2ddbff0",
+      "event_type": "quantity_changed",
+      "from_quantity": 1,
+      "to_quantity": 2,
+      "notes": "",
+      "created_at": "2026-03-15T23:40:12.105Z"
+    },
+    {
+      "id": "02e6ccc1-2c81-446e-a3c6-afeba37f2c06",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "event_type": "quantity_changed",
+      "from_quantity": 12,
+      "to_quantity": 11,
+      "notes": "",
+      "created_at": "2026-03-15T23:47:02.308Z"
+    },
+    {
+      "id": "66b56c45-1ee1-4dd7-b00d-fb93d4235b0b",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "event_type": "quantity_changed",
+      "from_quantity": 11,
+      "to_quantity": 10,
+      "notes": "",
+      "created_at": "2026-03-15T23:47:02.505Z"
+    },
+    {
+      "id": "eeb62c9e-0087-4048-ac8b-c9c3f288bcce",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "event_type": "quantity_changed",
+      "from_quantity": 10,
+      "to_quantity": 11,
+      "notes": "",
+      "created_at": "2026-03-15T23:47:35.357Z"
+    },
+    {
+      "id": "3351829e-2b83-4ca4-9744-22c0f638a9d5",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "event_type": "quantity_changed",
+      "from_quantity": 11,
+      "to_quantity": 12,
+      "notes": "",
+      "created_at": "2026-03-15T23:47:36.833Z"
+    },
+    {
+      "id": "dc9a35d1-4696-4463-83ba-2e3df3f75016",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "event_type": "quantity_changed",
+      "from_quantity": 12,
+      "to_quantity": 13,
+      "notes": "",
+      "created_at": "2026-03-15T23:47:37.018Z"
+    },
+    {
+      "id": "47ab591c-1660-4222-af21-8fc10693c076",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "ec73feb3-0eab-4d68-8d7b-e61619a6f699",
+      "event_type": "quantity_changed",
+      "from_quantity": 3,
+      "to_quantity": 5,
+      "notes": "",
+      "created_at": "2026-03-15T23:50:45.575Z"
+    },
+    {
+      "id": "37aa5286-a42f-413c-9fde-a8b805ff39a9",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "event_type": "quantity_changed",
+      "from_quantity": 13,
+      "to_quantity": 18,
+      "notes": "",
+      "created_at": "2026-03-15T23:54:37.493Z"
+    },
+    {
+      "id": "fea8e017-8f21-4d17-88a1-1f9e1c778f38",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "event_type": "quantity_changed",
+      "from_quantity": 18,
+      "to_quantity": 16,
+      "notes": "",
+      "created_at": "2026-03-15T23:58:18.111Z"
+    }
+  ],
+  "item_event_log": [
+    {
+      "id": "1be497f6-504c-41b9-9a18-cb3cd1b59508",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "ec73feb3-0eab-4d68-8d7b-e61619a6f699",
+      "event_type": "renamed",
+      "from_text": "Oranges",
+      "to_text": "Naval Oranges",
+      "notes": "",
+      "created_at": "2026-03-13T23:55:24.909Z"
+    },
+    {
+      "id": "ab60b48a-a21b-4b86-8587-adf8cb510287",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "bdcae21a-8bcd-43b1-9692-913fae24c702",
+      "event_type": "image_changed",
+      "from_text": "",
+      "to_text": "Pineapples.jpg",
+      "notes": "",
+      "created_at": "2026-03-15T14:51:22.410Z"
+    },
+    {
+      "id": "e7e2b71f-6ed2-4eaa-8c3a-6a6c778385ff",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "3bfdae18-7c1e-4689-a865-46feb2ddbff0",
+      "event_type": "image_changed",
+      "from_text": "",
+      "to_text": "gem-512x512-1-374x512.png",
+      "notes": "",
+      "created_at": "2026-03-15T14:56:50.031Z"
+    },
+    {
+      "id": "6a355319-2393-47ab-b5ee-c5523d346a5e",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "event_type": "image_changed",
+      "from_text": "",
+      "to_text": "bananas.jpg",
+      "notes": "",
+      "created_at": "2026-03-15T23:46:53.197Z"
+    },
+    {
+      "id": "75f46099-914f-4d88-afb6-b05ba5bdb07f",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "item_id": "1e630788-886b-432e-b1b2-2b88371c99ce",
+      "event_type": "image_changed",
+      "from_text": "",
+      "to_text": "hello.txt",
+      "notes": "",
+      "created_at": "2026-03-28T22:29:52.192Z"
+    }
+  ],
+  "container_event_log": [
+    {
+      "id": "dc6d2723-b594-44d2-b9c9-0b92a7c11d90",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "f7c80983-4874-4fe6-9603-f1eeed004269",
+      "event_type": "image_changed",
+      "from_text": "",
+      "to_text": "Storage tote.jpg",
+      "notes": "",
+      "created_at": "2026-03-15T15:06:51.740Z"
+    }
+  ],
+  "container_activity_log": [
+    {
+      "id": "192944ec-7319-4a80-83b2-f35bc5bd5436",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "39315d5d-97e4-438c-b459-61359dccba07",
+      "item_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "item_name": "Banana",
+      "action_type": "item_added",
+      "from_quantity": null,
+      "to_quantity": null,
+      "notes": "",
+      "created_at": "2026-03-15T23:46:53.121Z"
+    },
+    {
+      "id": "3d8ea61c-c056-4136-8ef6-5107e5bb41ee",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "39315d5d-97e4-438c-b459-61359dccba07",
+      "item_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "item_name": "Banana",
+      "action_type": "quantity_changed",
+      "from_quantity": 10,
+      "to_quantity": 11,
+      "notes": "",
+      "created_at": "2026-03-15T23:47:35.410Z"
+    },
+    {
+      "id": "fd4ba584-e9a6-4d66-8935-187202f44ddb",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "39315d5d-97e4-438c-b459-61359dccba07",
+      "item_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "item_name": "Banana",
+      "action_type": "quantity_changed",
+      "from_quantity": 11,
+      "to_quantity": 12,
+      "notes": "",
+      "created_at": "2026-03-15T23:47:36.867Z"
+    },
+    {
+      "id": "3a8ca2ed-028e-40af-b906-449fd18832f7",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "39315d5d-97e4-438c-b459-61359dccba07",
+      "item_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "item_name": "Banana",
+      "action_type": "quantity_changed",
+      "from_quantity": 12,
+      "to_quantity": 13,
+      "notes": "",
+      "created_at": "2026-03-15T23:47:37.054Z"
+    },
+    {
+      "id": "b4cb740a-4d78-46eb-97a1-a854dc3039c4",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "39315d5d-97e4-438c-b459-61359dccba07",
+      "item_id": "ec73feb3-0eab-4d68-8d7b-e61619a6f699",
+      "item_name": "Naval Oranges",
+      "action_type": "quantity_changed",
+      "from_quantity": 3,
+      "to_quantity": 5,
+      "notes": "",
+      "created_at": "2026-03-15T23:50:45.583Z"
+    },
+    {
+      "id": "e4d43947-af31-44c1-84be-fdb016b6b603",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "39315d5d-97e4-438c-b459-61359dccba07",
+      "item_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "item_name": "Banana",
+      "action_type": "item_removed",
+      "from_quantity": null,
+      "to_quantity": null,
+      "notes": "Moved by scan",
+      "created_at": "2026-03-16T00:17:46.239Z"
+    },
+    {
+      "id": "13b231b4-b4be-4d08-b78c-82541a036158",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "a7d4ae24-312a-40f4-96ab-6996f0903802",
+      "item_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "item_name": "Banana",
+      "action_type": "item_added",
+      "from_quantity": null,
+      "to_quantity": null,
+      "notes": "Moved by scan",
+      "created_at": "2026-03-16T00:17:46.245Z"
+    },
+    {
+      "id": "83556662-6d08-462c-b68a-acf91f265977",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "a7d4ae24-312a-40f4-96ab-6996f0903802",
+      "item_id": "ef4e2d13-4a7a-4860-8421-127384b7ceb8",
+      "item_name": "Banana",
+      "action_type": "item_removed",
+      "from_quantity": null,
+      "to_quantity": null,
+      "notes": "Moved by scan",
+      "created_at": "2026-03-16T18:03:44.646Z"
+    },
+    {
+      "id": "1fa8664e-d44c-4e42-b547-db575b6208e0",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "f7c80983-4874-4fe6-9603-f1eeed004269",
+      "item_id": "ef4e2d13-4a7a-4860-8421-127384b7ceb8",
+      "item_name": "Banana",
+      "action_type": "item_added",
+      "from_quantity": null,
+      "to_quantity": null,
+      "notes": "Moved by scan",
+      "created_at": "2026-03-16T18:03:44.652Z"
+    },
+    {
+      "id": "1888ce57-b470-4f96-b17b-9e1371881010",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "container_id": "8b77254b-a519-46a4-bd2b-e57f121e4e85",
+      "item_id": "1e630788-886b-432e-b1b2-2b88371c99ce",
+      "item_name": "Test Item",
+      "action_type": "item_added",
+      "from_quantity": null,
+      "to_quantity": null,
+      "notes": "",
+      "created_at": "2026-03-28T22:29:52.052Z"
+    }
+  ],
+  "tags": [
+    {
+      "id": "01a8660e-a3fb-4f02-9a98-2be2c3adfa6d",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "token": "test-123",
+      "status": "assigned",
+      "entity_type": "location",
+      "entity_id": "655b42e1-96a1-48e9-924e-d62175f4f224",
+      "created_at": "2026-03-15T13:25:18.047Z",
+      "updated_at": "2026-03-15T13:25:18.047Z"
+    },
+    {
+      "id": "7be80622-3e9f-441d-9b72-a2b732a5d34a",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "token": "fa8fcf53-e134-4102-9e9f-362a663c8f80",
+      "status": "assigned",
+      "entity_type": "container",
+      "entity_id": "39315d5d-97e4-438c-b459-61359dccba07",
+      "created_at": "2026-03-15T13:51:17.694Z",
+      "updated_at": "2026-03-15T13:51:17.694Z"
+    },
+    {
+      "id": "55a54809-7283-4440-b4a0-ca67cce2a764",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "token": "13bd8d9b-7be5-4a19-a1a8-a116222dd155",
+      "status": "assigned",
+      "entity_type": "location",
+      "entity_id": "cb4854ee-1dfa-4a40-8f99-26f4056ccf39",
+      "created_at": "2026-03-16T00:03:56.375Z",
+      "updated_at": "2026-03-16T00:03:56.375Z"
+    },
+    {
+      "id": "dba6543f-bfde-4098-bea5-bbe60898bbe7",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "token": "148b9502-01f2-4a1f-83f0-c930d2990e40",
+      "status": "assigned",
+      "entity_type": "item",
+      "entity_id": "9d641ef0-0280-4082-93b3-84cda4156afe",
+      "created_at": "2026-03-16T00:15:06.651Z",
+      "updated_at": "2026-03-16T00:15:06.651Z"
+    },
+    {
+      "id": "0685651b-b446-4bc3-8317-54c3fa0072d3",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "token": "5ddd927b-c754-4de9-b7f9-b17e2f2041bf",
+      "status": "assigned",
+      "entity_type": "container",
+      "entity_id": "a7d4ae24-312a-40f4-96ab-6996f0903802",
+      "created_at": "2026-03-16T00:17:46.192Z",
+      "updated_at": "2026-03-16T00:17:46.192Z"
+    },
+    {
+      "id": "5d6dfafd-dbc2-4898-8b6f-8ad1fda3a206",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "token": "3cb4170b-15ab-415f-948e-70f335bb45d3",
+      "status": "assigned",
+      "entity_type": "item",
+      "entity_id": "ef4e2d13-4a7a-4860-8421-127384b7ceb8",
+      "created_at": "2026-03-16T18:03:35.503Z",
+      "updated_at": "2026-03-16T18:03:35.503Z"
+    },
+    {
+      "id": "63e9f9ef-6c36-4f77-88dc-5c13993be115",
+      "workspace_id": "3f080e59-0843-48c9-bf88-e7e964bc9b61",
+      "token": "39868d47-3eae-4fc1-aeab-7b98c495653f",
+      "status": "assigned",
+      "entity_type": "container",
+      "entity_id": "f7c80983-4874-4fe6-9603-f1eeed004269",
+      "created_at": "2026-03-16T18:03:44.578Z",
+      "updated_at": "2026-03-16T18:03:44.578Z"
+    }
+  ]
+}
