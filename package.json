@@ -3,15 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": {
-    "node": "22.x"
-  },
   "scripts": {
     "dev": "node src/server.js",
-    "seed:sqlite": "node scripts/export-sqlite-to-seed.js",
+    "import:aura-whiskies": "node scripts/import-aura-whiskies.js",
+    "replace:aura-whiskies": "node scripts/import-aura-whiskies.js --replace",
     "test": "node --test"
-  },
-  "dependencies": {
-    "@vercel/blob": "^2.3.0"
   }
 }

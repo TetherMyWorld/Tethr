@@ -16,8 +16,8 @@ Jason should have:
 - `Node.js` installed
 
 Important:
-- Install a current Node.js version.
-- Run `npm install` before starting the app.
+- This project uses built-in SQLite support from modern Node.js.
+- If `node src/server.js` fails because of SQLite support, install a current Node.js version.
 
 ## How to Run It
 
@@ -30,10 +30,6 @@ cd path\to\TethrArca
 ```
 
 4. Start the app:
-
-```powershell
-npm install
-```
 
 ```powershell
 node src/server.js
@@ -62,7 +58,7 @@ That means Jason should see the same test data that exists right now.
 
 ## Important Notes
 
-- This copy is set up for local use, though the repo can also be deployed to Vercel with Blob configured.
+- This is a local app, not a cloud app yet.
 - Jason's copy will be separate from Andy's copy.
 - Changes Jason makes on his computer will not automatically show up on Andy's computer.
 
@@ -71,8 +67,7 @@ That means Jason should see the same test data that exists right now.
 - `src/server.js`
 - `src/db.js`
 - `src/ui.js`
-- `seed/state.json`
-- `data/state.local.json`
+- `data/tethrarca.sqlite`
 
 ## Current Features
 
@@ -84,3 +79,4 @@ That means Jason should see the same test data that exists right now.
 - search
 - item and container history
 - tag/token assignment groundwork for QR/NFC scanning
+
