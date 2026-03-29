@@ -969,6 +969,14 @@ export function renderApp(initialContainerId) {
             window.location.href = "/auth/google/start";
           }
         });
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("authError") === "google") {
+          showMessage("Google sign-in did not finish cleanly. Please try again.", true);
+          params.delete("authError");
+          const nextQuery = params.toString();
+          history.replaceState({}, "", window.location.pathname + (nextQuery ? "?" + nextQuery : ""));
+        }
       }
 
       function goToLocations(push = true) {

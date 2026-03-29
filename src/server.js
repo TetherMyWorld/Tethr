@@ -75,7 +75,7 @@ export async function handleRequest(req, res) {
     ? { userId: session.user.id, workspaceId: session.workspace.id, session }
     : {};
 
-  runWithRequestContext(context, async () => {
+  return runWithRequestContext(context, async () => {
     try {
       if (hostedRuntime && session) {
         await hydrateHostedWorkspace(session);
@@ -131,9 +131,7 @@ export async function handleRequest(req, res) {
         authUrl.searchParams.set("state", stateToken);
         authUrl.searchParams.set("access_type", "online");
         authUrl.searchParams.set("prompt", "select_account");
-        res.writeHead(302, { Location: authUrl.toString() });
-        res.end();
-        return;
+        return redirect(res, authUrl.toString());
       }
 
       if (req.method === "GET" && url.pathname === "/auth/google/callback") {
@@ -145,7 +143,7 @@ export async function handleRequest(req, res) {
         const expectedState = cookies[googleStateCookieName] || "";
         clearCookie(res, googleStateCookieName);
         if (!code || !returnedState || returnedState !== expectedState) {
-          return sendHtml(res, renderSimpleMessagePage("Google sign-in could not be verified. Please try again."));
+          return redirect(res, "/?authError=google");
         }
 
         const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
@@ -160,13 +158,13 @@ export async function handleRequest(req, res) {
           })
         });
         if (!tokenResponse.ok) {
-          return sendHtml(res, renderSimpleMessagePage("Google sign-in failed while exchanging the login code."));
+          return redirect(res, "/?authError=google");
         }
 
         const tokenBody = await tokenResponse.json();
         const accessToken = String(tokenBody.access_token || "").trim();
         if (!accessToken) {
-          return sendHtml(res, renderSimpleMessagePage("Google sign-in failed because no access token was returned."));
+          return redirect(res, "/?authError=google");
         }
 
         const profileResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
@@ -175,7 +173,7 @@ export async function handleRequest(req, res) {
           }
         });
         if (!profileResponse.ok) {
-          return sendHtml(res, renderSimpleMessagePage("Google sign-in failed while loading the account profile."));
+          return redirect(res, "/?authError=google");
         }
 
         const profile = await profileResponse.json();
@@ -193,9 +191,7 @@ export async function handleRequest(req, res) {
               avatar: profile.picture
             });
         setSessionCookie(res, signedIn.sessionToken);
-        res.writeHead(302, { Location: "/" });
-        res.end();
-        return;
+        return redirect(res, "/");
       }
 
       if (req.method === "POST" && url.pathname === "/api/auth/logout") {
@@ -596,6 +592,11 @@ function sendHtml(res, body) {
     "cache-control": "no-store"
   });
   res.end(body);
+}
+
+function redirect(res, location) {
+  res.writeHead(302, { Location: location });
+  res.end();
 }
 
 function loadLocalEnvFile() {
