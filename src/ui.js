@@ -5100,19 +5100,25 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
         const isEditing = Boolean(entry?.id);
         const title = isEditing ? "Edit Entry" : "Create Entry";
         const saveLabel = isEditing ? "Save Changes" : "Save Entry";
-        openModal(
-          title,
-          '<label>Aura Entry<textarea id="aura-entry-text" placeholder="Type whatever you want to remember about this item...">' + escapeHtml(entry?.entryText || "") + '</textarea></label>' +
-          '<div class="save-row"><button id="save-aura-entry" type="button">' + saveLabel + '</button></div>',
-          (modal) => {
-            const textarea = modal.querySelector("#aura-entry-text");
-            const button = modal.querySelector("#save-aura-entry");
-            textarea?.focus();
-            button?.addEventListener("click", async () => {
-              if (state.entrySaveInFlight) {
-                return;
-              }
-              const entryText = textarea?.value || "";
+      openModal(
+  title,
+  '<label>Rating<input id="aura-entry-rating" type="number" min="1" max="5" placeholder="1 to 5" value="' + escapeHtml(String(entry?.rating || "")) + '"></label>' +
+  '<label>Aura Entry<textarea id="aura-entry-text" placeholder="Type whatever you want to remember about this item...">' + escapeHtml(entry?.entryText || "") + '</textarea></label>' +
+  '<div class="save-row"><button id="save-aura-entry" type="button">' + saveLabel + '</button></div>',
+  (modal) => {
+    const textarea = modal.querySelector("#aura-entry-text");
+    const ratingInput = modal.querySelector("#aura-entry-rating");
+    const button = modal.querySelector("#save-aura-entry");
+
+    textarea?.focus();
+
+    button?.addEventListener("click", async () => {
+      if (state.entrySaveInFlight) {
+        return;
+      }
+
+      const rating = Number(ratingInput?.value || 0);
+      const entryText = textarea?.value || "";
               state.entrySaveInFlight = true;
               button.disabled = true;
               button.textContent = "Saving...";
@@ -5120,11 +5126,11 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
                 const saved = isEditing
                   ? await api("/api/aura/whiskies/" + encodeURIComponent(whisky.id) + "/entries/" + encodeURIComponent(entry.id), {
                       method: "PATCH",
-                      body: JSON.stringify({ entryText })
+                      body: JSON.stringify({ entryText, rating })
                     })
                   : await api("/api/aura/whiskies/" + encodeURIComponent(whisky.id) + "/entries", {
                       method: "POST",
-                      body: JSON.stringify({ entryText })
+                      body: JSON.stringify({ entryText, rating })
                     });
                 if (!state.detail?.entries) {
                   state.detail.entries = [];
