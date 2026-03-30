@@ -5102,8 +5102,14 @@ export function renderAuraApp(initialPath = "/aura/whiskies") {
         const saveLabel = isEditing ? "Save Changes" : "Save Entry";
       openModal(
   title,
-  '<label>Rating<input id="aura-entry-rating" type="number" min="1" max="5" placeholder="1 to 5" value="' + escapeHtml(String(entry?.rating || "")) + '"></label>' +
-  '<label>Aura Entry<textarea id="aura-entry-text" placeholder="Type whatever you want to remember about this item...">' + escapeHtml(entry?.entryText || "") + '</textarea></label>' +
+'<label>Rating<select id="aura-entry-rating">' +
+'<option value="">Rating</option>' +
+'<option value="1"' + ((entry?.rating === 1) ? ' selected' : '') + '>★☆☆☆☆</option>' +
+'<option value="2"' + ((entry?.rating === 2) ? ' selected' : '') + '>★★☆☆☆</option>' +
+'<option value="3"' + ((entry?.rating === 3) ? ' selected' : '') + '>★★★☆☆</option>' +
+'<option value="4"' + ((entry?.rating === 4) ? ' selected' : '') + '>★★★★☆</option>' +
+'<option value="5"' + ((entry?.rating === 5) ? ' selected' : '') + '>★★★★★</option>' +
+'</select></label>' +  '<label>Aura Entry<textarea id="aura-entry-text" placeholder="Type whatever you want to remember about this item...">' + escapeHtml(entry?.entryText || "") + '</textarea></label>' +
   '<div class="save-row"><button id="save-aura-entry" type="button">' + saveLabel + '</button></div>',
   (modal) => {
     const textarea = modal.querySelector("#aura-entry-text");
