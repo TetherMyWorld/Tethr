@@ -993,20 +993,26 @@ export function hydrateWorkspaceSnapshot(snapshot = {}) {
     }
 
     for (const notes of auraWhiskyUserNotes) {
-      db.prepare(
-        `INSERT INTO aura_whisky_user_notes (
-           id, whisky_id, workspace_id, user_id, tasting_notes, personal_notes, created_at, updated_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-      ).run(
-        notes.id,
-        notes.whisky_id,
-        notes.workspace_id || workspaceIdValue,
-        notes.user_id || user.id,
-        notes.tasting_notes || "",
-        notes.personal_notes || "",
-        notes.created_at || notes.createdAt || now(),
-        notes.updated_at || notes.updatedAt || now()
-      );
+     db.prepare(`
+  INSERT INTO aura_entries (
+    id,
+    entity_id,
+    category,
+    user_id,
+    rating,
+    notes,
+    created_at
+  )
+  VALUES (?, ?, ?, ?, ?, ?, ?)
+`).run(
+  entry.id,
+  entry.whisky_id || entry.whiskyId,   // maps to entity_id
+  'whisky',
+  user.id,
+  entry.rating || 0,                   // make sure rating exists
+  entry.entry_text || "",              // maps to notes
+  entry.created_at || entry.createdAt || now()
+);
     }
 
     for (const entry of auraWhiskyEntries) {
