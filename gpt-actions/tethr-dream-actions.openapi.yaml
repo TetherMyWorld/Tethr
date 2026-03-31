@@ -1,0 +1,260 @@
+openapi: 3.1.0
+info:
+  title: Tethr Dream Actions
+  version: 1.0.0
+  description: >
+    Actions for storing and retrieving raw dream entries from Tethr Dream.
+    Raw dream data is stored in dream_entries. Interpretation should happen in the GPT conversation, not in storage.
+servers:
+  - url: https://tethr-blue.vercel.app
+paths:
+  /api/gpt/dreams:
+    post:
+      operationId: createDreamEntry
+      summary: Create a new dream entry
+      description: Save a raw dream entry exactly as the user described it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDreamEntryRequest"
+      responses:
+        "201":
+          description: Dream entry stored successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateDreamEntryResponse"
+        "502":
+          description: The dream entry could not be durably synced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateDreamEntryResponse"
+  /api/gpt/dreams/recent:
+    get:
+      operationId: listRecentDreamEntries
+      summary: List recent dream entries
+      description: Retrieve the user's most recent dream entries.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+        - name: timezone
+          in: query
+          required: false
+          schema:
+            type: string
+            example: America/Chicago
+      responses:
+        "200":
+          description: Recent dream entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DreamEntryListResponse"
+  /api/gpt/dreams/search:
+    get:
+      operationId: searchDreamEntries
+      summary: Search dream entries
+      description: Search dream entries by text, weekday, or date range.
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: weekday
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - sunday
+              - monday
+              - tuesday
+              - wednesday
+              - thursday
+              - friday
+              - saturday
+        - name: dateFrom
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - name: timezone
+          in: query
+          required: false
+          schema:
+            type: string
+            example: America/Chicago
+      responses:
+        "200":
+          description: Matching dream entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DreamEntrySearchResponse"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    DreamEntry:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        userId:
+          type: string
+        dreamSummary:
+          type: string
+        restfulnessRating:
+          type:
+            - integer
+            - "null"
+          minimum: 1
+          maximum: 5
+        wakeFeeling:
+          type: string
+        sleepContextNotes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        localDate:
+          type: string
+          format: date
+        weekday:
+          type: string
+        timeZone:
+          type: string
+      required:
+        - id
+        - dreamSummary
+        - wakeFeeling
+        - sleepContextNotes
+        - createdAt
+        - updatedAt
+        - localDate
+        - weekday
+        - timeZone
+    CreateDreamEntryRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        dreamSummary:
+          type: string
+          description: The user's raw summary of the dream
+        restfulnessRating:
+          type:
+            - integer
+            - "null"
+          minimum: 1
+          maximum: 5
+        wakeFeeling:
+          type: string
+        sleepContextNotes:
+          type: string
+      required:
+        - dreamSummary
+    CreateDreamEntryResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        success:
+          type: boolean
+        entry:
+          $ref: "#/components/schemas/DreamEntry"
+        supabaseSync:
+          type: object
+          additionalProperties: true
+      required:
+        - success
+        - entry
+    DreamEntryListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+        total:
+          type: integer
+        limit:
+          type: integer
+        timeZone:
+          type: string
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/DreamEntry"
+      required:
+        - success
+        - total
+        - limit
+        - timeZone
+        - entries
+    DreamEntrySearchResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+        query:
+          type: string
+        weekday:
+          type: string
+        dateFrom:
+          type: string
+        dateTo:
+          type: string
+        limit:
+          type: integer
+        total:
+          type: integer
+        timeZone:
+          type: string
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/DreamEntry"
+      required:
+        - success
+        - query
+        - weekday
+        - dateFrom
+        - dateTo
+        - limit
+        - total
+        - timeZone
+        - entries
+security:
+  - bearerAuth: []

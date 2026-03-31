@@ -5680,6 +5680,137 @@ export function renderPrintLabelPage({ name, entityType, qrUrl, size }) {
 </html>`;
 }
 
+export function renderPrivacyPage() {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tethr Privacy Policy</title>
+    <style>
+      :root {
+        --bg:#eef4fb;
+        --panel:#ffffff;
+        --ink:#18202b;
+        --muted:#5f6b7b;
+        --accent:#16508c;
+        --line:rgba(24,32,43,.1);
+        --shadow:0 24px 56px rgba(20,38,64,.12);
+        --heading-font:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+        --body-font:"Aptos","Segoe UI","Trebuchet MS",sans-serif;
+      }
+      * { box-sizing:border-box; }
+      body {
+        margin:0;
+        font-family:var(--body-font);
+        color:var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(15,109,115,.16), transparent 22%),
+          radial-gradient(circle at top right, rgba(22,80,140,.18), transparent 22%),
+          linear-gradient(180deg, #f7fbff 0%, #eef4fb 48%, #e5edf6 100%);
+      }
+      main {
+        max-width:860px;
+        margin:0 auto;
+        padding:48px 24px 56px;
+      }
+      .card {
+        background:var(--panel);
+        border:1px solid rgba(255,255,255,.7);
+        border-radius:28px;
+        box-shadow:var(--shadow);
+        padding:36px;
+      }
+      h1,h2 {
+        font-family:var(--heading-font);
+        letter-spacing:-.04em;
+        margin:0 0 14px;
+      }
+      h1 { font-size:clamp(2.3rem,5vw,3.5rem); line-height:.95; }
+      h2 { font-size:1.5rem; margin-top:26px; }
+      p, li {
+        color:var(--muted);
+        font-size:1rem;
+        line-height:1.65;
+      }
+      ul { padding-left:20px; margin:10px 0 0; }
+      a { color:var(--accent); text-decoration:none; }
+      .eyebrow {
+        display:inline-flex;
+        align-items:center;
+        padding:7px 12px;
+        border-radius:999px;
+        background:#dfeafb;
+        color:#123a64;
+        font-size:.86rem;
+        font-weight:700;
+        letter-spacing:.02em;
+        text-transform:uppercase;
+        margin-bottom:18px;
+      }
+      .meta {
+        margin-top:26px;
+        font-size:.95rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="card">
+        <div class="eyebrow">Tethr Privacy Policy</div>
+        <h1>Privacy Policy</h1>
+        <p>
+          Tethr is designed to help users store private personal information, including dream entries and related notes.
+          We aim to keep that information private to the user's account and workspace.
+        </p>
+
+        <h2>What Tethr Stores</h2>
+        <p>
+          Tethr may store information that a user chooses to provide, including dream summaries, feelings on waking,
+          sleep context notes, and other journal-like entries. Tethr may also store account, workspace, and application
+          data needed to operate the service.
+        </p>
+
+        <h2>How Dream Data Is Used</h2>
+        <p>
+          Dream entries are stored so the user can review them later and use them for reflection, pattern analysis,
+          and AI-assisted discussion. Raw dream entries are intended to remain separate from later AI interpretation.
+        </p>
+
+        <h2>AI and External Services</h2>
+        <p>
+          If a user connects Tethr to AI tools or custom GPT actions, limited data may be sent to those systems to
+          complete the user's request. Tethr is designed so that raw dream entries remain under the user's control,
+          and external analysis should be treated as a separate layer from the original stored entry.
+        </p>
+
+        <h2>Sharing</h2>
+        <p>
+          Tethr is currently intended for private use. Features for sharing or collaboration may be added later,
+          but private dream entries should be treated as private by default unless the product explicitly says otherwise.
+        </p>
+
+        <h2>Security</h2>
+        <p>
+          We use reasonable efforts to protect stored data, but no system can guarantee absolute security.
+          Users should avoid storing highly sensitive information unless they are comfortable with the risks of using an online service.
+        </p>
+
+        <h2>Contact</h2>
+        <p>
+          If you have questions about this privacy policy, please contact the Tethr project owner through the contact method
+          associated with the deployed service.
+        </p>
+
+        <p class="meta">
+          Last updated: March 31, 2026
+        </p>
+      </section>
+    </main>
+  </body>
+</html>`;
+}
+
 function labelSizeDefinitionForPrint(size) {
   if (size === "small") {
     return { width: "2.25in", qr: 150, qrShell: "1.75in", title: "1rem", subtitle: ".7rem", note: ".64rem", padding: ".18in", gap: ".12in", qrPad: ".08in", typePad: ".05in .12in" };

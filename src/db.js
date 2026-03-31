@@ -187,6 +187,23 @@ db.exec(`
     FOREIGN KEY (container_id) REFERENCES containers(id) ON DELETE CASCADE
   );
 
+  CREATE TABLE IF NOT EXISTS dream_entries (
+    id TEXT PRIMARY KEY,
+    workspace_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    dream_summary TEXT NOT NULL,
+    restfulness_rating INTEGER CHECK (
+      restfulness_rating IS NULL
+      OR (restfulness_rating BETWEEN 1 AND 5)
+    ),
+    wake_feeling TEXT NOT NULL DEFAULT '',
+    sleep_context_notes TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
   CREATE TABLE IF NOT EXISTS tags (
     id TEXT PRIMARY KEY,
     workspace_id TEXT NOT NULL,
@@ -274,6 +291,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_item_event_log_item_created ON item_event_log (workspace_id, item_id, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_container_event_log_container_created ON container_event_log (workspace_id, container_id, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_container_activity_log_container_created ON container_activity_log (workspace_id, container_id, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_dream_entries_workspace_user_created ON dream_entries (workspace_id, user_id, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_tags_workspace_token ON tags (workspace_id, token);
   CREATE INDEX IF NOT EXISTS idx_tags_entity ON tags (workspace_id, entity_type, entity_id);
   CREATE UNIQUE INDEX IF NOT EXISTS idx_workspace_members_unique ON workspace_members (workspace_id, user_id);
@@ -715,6 +733,7 @@ export function hydrateWorkspaceSnapshot(snapshot = {}) {
   const itemEventLog = Array.isArray(snapshot.itemEventLog) ? snapshot.itemEventLog : [];
   const containerEventLog = Array.isArray(snapshot.containerEventLog) ? snapshot.containerEventLog : [];
   const containerActivityLog = Array.isArray(snapshot.containerActivityLog) ? snapshot.containerActivityLog : [];
+  const dreamEntries = Array.isArray(snapshot.dreamEntries) ? snapshot.dreamEntries : [];
   const auraWhiskies = Array.isArray(snapshot.auraWhiskies) ? snapshot.auraWhiskies : [];
   const auraWhiskyUserNotes = Array.isArray(snapshot.auraWhiskyUserNotes) ? snapshot.auraWhiskyUserNotes : [];
   const auraWhiskyEntries = Array.isArray(snapshot.auraWhiskyEntries) ? snapshot.auraWhiskyEntries : [];
@@ -784,6 +803,7 @@ export function hydrateWorkspaceSnapshot(snapshot = {}) {
     db.prepare("DELETE FROM items WHERE workspace_id = ?").run(workspaceIdValue);
     db.prepare("DELETE FROM containers WHERE workspace_id = ?").run(workspaceIdValue);
     db.prepare("DELETE FROM locations WHERE workspace_id = ?").run(workspaceIdValue);
+    db.prepare("DELETE FROM dream_entries WHERE workspace_id = ? AND user_id = ?").run(workspaceIdValue, user.id);
     db.prepare("DELETE FROM aura_whisky_entries WHERE workspace_id = ? AND user_id = ?").run(workspaceIdValue, user.id);
     db.prepare("DELETE FROM aura_whisky_user_notes WHERE workspace_id = ? AND user_id = ?").run(workspaceIdValue, user.id);
     db.exec("DELETE FROM aura_whiskies");
@@ -965,6 +985,24 @@ export function hydrateWorkspaceSnapshot(snapshot = {}) {
       );
     }
 
+    for (const entry of dreamEntries) {
+      db.prepare(
+        `INSERT INTO dream_entries (
+           id, workspace_id, user_id, dream_summary, restfulness_rating, wake_feeling, sleep_context_notes, created_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        entry.id,
+        workspaceIdValue,
+        entry.user_id || entry.userId || user.id,
+        entry.dream_summary || entry.dreamSummary || "",
+        entry.restfulness_rating ?? entry.restfulnessRating ?? null,
+        entry.wake_feeling || entry.wakeFeeling || "",
+        entry.sleep_context_notes || entry.sleepContextNotes || "",
+        entry.created_at || entry.createdAt || now(),
+        entry.updated_at || entry.updatedAt || now()
+      );
+    }
+
     for (const whisky of auraWhiskies) {
       db.prepare(
         `INSERT INTO aura_whiskies (
@@ -1132,6 +1170,137 @@ function defaultAuraWhiskyUserNotes(whiskyId) {
 
 function auraNormalizeText(value) {
   return String(value || "").trim();
+}
+
+function normalizeDreamRating(value) {
+  if (value === undefined || value === null || String(value).trim() === "") {
+    return null;
+  }
+
+  const rating = Number.parseInt(String(value), 10);
+  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+    throw new Error("Restfulness rating must be between 1 and 5");
+  }
+  return rating;
+}
+
+function normalizeDreamLimit(value, fallback = 10) {
+  if (value === undefined || value === null || String(value).trim() === "") {
+    return fallback;
+  }
+
+  const limit = Number.parseInt(String(value), 10);
+  if (!Number.isFinite(limit) || limit < 1 || limit > 50) {
+    throw new Error("Limit must be between 1 and 50");
+  }
+  return limit;
+}
+
+function normalizeDreamDate(value, fieldName) {
+  const date = String(value || "").trim();
+  if (!date) {
+    return "";
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new Error(`${fieldName} must use YYYY-MM-DD format`);
+  }
+  return date;
+}
+
+function normalizeDreamWeekday(value) {
+  const weekday = String(value || "").trim().toLowerCase();
+  if (!weekday) {
+    return "";
+  }
+
+  const allowed = new Set([
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday"
+  ]);
+  if (!allowed.has(weekday)) {
+    throw new Error("Weekday must be a full day name like friday");
+  }
+  return weekday;
+}
+
+function normalizeDreamTimeZone(value) {
+  const fallback = String(process.env.GPT_ACTIONS_TIMEZONE || "UTC").trim() || "UTC";
+  const timeZone = String(value || "").trim() || fallback;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone }).format(new Date());
+    return timeZone;
+  } catch {
+    return fallback;
+  }
+}
+
+function dreamTimingDetails(timestamp, timeZone) {
+  const instant = new Date(timestamp);
+  if (Number.isNaN(instant.getTime())) {
+    return {
+      localDate: "",
+      weekday: "",
+      timeZone
+    };
+  }
+
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "long"
+  }).formatToParts(instant);
+
+  const lookup = (type) => parts.find((part) => part.type === type)?.value || "";
+
+  return {
+    localDate: `${lookup("year")}-${lookup("month")}-${lookup("day")}`,
+    weekday: lookup("weekday").toLowerCase(),
+    timeZone
+  };
+}
+
+function mapDreamEntry(row, options = {}) {
+  if (!row) {
+    return null;
+  }
+
+  const timeZone = normalizeDreamTimeZone(options.timeZone || options.timezone);
+  const timing = dreamTimingDetails(row.created_at, timeZone);
+
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    userId: row.user_id,
+    dreamSummary: row.dream_summary || "",
+    restfulnessRating: row.restfulness_rating == null ? null : Number(row.restfulness_rating),
+    wakeFeeling: row.wake_feeling || "",
+    sleepContextNotes: row.sleep_context_notes || "",
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    localDate: timing.localDate,
+    weekday: timing.weekday,
+    timeZone
+  };
+}
+
+function listDreamEntryRows(workspaceIdValue = workspaceId(), userIdValue = currentUserId()) {
+  if (!workspaceIdValue || !userIdValue) {
+    return [];
+  }
+
+  return db.prepare(
+    `SELECT id, workspace_id, user_id, dream_summary, restfulness_rating, wake_feeling, sleep_context_notes, created_at, updated_at
+     FROM dream_entries
+     WHERE workspace_id = ? AND user_id = ?
+     ORDER BY created_at DESC, updated_at DESC, id DESC`
+  ).all(workspaceIdValue, userIdValue);
 }
 
 function getAuraWhiskyRow(id) {
@@ -1415,6 +1584,108 @@ export function upsertAuraWhiskyUserNotes(whiskyId, input = {}) {
   }
 
   return getAuraWhiskyDetail(whisky.id).myNotes;
+}
+
+export function createDreamEntry(input = {}) {
+  const workspaceIdValue = workspaceId();
+  const userIdValue = currentUserId();
+  if (!userIdValue) {
+    throw new Error("Please sign in.");
+  }
+
+  const dreamSummary = auraNormalizeText(input.dreamSummary ?? input.dream_summary);
+  if (!dreamSummary) {
+    throw new Error("Dream summary is required");
+  }
+
+  const timestamp = now();
+  const id = randomUUID();
+  db.prepare(
+    `INSERT INTO dream_entries (
+       id, workspace_id, user_id, dream_summary, restfulness_rating, wake_feeling, sleep_context_notes, created_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(
+    id,
+    workspaceIdValue,
+    userIdValue,
+    dreamSummary,
+    normalizeDreamRating(input.restfulnessRating ?? input.restfulness_rating),
+    auraNormalizeText(input.wakeFeeling ?? input.wake_feeling),
+    auraNormalizeText(input.sleepContextNotes ?? input.sleep_context_notes),
+    timestamp,
+    timestamp
+  );
+
+  return mapDreamEntry(
+    db.prepare(
+      `SELECT id, workspace_id, user_id, dream_summary, restfulness_rating, wake_feeling, sleep_context_notes, created_at, updated_at
+       FROM dream_entries
+       WHERE id = ?`
+    ).get(id)
+  );
+}
+
+export function listRecentDreamEntries(options = {}) {
+  const timeZone = normalizeDreamTimeZone(options.timeZone || options.timezone);
+  const limit = normalizeDreamLimit(options.limit, 10);
+  const rows = listDreamEntryRows()
+    .slice(0, limit)
+    .map((row) => mapDreamEntry(row, { timeZone }));
+
+  return {
+    total: rows.length,
+    limit,
+    timeZone,
+    entries: rows
+  };
+}
+
+export function searchDreamEntries(filters = {}) {
+  const timeZone = normalizeDreamTimeZone(filters.timeZone || filters.timezone);
+  const limit = normalizeDreamLimit(filters.limit, 20);
+  const query = auraNormalizeText(filters.q || filters.query);
+  const weekday = normalizeDreamWeekday(filters.weekday);
+  const dateFrom = normalizeDreamDate(filters.dateFrom || filters.date_from, "dateFrom");
+  const dateTo = normalizeDreamDate(filters.dateTo || filters.date_to, "dateTo");
+
+  let entries = listDreamEntryRows().map((row) => mapDreamEntry(row, { timeZone }));
+
+  if (query) {
+    const needle = query.toLowerCase();
+    entries = entries.filter((entry) => (
+      [
+        entry.dreamSummary,
+        entry.wakeFeeling,
+        entry.sleepContextNotes
+      ].join(" ").toLowerCase().includes(needle)
+    ));
+  }
+
+  if (weekday) {
+    entries = entries.filter((entry) => entry.weekday === weekday);
+  }
+
+  if (dateFrom) {
+    entries = entries.filter((entry) => entry.localDate >= dateFrom);
+  }
+
+  if (dateTo) {
+    entries = entries.filter((entry) => entry.localDate <= dateTo);
+  }
+
+  const total = entries.length;
+  entries = entries.slice(0, limit);
+
+  return {
+    query,
+    weekday,
+    dateFrom,
+    dateTo,
+    limit,
+    total,
+    timeZone,
+    entries
+  };
 }
 
 function findAuraWhiskyByStableKey(name, distillery) {

@@ -6,6 +6,7 @@ import { Readable } from "node:stream";
 import { pathToFileURL } from "node:url";
 import {
   assignTag,
+  createDreamEntry,
   createAuraWhiskyEntry,
   updateAuraWhiskyEntry,
   createContainer,
@@ -24,7 +25,9 @@ import {
   getPhotoFile,
   getSessionByToken,
   hydrateWorkspaceSnapshot,
+  listRecentDreamEntries,
   listAuraWhiskies,
+  searchDreamEntries,
   upsertAuraWhiskyUserNotes,
   normalizeUserEmail,
   getTag,
@@ -44,7 +47,7 @@ import {
   updateItem,
   updateLocation
 } from "./db.js";
-import { renderApp, renderAuraApp, renderAuraHome, renderPrintLabelPage, renderTethrHome } from "./ui.js";
+import { renderApp, renderAuraApp, renderAuraHome, renderPrintLabelPage, renderPrivacyPage, renderTethrHome } from "./ui.js";
 
 loadLocalEnvFile();
 
@@ -63,24 +66,32 @@ const supabaseConfigured = Boolean(
   process.env.SUPABASE_SECRET_KEY
 );
 const hostedRuntime = Boolean(process.env.VERCEL && supabaseConfigured);
+const gptActionsApiKey = String(process.env.GPT_ACTIONS_API_KEY || "").trim();
+const gptActionsWorkspaceId = String(process.env.GPT_ACTIONS_WORKSPACE_ID || "").trim();
+const gptActionsUserId = String(process.env.GPT_ACTIONS_USER_ID || "").trim();
 let supabaseBucketEnsured = false;
 
 export async function handleRequest(req, res) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
   const cookies = parseCookies(req.headers.cookie || "");
   const sessionToken = cookies[sessionCookieName] || "";
   const session = hostedRuntime
     ? getHostedSessionByToken(sessionToken)
     : getSessionByToken(sessionToken);
+  const gptActionSession = url.pathname.startsWith("/api/gpt/")
+    ? await requireGptActionSession(req)
+    : null;
   const context = session
     ? { userId: session.user.id, workspaceId: session.workspace.id, session }
-    : {};
+    : gptActionSession
+      ? { userId: gptActionSession.user.id, workspaceId: gptActionSession.workspace.id, session: gptActionSession }
+      : {};
 
   return runWithRequestContext(context, async () => {
     try {
-      if (hostedRuntime && session) {
-        await hydrateHostedWorkspace(session);
+      if (hostedRuntime && (session || gptActionSession)) {
+        await hydrateHostedWorkspace(gptActionSession || session);
       }
-      const url = new URL(req.url, `http://${req.headers.host}`);
 
       if (req.method === "GET" && url.pathname.startsWith("/uploads/")) {
         return serveUpload(url.pathname, res);
@@ -217,6 +228,10 @@ export async function handleRequest(req, res) {
         return sendHtml(res, renderAuraHome());
       }
 
+      if (req.method === "GET" && url.pathname === "/privacy") {
+        return sendHtml(res, renderPrivacyPage());
+      }
+
       if (req.method === "GET" && (url.pathname === "/aura/whiskies" || url.pathname.startsWith("/aura/whiskies/"))) {
         return sendHtml(res, renderAuraApp(url.pathname));
       }
@@ -243,6 +258,43 @@ export async function handleRequest(req, res) {
             supabaseUrl: process.env.SUPABASE_URL || "",
             bucket: supabaseStorageBucket
           }
+        });
+      }
+
+      if (gptActionSession && req.method === "POST" && url.pathname === "/api/gpt/dreams") {
+        const entry = createDreamEntry(await readJson(req));
+        const syncStatus = hostedRuntime
+          ? await syncDreamEntryToSupabase(gptActionSession, entry)
+          : { synced: true, mode: "local" };
+        const persisted = !hostedRuntime || syncStatus.synced;
+        return sendJson(res, persisted ? 201 : 502, {
+          success: persisted,
+          entry,
+          supabaseSync: syncStatus
+        });
+      }
+
+      if (gptActionSession && req.method === "GET" && url.pathname === "/api/gpt/dreams/recent") {
+        return sendJson(res, 200, {
+          success: true,
+          ...listRecentDreamEntries({
+            limit: url.searchParams.get("limit") || "",
+            timeZone: url.searchParams.get("timezone") || ""
+          })
+        });
+      }
+
+      if (gptActionSession && req.method === "GET" && url.pathname === "/api/gpt/dreams/search") {
+        return sendJson(res, 200, {
+          success: true,
+          ...searchDreamEntries({
+            q: url.searchParams.get("q") || "",
+            weekday: url.searchParams.get("weekday") || "",
+            dateFrom: url.searchParams.get("dateFrom") || url.searchParams.get("date_from") || "",
+            dateTo: url.searchParams.get("dateTo") || url.searchParams.get("date_to") || "",
+            limit: url.searchParams.get("limit") || "",
+            timeZone: url.searchParams.get("timezone") || ""
+          })
         });
       }
 
@@ -565,11 +617,13 @@ export async function handleRequest(req, res) {
 
       sendJson(res, 404, { error: "Not found" });
     } catch (error) {
-      const status = error.message === "Unexpected end of JSON input"
-        ? 400
-        : error.message === "Please sign in."
-          ? 401
-          : 500;
+      const status = Number.isInteger(error?.statusCode)
+        ? error.statusCode
+        : error.message === "Unexpected end of JSON input"
+          ? 400
+          : error.message === "Please sign in."
+            ? 401
+            : 500;
       sendJson(res, status, { error: error.message || "Unexpected error" });
     }
   });
@@ -866,6 +920,7 @@ async function hydrateHostedWorkspace(session) {
     auraWhiskies,
     auraWhiskyUserNotes,
     auraWhiskyEntries,
+    dreamEntries,
     locations,
     containers,
     items,
@@ -886,6 +941,10 @@ async function hydrateHostedWorkspace(session) {
       "aura_whisky_entries",
       `?workspace_id=eq.${encodeURIComponent(workspaceId)}&user_id=eq.${encodeURIComponent(session.user.id)}&select=*`
     ),
+    supabaseSelect(
+      "dream_entries",
+      `?workspace_id=eq.${encodeURIComponent(workspaceId)}&user_id=eq.${encodeURIComponent(session.user.id)}&select=*`
+    ),
     supabaseSelect("locations", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`),
     supabaseSelect("containers", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`),
     supabaseSelect("items", `?workspace_id=eq.${encodeURIComponent(workspaceId)}&select=*`),
@@ -903,6 +962,7 @@ async function hydrateHostedWorkspace(session) {
     auraWhiskies,
     auraWhiskyUserNotes,
     auraWhiskyEntries,
+    dreamEntries,
     locations,
     containers,
     items,
@@ -920,6 +980,85 @@ function ensureAuthenticated(session) {
   if (!session) {
     throw new Error("Please sign in.");
   }
+}
+
+function safeSecretEqual(left, right) {
+  const leftValue = Buffer.from(String(left || ""), "utf8");
+  const rightValue = Buffer.from(String(right || ""), "utf8");
+  if (!leftValue.length || !rightValue.length || leftValue.length !== rightValue.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(leftValue, rightValue);
+}
+
+function authorizationBearerToken(req) {
+  const header = String(req.headers.authorization || "").trim();
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  return match ? String(match[1] || "").trim() : "";
+}
+
+async function requireGptActionSession(req) {
+  if (!gptActionsApiKey || !gptActionsWorkspaceId || !gptActionsUserId) {
+    const error = new Error("GPT actions are not configured.");
+    error.statusCode = 503;
+    throw error;
+  }
+
+  const providedToken = authorizationBearerToken(req);
+  if (!safeSecretEqual(providedToken, gptActionsApiKey)) {
+    const error = new Error("Unauthorized GPT action request.");
+    error.statusCode = 401;
+    throw error;
+  }
+
+  if (!hostedRuntime) {
+    return {
+      user: {
+        id: gptActionsUserId,
+        googleId: "",
+        email: "",
+        name: "GPT Actions",
+        avatar: "",
+        createdAt: "",
+        updatedAt: ""
+      },
+      workspace: {
+        id: gptActionsWorkspaceId,
+        name: "Tethr",
+        ownerUserId: gptActionsUserId,
+        createdAt: "",
+        updatedAt: "",
+        role: "owner"
+      },
+      workspaces: []
+    };
+  }
+
+  const [userRows, workspaceRows, membershipRows] = await Promise.all([
+    supabaseSelect("users", `?id=eq.${encodeURIComponent(gptActionsUserId)}&select=*`),
+    supabaseSelect("workspaces", `?id=eq.${encodeURIComponent(gptActionsWorkspaceId)}&select=*`),
+    supabaseSelect(
+      "workspace_members",
+      `?workspace_id=eq.${encodeURIComponent(gptActionsWorkspaceId)}&user_id=eq.${encodeURIComponent(gptActionsUserId)}&select=*`
+    )
+  ]);
+
+  const user = userRows[0] ? mapSupabaseUser(userRows[0]) : null;
+  const workspace = workspaceRows[0]
+    ? mapSupabaseWorkspace(workspaceRows[0], membershipRows[0]?.role || "owner")
+    : null;
+
+  if (!user || !workspace) {
+    const error = new Error("GPT action user or workspace is not available.");
+    error.statusCode = 503;
+    throw error;
+  }
+
+  return {
+    user,
+    workspace,
+    workspaces: [workspace]
+  };
 }
 
 async function getSupabaseStatus() {
@@ -1548,6 +1687,35 @@ async function syncAuraWhiskyEntryToSupabase(session, entry) {
     return { synced: true };
   } catch (error) {
     console.error("Supabase Aura entry sync failed:", error);
+    return {
+      synced: false,
+      reason: String(error.message || error)
+    };
+  }
+}
+
+async function syncDreamEntryToSupabase(session, entry) {
+  if (!supabaseConfigured) {
+    return { synced: false, reason: "Supabase is not configured." };
+  }
+
+  try {
+    await syncSessionCoreToSupabase(session);
+    await upsertSupabaseRow("dream_entries", {
+      id: entry.id,
+      workspace_id: session.workspace.id,
+      user_id: session.user.id,
+      dream_summary: entry.dreamSummary || "",
+      restfulness_rating: entry.restfulnessRating ?? null,
+      wake_feeling: entry.wakeFeeling || "",
+      sleep_context_notes: entry.sleepContextNotes || "",
+      created_at: entry.createdAt || new Date().toISOString(),
+      updated_at: entry.updatedAt || new Date().toISOString()
+    }, "id");
+
+    return { synced: true };
+  } catch (error) {
+    console.error("Supabase dream entry sync failed:", error);
     return {
       synced: false,
       reason: String(error.message || error)
