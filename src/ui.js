@@ -13,6 +13,8 @@ export function renderApp(initialContainerId) {
         radial-gradient(circle at top center, rgba(176,125,31,.15), transparent 24%),
         radial-gradient(circle at top right, rgba(22,80,140,.18), transparent 24%),
         linear-gradient(180deg, #f5f9ff 0%, #e9f0f8 34%, var(--bg) 70%, var(--bg-deep) 100%); }
+      body.home-stage { background:
+        radial-gradient(circle at top left, rgba(255,255,255,.96), rgba(245,249,255,.9) 40%, rgba(228,235,243,.94) 100%); }
       a { color:var(--accent); text-decoration:none; }
       img { width:100%; border-radius:16px; display:block; -webkit-user-drag:none; user-select:none; -webkit-user-select:none; }
       .shell { max-width:1240px; margin:0 auto; padding:40px 28px 44px; display:grid; gap:24px; }
@@ -121,6 +123,40 @@ export function renderApp(initialContainerId) {
       .stage-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
       .empty-state { padding:56px 26px; border:1px dashed rgba(22,80,140,.18); border-radius:24px; text-align:center; background:linear-gradient(180deg,#f8fbff 0%,#e6eef8 100%); }
       .empty-state h3 { margin:0 0 8px; font-size:1.25rem; letter-spacing:-.02em; }
+      .search-results-shell,.search-results-list,.search-results-summary { display:grid; gap:16px; }
+      .search-results-toolbar { display:flex; gap:18px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+      .search-results-summary { gap:6px; }
+      .search-results-count { font-size:1rem; color:var(--muted); }
+      .search-results-count strong { color:var(--ink); }
+      .search-filter-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+      .search-filter-chip { width:auto; min-width:0; padding:10px 14px; border-radius:999px; border:1px solid rgba(24,62,99,.12); background:linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(231,239,248,.94) 100%); color:var(--accent-strong); box-shadow:0 8px 18px rgba(22,80,140,.08); }
+      .search-filter-chip.active { background:linear-gradient(180deg, #f8fbff 0%, #dfeafb 100%); border-color:rgba(22,80,140,.24); color:var(--accent-strong); }
+      .search-result-card { width:100%; text-align:left; display:grid; grid-template-columns:88px minmax(0,1fr) auto; gap:18px; align-items:center; padding:18px; border:1px solid rgba(24,62,99,.10); border-radius:24px; background:linear-gradient(180deg, rgba(253,254,255,.98) 0%, rgba(240,245,251,.96) 100%); color:var(--ink); box-shadow:var(--shadow-soft), inset 0 1px 0 rgba(255,255,255,.7); transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease; }
+      .search-result-card:hover { transform:translateY(-2px); border-color:rgba(24,62,99,.18); box-shadow:0 20px 34px rgba(27,42,63,.12); }
+      .search-result-thumb { width:88px; height:88px; border-radius:22px; overflow:hidden; border:1px solid rgba(24,62,99,.10); background:linear-gradient(145deg, rgba(229,234,242,.92), rgba(244,242,236,.96)); box-shadow:0 8px 16px rgba(27,42,63,.08); display:flex; align-items:center; justify-content:center; }
+      .search-result-thumb img { width:100%; height:100%; object-fit:cover; border-radius:0; }
+      .search-result-thumb.placeholder { font-family:var(--heading-font); font-size:1.7rem; line-height:1; color:var(--accent-strong); letter-spacing:-.04em; }
+      .search-result-body { min-width:0; display:grid; gap:8px; }
+      .search-result-type { width:fit-content; padding:6px 10px; border-radius:999px; background:rgba(22,80,140,.08); color:var(--accent-strong); font-size:.8rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
+      .search-result-title { font-family:var(--heading-font); font-size:1.8rem; line-height:.95; letter-spacing:-.05em; font-weight:700; }
+      .search-result-context { color:var(--muted); font-size:1rem; }
+      .search-result-state { color:var(--accent-strong); font-size:.96rem; font-weight:700; }
+      .search-result-open { color:var(--accent-strong); font-size:.96rem; font-weight:700; white-space:nowrap; }
+      .home-shell-stage { min-height:calc(100vh - 80px); display:grid; align-content:start; justify-items:center; gap:28px; padding:19vh 0 48px; }
+      .home-shell-title { margin:0; font-family:var(--body-font); font-size:clamp(4.3rem, 10vw, 8.4rem); line-height:.93; letter-spacing:-.08em; font-weight:350; text-align:center; }
+      .home-search-wrap { width:min(960px,100%); }
+      .home-search-form { margin:0; }
+      .home-search-frame { width:100%; min-height:110px; border-radius:28px; border:1.5px solid rgba(18,58,100,.28); background:rgba(255,255,255,.78); box-shadow:0 18px 44px rgba(44,55,70,.1); display:flex; align-items:center; gap:16px; padding:0 18px 0 28px; backdrop-filter:blur(18px); }
+      .home-search-input { border:0; outline:0; width:100%; background:transparent; color:var(--ink); font-size:clamp(1.5rem,2.6vw,2.35rem); font-weight:350; letter-spacing:-.03em; }
+      .home-search-input::placeholder { color:rgba(16,17,20,.78); }
+      .home-search-submit { width:auto; min-width:120px; min-height:62px; padding:0 22px; border-radius:999px; }
+      .subject-shell { display:grid; gap:18px; }
+      .subject-support-grid { display:grid; grid-template-columns:minmax(0, 1.5fr) minmax(260px, .9fr); gap:18px; align-items:start; }
+      .subject-meta-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:14px; }
+      .subject-meta-card { display:grid; gap:8px; padding:18px; border-radius:20px; border:1px solid rgba(24,62,99,.08); background:rgba(255,255,255,.52); box-shadow:inset 0 1px 0 rgba(255,255,255,.72); }
+      .subject-meta-label { font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700; }
+      .subject-meta-value { font-family:var(--heading-font); font-size:1.52rem; line-height:.98; letter-spacing:-.05em; color:var(--accent-strong); }
+      .subject-meta-note { color:var(--muted); font-size:.94rem; line-height:1.35; }
       .tile-grid { grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:18px; align-items:stretch; }
       .tile { width:100%; text-align:left; padding:24px; border:1px solid rgba(24,62,99,.07); border-radius:26px; background:
         linear-gradient(180deg, rgba(253,254,255,.98) 0%, rgba(240,245,251,.96) 100%);
@@ -238,6 +274,13 @@ export function renderApp(initialContainerId) {
       .item-row.item-tone-3 { background:linear-gradient(180deg, #fffdf8 0%, #f6e8cb 100%); border-color:rgba(176,125,31,.15); }
       .item-row.item-tone-4 { background:linear-gradient(180deg, #fefafd 0%, #f0ddea 100%); border-color:rgba(159,79,111,.14); }
       .item-row-header { align-items:flex-start; }
+      body.home-stage .shell { max-width:1360px; min-height:100vh; padding:26px 28px 36px; }
+      body.home-stage .topbar { background:transparent; border:0; box-shadow:none; backdrop-filter:none; padding:0; display:flex; justify-content:flex-end; }
+      body.home-stage .brand,
+      body.home-stage .searchbar,
+      body.home-stage .breadcrumbs { display:none; }
+      body.home-stage .panel { background:transparent; border:0; box-shadow:none; backdrop-filter:none; padding:0; }
+      body.home-stage .stage-head { display:none; }
       .item-name { font-family:var(--heading-font); font-size:1.45rem; font-weight:700; letter-spacing:-.04em; }
       .item-quantity { font-family:var(--heading-font); font-size:2.1rem; line-height:1; letter-spacing:-.05em; color:var(--accent-strong); }
       .item-quantity-wrap { display:grid; justify-items:center; width:100%; }
@@ -436,7 +479,7 @@ export function renderApp(initialContainerId) {
       const state = {
         bootstrap: null,
         googleAuthConfigured: false,
-        stage: ${JSON.stringify(initialContainerId ? "container" : "locations")},
+        stage: ${JSON.stringify(initialContainerId ? "container" : "home")},
         selectedLocationId: null,
         activeContainerId: ${JSON.stringify(initialContainerId)},
         activeContainerDetail: null,
@@ -446,6 +489,7 @@ export function renderApp(initialContainerId) {
         scanToken: null,
         pendingScanAction: null,
         searchResults: null,
+        searchFilter: "all",
         messageTimer: null,
         searchTimer: null
       };
@@ -613,6 +657,12 @@ export function renderApp(initialContainerId) {
       const itemTones = ["item-tone-1", "item-tone-2", "item-tone-3", "item-tone-4"];
       const heroTones = ["hero-tone-1", "hero-tone-2", "hero-tone-3", "hero-tone-4"];
       const detailTones = ["detail-tone-1", "detail-tone-2", "detail-tone-3", "detail-tone-4"];
+      const searchFilterOptions = [
+        { key: "all", label: "All" },
+        { key: "locations", label: "Places" },
+        { key: "containers", label: "Containers" },
+        { key: "items", label: "Things" }
+      ];
       const saveActionButton = '<button class="icon-button save-icon" type="submit" aria-label="Save" title="Save">&#10003;</button>';
       const addIconMarkup = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="M12 5v14"/><path d="M5 12h14"/></svg>';
       const plusIconMarkup = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="M12 5v14"/><path d="M5 12h14"/></svg>';
@@ -651,8 +701,7 @@ export function renderApp(initialContainerId) {
         window.addEventListener("unhandledrejection", (event) => {
           showFatalError(event.reason || "The page hit an unexpected async error.");
         });
-        els.searchForm.addEventListener("submit", onSearch);
-        els.searchInput.addEventListener("input", onSearchInput);
+        els.searchForm.addEventListener("submit", onSearchSubmit);
         window.addEventListener("keydown", (event) => {
           if (event.key === "Escape" && !els.modalRoot.hidden) closeModal();
         });
@@ -689,6 +738,7 @@ export function renderApp(initialContainerId) {
         document.title = state.bootstrap.authenticated
           ? state.bootstrap.workspace.name + " | TethrArca"
           : "TethrArca";
+        document.body.classList.toggle("home-stage", Boolean(state.bootstrap.authenticated && state.stage === "home"));
         els.searchInput.disabled = !state.bootstrap.authenticated;
         els.searchInput.placeholder = state.bootstrap.authenticated
           ? "Search locations, containers, or items"
@@ -734,7 +784,12 @@ export function renderApp(initialContainerId) {
           '<button id="topbar-account-button" class="account-badge" type="button" aria-label="Account settings" title="Account settings">' + escapeHtml(getAccountInitials(user)) + '</button>';
         const homeButtonHtml =
           '<button id="topbar-home-button" class="secondary icon-button nav-icon home-icon" type="button" aria-label="Start" title="Start"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 3.2 2.8 10.6a1 1 0 0 0 .62 1.78H5v7.1c0 .83.67 1.5 1.5 1.5h3.8a.7.7 0 0 0 .7-.7V15.2c0-.39.31-.7.7-.7h1.6c.39 0 .7.31.7.7v5.05a.7.7 0 0 0 .7.7h3.8c.83 0 1.5-.67 1.5-1.5v-7.1h1.58a1 1 0 0 0 .62-1.78L12 3.2Z"/></svg></button>';
-        const showBack = state.stage === "containers" || state.stage === "container" || state.stage === "simulatedScan";
+        if (state.stage === "home") {
+          els.topbarNav.innerHTML = '<div class="top-actions">' + accountButtonHtml + '</div>';
+          document.getElementById("topbar-account-button").addEventListener("click", openAccountModal);
+          return;
+        }
+        const showBack = state.stage === "containers" || state.stage === "container" || state.stage === "item" || state.stage === "simulatedScan";
         if (!showBack) {
           els.topbarNav.innerHTML =
             '<div class="top-actions">' +
@@ -742,7 +797,7 @@ export function renderApp(initialContainerId) {
               accountButtonHtml +
             '</div>';
           document.getElementById("topbar-home-button").addEventListener("click", () => {
-            window.location.href = "/";
+            goHome(true);
           });
           document.getElementById("topbar-account-button").addEventListener("click", openAccountModal);
           return;
@@ -757,7 +812,7 @@ export function renderApp(initialContainerId) {
           if (state.stage === "simulatedScan") {
             if (state.activeItemDetail) {
               state.pendingScanAction = null;
-              state.stage = "container";
+              state.stage = "item";
               renderOverview();
               renderStage();
               return;
@@ -770,6 +825,15 @@ export function renderApp(initialContainerId) {
               return;
             }
           }
+          if (state.stage === "item") {
+            state.activeItemId = null;
+            state.activeItemDetail = null;
+            state.revealedItemId = null;
+            state.stage = "container";
+            renderOverview();
+            renderStage();
+            return;
+          }
           if (state.stage === "container") {
             openLocation(state.selectedLocationId || null);
             return;
@@ -779,7 +843,7 @@ export function renderApp(initialContainerId) {
         const homeButton = document.getElementById("topbar-home-button");
         if (homeButton) {
           homeButton.addEventListener("click", () => {
-            window.location.href = "/";
+            goHome(true);
           });
         }
         document.getElementById("topbar-account-button").addEventListener("click", openAccountModal);
@@ -825,8 +889,12 @@ export function renderApp(initialContainerId) {
           renderSignInStage();
           return;
         }
-        if (state.searchResults) {
-          renderSearchStage();
+        if (state.stage === "home") {
+          renderHomeStage();
+          return;
+        }
+        if (state.stage === "search") {
+          renderRouteSearchStage();
           return;
         }
         if (state.stage === "locations") {
@@ -853,7 +921,7 @@ export function renderApp(initialContainerId) {
           renderItemStage();
           return;
         }
-        goToLocations(false);
+        goHome(false);
       }
 
       function renderStageLevels(activeLevel) {
@@ -926,7 +994,7 @@ export function renderApp(initialContainerId) {
       }
 
       function renderSignInStage() {
-        state.stage = "locations";
+        state.stage = "home";
         state.searchResults = null;
         els.stageTitle.textContent = "Welcome";
         els.stageMeta.textContent = "Sign in to get your own private TethrArca workspace.";
@@ -960,6 +1028,7 @@ export function renderApp(initialContainerId) {
               email: form.get("email")
             })
           });
+          history.replaceState({}, "", "/arca");
           showMessage("Signed in.");
           await refreshAll();
           await applyCurrentPath();
@@ -979,8 +1048,54 @@ export function renderApp(initialContainerId) {
         }
       }
 
-      function goToLocations(push = true) {
-        state.stage = "locations";
+      function renderHomeStage() {
+        els.stageLevels.innerHTML = "";
+        els.stageTitle.textContent = "";
+        els.stageMeta.textContent = "";
+        setBreadcrumbs([]);
+        els.stageActions.innerHTML = "";
+        els.stageContent.innerHTML =
+          '<div class="home-shell-stage">' +
+            '<h2 class="home-shell-title">Tethr your world.</h2>' +
+            '<div class="home-search-wrap">' +
+              '<form id="home-search-form" class="home-search-form">' +
+                '<div class="home-search-frame">' +
+                  '<input id="home-search-input" class="home-search-input" type="text" placeholder="Let\\'s begin." autocomplete="off">' +
+                  '<button class="home-search-submit" type="submit">Search</button>' +
+                '</div>' +
+              '</form>' +
+            '</div>' +
+          '</div>';
+        const homeSearchInput = document.getElementById("home-search-input");
+        if (homeSearchInput) {
+          homeSearchInput.value = els.searchInput.value || "";
+        }
+        document.getElementById("home-search-form").addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const query = homeSearchInput.value.trim();
+          els.searchInput.value = query;
+          if (!query) {
+            return;
+          }
+          await openSearchResults(query, true, "all");
+        });
+      }
+
+      function resetSearchState(options = {}) {
+        if (state.searchTimer) {
+          clearTimeout(state.searchTimer);
+          state.searchTimer = null;
+        }
+        state.searchResults = null;
+        state.searchFilter = "all";
+        if (options.clearInput !== false) {
+          els.searchInput.value = "";
+        }
+      }
+
+      function goHome(push = true) {
+        resetSearchState({ clearInput: false });
+        state.stage = "home";
         state.selectedLocationId = null;
         state.activeContainerId = null;
         state.activeContainerDetail = null;
@@ -995,17 +1110,89 @@ export function renderApp(initialContainerId) {
         renderStage();
       }
 
+      function goToLocations(push = true) {
+        resetSearchState({ clearInput: false });
+        state.stage = "locations";
+        state.selectedLocationId = null;
+        state.activeContainerId = null;
+        state.activeContainerDetail = null;
+        state.activeItemId = null;
+        state.activeItemDetail = null;
+        state.revealedItemId = null;
+        state.scanToken = null;
+        state.pendingScanAction = null;
+        if (push) {
+          history.pushState({}, "", "/places");
+        }
+        renderStage();
+      }
+
       function openLocation(locationId, push = true) {
+        resetSearchState({ clearInput: false });
         state.stage = "containers";
         state.selectedLocationId = locationId;
         state.activeContainerId = null;
         state.activeContainerDetail = null;
         state.activeItemId = null;
         state.activeItemDetail = null;
+        state.revealedItemId = null;
         state.scanToken = null;
         state.pendingScanAction = null;
         if (push) {
-          history.pushState({}, "", locationId ? "/arca?location=" + encodeURIComponent(locationId) : "/arca?location=__none__");
+          history.pushState({}, "", locationId ? "/places/" + encodeURIComponent(locationId) : "/places/__none__");
+        }
+        renderStage();
+      }
+
+      function normalizeSearchFilter(value) {
+        return searchFilterOptions.some((entry) => entry.key === value) ? value : "all";
+      }
+
+      function buildSearchPath(query, filter = "all") {
+        const params = new URLSearchParams();
+        const cleanQuery = String(query || "").trim();
+        if (cleanQuery) {
+          params.set("q", cleanQuery);
+        }
+        const cleanFilter = normalizeSearchFilter(filter);
+        if (cleanFilter !== "all") {
+          params.set("type", cleanFilter);
+        }
+        const suffix = params.toString();
+        return "/search" + (suffix ? "?" + suffix : "");
+      }
+
+      async function openSearchResults(query, push = true, filter = "all") {
+        const cleanQuery = String(query || "").trim();
+        if (!cleanQuery) {
+          clearSearchRoute(true);
+          return;
+        }
+        const nextFilter = normalizeSearchFilter(filter);
+        state.stage = "search";
+        state.selectedLocationId = null;
+        state.activeContainerId = null;
+        state.activeContainerDetail = null;
+        state.activeItemId = null;
+        state.activeItemDetail = null;
+        state.revealedItemId = null;
+        state.scanToken = null;
+        state.pendingScanAction = null;
+        state.searchResults = null;
+        state.searchFilter = nextFilter;
+        els.searchInput.value = cleanQuery;
+        if (push) {
+          history.pushState({}, "", buildSearchPath(cleanQuery, nextFilter));
+        }
+        renderStage();
+        state.searchResults = await api("/api/search?q=" + encodeURIComponent(cleanQuery));
+        renderStage();
+      }
+
+      function updateSearchFilter(filterKey) {
+        state.searchFilter = normalizeSearchFilter(filterKey);
+        if (state.searchResults?.query) {
+          history.replaceState({}, "", buildSearchPath(state.searchResults.query, state.searchFilter));
         }
         renderStage();
       }
@@ -1016,10 +1203,36 @@ export function renderApp(initialContainerId) {
           return;
         }
         if (window.location.pathname === "/simulate-scan") {
-          state.searchResults = null;
+          resetSearchState({ clearInput: false });
           state.stage = "simulatedScan";
           state.scanToken = null;
           renderStage();
+          return;
+        }
+        if (window.location.pathname === "/arca" || window.location.pathname === "/") {
+          goHome(false);
+          return;
+        }
+        if (window.location.pathname === "/places") {
+          goToLocations(false);
+          return;
+        }
+        const placeMatch = window.location.pathname.match(/^\\\/places\\\/([^/]+)$/);
+        if (placeMatch) {
+          const locationId = decodeURIComponent(placeMatch[1]) === "__none__" ? null : decodeURIComponent(placeMatch[1]);
+          openLocation(locationId, false);
+          return;
+        }
+        if (window.location.pathname === "/search") {
+          const currentUrl = new URL(window.location.href);
+          const query = currentUrl.searchParams.get("q") || "";
+          const filter = currentUrl.searchParams.get("type") || "all";
+          if (!query.trim()) {
+            history.replaceState({}, "", "/arca");
+            goHome(false);
+            return;
+          }
+          await openSearchResults(query, false, filter);
           return;
         }
         const scanMatch = window.location.pathname.match(/^\\\/scan\\\/([^/]+)$/);
@@ -1035,20 +1248,7 @@ export function renderApp(initialContainerId) {
             return;
           }
         }
-        const currentUrl = new URL(window.location.href);
-        if (currentUrl.pathname === "/arca" || currentUrl.pathname === "/") {
-          const itemId = currentUrl.searchParams.get("item") || "";
-          if (itemId) {
-            await revealItemInContainer(itemId, { pushUrl: false });
-            return;
-          }
-          if (currentUrl.searchParams.has("location")) {
-            const locationId = currentUrl.searchParams.get("location");
-            openLocation(locationId === "__none__" ? null : locationId, false);
-            return;
-          }
-        }
-        goToLocations(false);
+        goHome(false);
       }
 
       function extractRecordIdFromSlug(value) {
@@ -1421,6 +1621,121 @@ export function renderApp(initialContainerId) {
         );
       }
 
+      function buildRecordSummary(...parts) {
+        const unique = [];
+        parts.forEach((part) => {
+          const value = String(part || "").trim();
+          if (value && !unique.includes(value)) {
+            unique.push(value);
+          }
+        });
+        return unique.join(" ");
+      }
+
+      function renderSubjectMetaGrid(cards) {
+        const safeCards = (cards || []).filter(Boolean);
+        if (!safeCards.length) {
+          return "";
+        }
+        return '<div class="subject-meta-grid">' + safeCards.map((card) => (
+          '<div class="subject-meta-card">' +
+            '<div class="subject-meta-label">' + escapeHtml(card.label) + '</div>' +
+            '<div class="subject-meta-value">' + escapeHtml(card.value) + '</div>' +
+            (card.note ? '<div class="subject-meta-note">' + escapeHtml(card.note) + '</div>' : '') +
+          '</div>'
+        )).join("") + "</div>";
+      }
+
+      function adaptLocationSubjectView(location, containers) {
+        const summary = buildRecordSummary(location?.description, location?.notes);
+        const tag = location?.tag_token ? { token: location.tag_token } : null;
+        return {
+          title: location ? location.name : "No Location",
+          stageMeta: location
+            ? containers.length + " container" + (containers.length === 1 ? "" : "s") + " currently live here."
+            : containers.length + " container" + (containers.length === 1 ? "" : "s") + " currently have no place.",
+          summary,
+          imageStoredName: location?.image_stored_name || "",
+          tag,
+          metaCards: [
+            {
+              label: "Kind",
+              value: location ? "Place" : "Unassigned",
+              note: location ? "A place that can hold containers." : "A virtual bucket for containers without a place."
+            },
+            {
+              label: "Containers",
+              value: String(containers.length),
+              note: containers.length === 1 ? "Container currently here." : "Containers currently here."
+            }
+          ]
+        };
+      }
+
+      function adaptContainerSubjectView(detail) {
+        const location = detail.container.location_id ? getLocation(detail.container.location_id) : null;
+        const summary = buildRecordSummary(detail.container.description, detail.container.notes);
+        return {
+          location,
+          summary,
+          tag: detail.tag,
+          imageStoredName: detail.container.image_stored_name || "",
+          metaCards: [
+            {
+              label: "Kind",
+              value: "Container",
+              note: "A personal thing that can hold items."
+            },
+            {
+              label: "Place",
+              value: location ? location.name : "No place",
+              note: location ? "Current place." : "This container has not been placed yet."
+            },
+            {
+              label: "Items",
+              value: String(detail.items.length),
+              note: detail.items.length === 1 ? "Item currently inside." : "Items currently inside."
+            }
+          ]
+        };
+      }
+
+      function adaptItemSubjectView(detail) {
+        const container = getContainer(detail.item.container_id);
+        const location = container?.location_id ? getLocation(container.location_id) : null;
+        const imagePhotos = detail.photos.filter((photo) => isPreviewableImageAsset(photo.file_name, photo.mime_type));
+        const summary = buildRecordSummary(detail.item.description, detail.item.notes);
+        return {
+          container,
+          location,
+          summary,
+          tag: detail.tag,
+          imagePhotos,
+          metaCards: [
+            {
+              label: "Container",
+              value: detail.item.container_name || "Unassigned",
+              note: "Where this thing currently lives."
+            },
+            {
+              label: "Place",
+              value: location ? location.name : "No place",
+              note: location ? "Current place." : "Its container is not placed yet."
+            },
+            {
+              label: "Quantity",
+              value: String(detail.item.quantity),
+              note: detail.item.quantity === 1 ? "One currently tracked." : "Currently tracked in this amount."
+            },
+            {
+              label: "Photos",
+              value: String(imagePhotos.length),
+              note: imagePhotos.length === 1 ? "Image attached." : "Images attached."
+            }
+          ]
+        };
+      }
+
       async function createTagForEntity(entityType, entityId) {
         const created = await api("/api/tags", {
           method: "POST",
@@ -1442,6 +1757,15 @@ export function renderApp(initialContainerId) {
         const created = await createTagForEntity(entityType, entityId);
         await refreshAll();
         return created.token;
+      }
+
+      async function handleCreateTagFromSubjectView(entityType, entityId, reloadDetail) {
+        await createTagForEntity(entityType, entityId);
+        state.bootstrap = await api("/api/bootstrap?selectedContainerId=" + encodeURIComponent(state.activeContainerId || ""));
+        if (typeof reloadDetail === "function") {
+          await reloadDetail();
+        }
+        renderStage();
       }
 
       function canShowLabelAction(tagToken, tagSource) {
@@ -1558,11 +1882,12 @@ export function renderApp(initialContainerId) {
       function renderLocationsStage() {
         renderTopbarNav();
         renderStageLevels("places");
-        els.stageTitle.textContent = "";
-        els.stageMeta.textContent = combineStageHint("Open a place to look inside.", "tile");
+        els.stageTitle.textContent = "Places";
+        els.stageMeta.textContent = "Tap a place to open it. Right-click or press and hold a location for actions.";
         setBreadcrumbs([]);
         els.stageActions.innerHTML =
           '<div class="action-cluster">' +
+            '<button id="open-simulated-scan" class="secondary" type="button">Test Scan</button>' +
             '<button id="stage-add-location" class="icon-button add-icon" type="button" aria-label="Add location" title="Add location">' + addIconMarkup + '</button>' +
           '</div>';
         const noLocationCount = containersForLocation(null).length;
@@ -1570,6 +1895,9 @@ export function renderApp(initialContainerId) {
         const locationTiles = safeLocations.map((location, index) => (
           '<div class="tile tile-card ' + toneClass(locationTones, index) + '">' +
             '<button class="tile-open" type="button" data-open-location="' + location.id + '">' +
+              (location.image_stored_name
+                ? '<div class="tile-thumb"><img src="' + getDisplayImageUrl(location.image_stored_name, "containers", location.name) + '" alt="' + escapeHtml(location.name) + '"></div>'
+                : '') +
               '<div class="tile-title">' + escapeHtml(location.name) + '</div>' +
               '<div class="tile-subtitle">' + location.container_count + ' container' + (location.container_count === 1 ? '' : 's') + '</div>' +
             '</button>' +
@@ -1587,6 +1915,11 @@ export function renderApp(initialContainerId) {
           ? '<div class="tile-grid">' + locationTiles.join("") + '</div>'
           : '<div class="empty-state"><h3>No locations yet</h3><div class="mini-note">Create a location, or start with containers that have no location.</div></div>';
         document.getElementById("stage-add-location").addEventListener("click", () => openLocationModal());
+        document.getElementById("open-simulated-scan").addEventListener("click", () => {
+          state.stage = "simulatedScan";
+          history.pushState({}, "", "/simulate-scan");
+          renderStage();
+        });
         els.stageContent.querySelectorAll("[data-open-location]").forEach((button) => {
           button.addEventListener("click", () => openLocation(button.dataset.openLocation === "__none__" ? null : button.dataset.openLocation));
         });
@@ -1655,36 +1988,71 @@ export function renderApp(initialContainerId) {
         const location = state.selectedLocationId ? getLocation(state.selectedLocationId) : null;
         const containers = containersForLocation(state.selectedLocationId);
         const itemsMap = itemsByContainerMap();
+        const view = adaptLocationSubjectView(location, containers);
+        const heroTone = location ? toneClassForId(heroTones, location.id) : "hero-tone-1";
         const detailTone = location ? toneClassForId(detailTones, location.id) : "";
-        const infoBlocks = [];
-        if (location?.notes) {
-          infoBlocks.push(
-            '<div class="section ' + detailTone + '">' +
-              '<div class="hero-notes item-notes">' + escapeHtml(location.notes) + '</div>' +
-            '</div>'
-          );
-        }
+        const heroThumb = view.imageStoredName
+          ? '<div class="container-thumb"><img src="' + getDisplayImageUrl(view.imageStoredName, "containers", view.title) + '" alt="' + escapeHtml(view.title) + '"></div>'
+          : "";
+        const tagCardHtml = location
+          ? renderTagCard(view.tag, {
+              title: "Scan Tag",
+              buttonId: "create-location-tag-button",
+              toneClassName: detailTone
+            })
+          : "";
+        const containersHtml = containers.length
+          ? '<div class="tile-grid">' + containers.map((container, index) => (
+              '<div class="tile tile-card ' + toneClass(containerTones, index) + '">' +
+                '<button class="tile-open container-tile-open has-image" type="button" data-open-container="' + container.id + '">' +
+                  '<div class="tile-thumb' + (hasStoredImage(container.image_stored_name) ? '' : ' is-placeholder') + '"><img src="' + getDisplayImageUrl(container.image_stored_name, "containers", container.name) + '" alt="' + escapeHtml(container.name) + '"></div>' +
+                  '<div class="tile-title">' + escapeHtml(container.name) + '</div>' +
+                  '<div class="tile-subtitle">' + (itemsMap.get(container.id) || 0) + ' item' + ((itemsMap.get(container.id) || 0) === 1 ? '' : 's') + '</div>' +
+                '</button>' +
+              '</div>'
+            )).join("") + '</div>'
+          : '<div class="empty-state"><h3>No containers yet</h3><div class="mini-note">Add a container to this place.</div></div>';
         renderTopbarNav();
         renderStageLevels("containers");
-        els.stageTitle.textContent = location ? location.name : "No Location";
-        els.stageMeta.textContent = combineStageHint("Open a container to look inside.", "tile");
+        els.stageTitle.textContent = view.title;
+        els.stageMeta.textContent = view.stageMeta;
         setBreadcrumbs([]);
-        els.stageActions.innerHTML =
-          '<div class="action-cluster">' +
-            '<button id="add-container-here" class="icon-button add-icon" type="button" aria-label="Add container" title="Add container">' + addIconMarkup + '</button>' +
+        els.stageActions.innerHTML = "";
+        els.stageContent.innerHTML =
+          '<div class="subject-shell">' +
+            '<div class="hero ' + heroTone + '">' +
+              '<div class="hero-top"><div class="action-cluster">' +
+                (location
+                  ? '<button id="edit-location-button" class="secondary icon-button" type="button" aria-label="Edit place" title="Edit place">' + editIconMarkup + '</button>'
+                  : '') +
+                '<button id="add-container-here" class="icon-button add-icon" type="button" aria-label="Add container" title="Add container">' + addIconMarkup + '</button>' +
+              '</div></div>' +
+              '<div class="container-hero-layout' + (heroThumb ? "" : " no-photo") + '">' +
+                heroThumb +
+                '<div class="container-hero-copy">' +
+                  '<div class="hero-title">' +
+                    '<h3>' + escapeHtml(view.title) + '</h3>' +
+                    '<div class="hero-count">' + containers.length + ' container' + (containers.length === 1 ? '' : 's') + '</div>' +
+                  '</div>' +
+                  (view.summary ? '<div class="hero-notes item-notes">' + escapeHtml(view.summary) + '</div>' : '') +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="subject-support-grid">' +
+              '<div class="section ' + detailTone + '">' +
+                '<div class="section-head"><h3>Overview</h3></div>' +
+                renderSubjectMetaGrid(view.metaCards) +
+              '</div>' +
+              tagCardHtml +
+            '</div>' +
+            '<div class="section items-section">' +
+              '<div class="section-head">' +
+                '<h3>Containers</h3>' +
+                '<button id="add-container-inline" class="icon-button add-icon" type="button" aria-label="Add container" title="Add container">' + addIconMarkup + '</button>' +
+              '</div>' +
+              containersHtml +
+            '</div>' +
           '</div>';
-
-        els.stageContent.innerHTML = infoBlocks.join("") + (containers.length
-          ? '<div class="tile-grid">' + containers.map((container, index) => (
-                '<div class="tile tile-card ' + toneClass(containerTones, index) + '">' +
-                  '<button class="tile-open container-tile-open has-image" type="button" data-open-container="' + container.id + '">' +
-                    '<div class="tile-thumb' + (hasStoredImage(container.image_stored_name) ? '' : ' is-placeholder') + '"><img src="' + getDisplayImageUrl(container.image_stored_name, "containers", container.name) + '" alt="' + escapeHtml(container.name) + '"></div>' +
-                    '<div class="tile-title">' + escapeHtml(container.name) + '</div>' +
-                    '<div class="tile-subtitle">' + (itemsMap.get(container.id) || 0) + ' item' + ((itemsMap.get(container.id) || 0) === 1 ? '' : 's') + '</div>' +
-                  '</button>' +
-                '</div>'
-              )).join("") + '</div>'
-          : '<div class="empty-state"><h3>No containers yet</h3><div class="mini-note">Add a container to this location.</div></div>');
         document.getElementById("add-container-here").addEventListener("click", async () => {
           const saved = await api("/api/containers", {
             method: "POST",
@@ -1696,6 +2064,26 @@ export function renderApp(initialContainerId) {
           showMessage(saved.name + " created.");
           await refreshAll();
         });
+        document.getElementById("add-container-inline").addEventListener("click", async () => {
+          const saved = await api("/api/containers", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              locationId: state.selectedLocationId || null
+            })
+          });
+          showMessage(saved.name + " created.");
+          await refreshAll();
+        });
+        if (location) {
+          document.getElementById("edit-location-button").addEventListener("click", () => openLocationModal(location));
+          const createTagButton = document.getElementById("create-location-tag-button");
+          if (createTagButton) {
+            createTagButton.addEventListener("click", async () => {
+              await handleCreateTagFromSubjectView("location", location.id);
+            });
+          }
+        }
         els.stageContent.querySelectorAll("[data-open-container]").forEach((button) => {
           button.addEventListener("click", () => openContainer(button.dataset.openContainer, true));
         });
@@ -1713,6 +2101,7 @@ export function renderApp(initialContainerId) {
       async function openContainer(containerId, pushUrl, revealedItemId = null) {
         const detail = await api("/api/containers/" + containerId);
         state.stage = "container";
+        resetSearchState({ clearInput: false });
         state.selectedLocationId = detail.container.location_id || null;
         state.activeContainerId = containerId;
         state.activeContainerDetail = detail;
@@ -1749,33 +2138,29 @@ export function renderApp(initialContainerId) {
         }
 
         const detail = state.activeContainerDetail;
-        const location = detail.container.location_id ? getLocation(detail.container.location_id) : null;
-        const itemCountLabel = detail.items.length + ' item' + (detail.items.length === 1 ? '' : 's');
+        const view = adaptContainerSubjectView(detail);
+        const location = view.location;
+        const heroTone = toneClassForId(heroTones, detail.container.id);
+        const detailTone = toneClassForId(detailTones, detail.container.id);
+        const containerThumb = detail.container.image_stored_name
+          ? '<div class="container-thumb"><img src="' + getDisplayImageUrl(detail.container.image_stored_name, "containers", detail.container.name) + '" alt="' + escapeHtml(detail.container.name) + '"></div>'
+          : "";
+        const tagCardHtml = renderTagCard(view.tag, {
+          title: "Scan Tag",
+          buttonId: "create-container-tag-button",
+          toneClassName: detailTone
+        });
         renderTopbarNav();
-        renderStageLevels("containers");
-        els.stageTitle.innerHTML =
-          '<span class="stage-title-inline">' +
-            '<span class="stage-title-location">' + escapeHtml(location ? location.name : "No Location") + '</span>' +
-            '<span class="stage-title-separator">/</span>' +
-            '<button id="container-stage-title" class="stage-title-action" type="button" aria-label="Actions for ' + escapeAttr(detail.container.name) + '">' +
-              '<span class="stage-title-chip">' +
-                '<span class="stage-title-thumb' + (hasStoredImage(detail.container.image_stored_name) ? '' : ' is-placeholder') + '"><img src="' + getDisplayImageUrl(detail.container.image_stored_name, "containers", detail.container.name) + '" alt="' + escapeHtml(detail.container.name) + '"></span>' +
-                '<span class="stage-title-name">' + escapeHtml(detail.container.name) + '</span>' +
-              '</span>' +
-            '</button>' +
-            '<span class="stage-title-separator">/</span>' +
-            '<span class="stage-title-count">' + itemCountLabel + '</span>' +
-          '</span>';
-        els.stageMeta.innerHTML = detail.container.notes
-          ? '<div class="stage-summary-note">' + escapeHtml(detail.container.notes) + '</div>'
-          : '';
+        renderStageLevels("items");
+        els.stageTitle.textContent = detail.container.name;
+        els.stageMeta.textContent = location ? "In " + location.name + "." : "No place assigned yet.";
         setBreadcrumbs([]);
         els.stageActions.innerHTML = "";
 
         const itemRows = detail.items.length
           ? detail.items.map((item, index) => (
               '<div class="item-card">' +
-                '<div class="item-row ' + toneClass(itemTones, index) + (state.revealedItemId === item.id ? ' is-target' : '') + '" data-item-id="' + item.id + '" tabindex="0" role="group" aria-label="Actions for ' + escapeAttr(item.name) + '">' +
+                '<div class="item-row ' + toneClass(itemTones, index) + '" data-open-item="' + item.id + '" tabindex="0" role="button" aria-label="Open ' + escapeAttr(item.name) + '">' +
                   '<div class="item-row-thumb' + (hasStoredImage(item.thumbnail_stored_name) ? '' : ' is-placeholder') + '"><img src="' + getDisplayImageUrl(item.thumbnail_stored_name, "items", item.name) + '" alt="' + escapeHtml(item.name) + '"></div>' +
                   '<div class="item-row-body">' +
                     '<div class="item-row-header">' +
@@ -1796,26 +2181,50 @@ export function renderApp(initialContainerId) {
               '</div>'
             )).join("")
           : '<div class="empty-state"><h3>No items yet</h3><div class="mini-note">Add the first item to this container.</div></div>';
-
-          els.stageContent.innerHTML =
-          '<div class="section items-section clean">' +
-            '<div class="section-head">' +
-              '<div style="display:flex; gap:12px; align-items:baseline; flex-wrap:wrap;">' +
-                '<h3>Items</h3>' +
-                '<div class="mini-note">' + getTileActionHint("tile") + '</div>' +
+        els.stageContent.innerHTML =
+          '<div class="subject-shell">' +
+            '<div class="hero ' + heroTone + '">' +
+              '<div class="hero-top"><div class="action-cluster">' +
+                '<button id="container-history-button" class="secondary icon-button" type="button" aria-label="View container history" title="View container history">' + historyIconMarkup + '</button>' +
+                '<button id="edit-container-button" class="secondary icon-button" type="button" aria-label="Edit container" title="Edit container">' + editIconMarkup + '</button>' +
+              '</div></div>' +
+              '<div class="container-hero-layout' + (containerThumb ? "" : " no-photo") + '">' +
+                containerThumb +
+                '<div class="container-hero-copy">' +
+                  '<div class="hero-title">' +
+                    '<h3>' + escapeHtml(detail.container.name) + '</h3>' +
+                    '<div class="hero-count">' + detail.items.length + ' item' + (detail.items.length === 1 ? '' : 's') + '</div>' +
+                  '</div>' +
+                  (view.summary ? '<div class="hero-notes item-notes">' + escapeHtml(view.summary) + '</div>' : '') +
+                '</div>' +
               '</div>' +
-              '<button id="add-item-button" class="icon-button add-icon" type="button" aria-label="Add item" title="Add item">' + addIconMarkup + '</button>' +
             '</div>' +
-            '<div class="contents-grid">' + itemRows + '</div>' +
+            '<div class="subject-support-grid">' +
+              '<div class="section ' + detailTone + '">' +
+                '<div class="section-head"><h3>Overview</h3></div>' +
+                renderSubjectMetaGrid(view.metaCards) +
+              '</div>' +
+              tagCardHtml +
+            '</div>' +
+            '<div class="section items-section">' +
+              '<div class="section-head">' +
+                '<h3>Items</h3>' +
+                '<button id="add-item-button" class="icon-button add-icon" type="button" aria-label="Add item" title="Add item">' + addIconMarkup + '</button>' +
+              '</div>' +
+              '<div class="contents-grid">' + itemRows + '</div>' +
+            '</div>' +
           '</div>';
-
-        const titleActionSurface = document.getElementById("container-stage-title");
-        if (titleActionSurface) {
-          attachPressAndHoldAction(titleActionSurface, () => {
-            openContainerActionSheet(detail.container);
+        document.getElementById("container-history-button").addEventListener("click", () => openContainerHistoryModal(detail));
+        document.getElementById("edit-container-button").addEventListener("click", () => openContainerModal({ container: detail.container, defaultLocationId: detail.container.location_id || null }));
+        document.getElementById("add-item-button").addEventListener("click", () => openItemModal({ itemId: null, containerId: detail.container.id }));
+        const createTagButton = document.getElementById("create-container-tag-button");
+        if (createTagButton) {
+          createTagButton.addEventListener("click", async () => {
+            await handleCreateTagFromSubjectView("container", detail.container.id, async () => {
+              state.activeContainerDetail = await api("/api/containers/" + detail.container.id);
+            });
           });
         }
-        document.getElementById("add-item-button").addEventListener("click", () => openItemModal({ itemId: null, containerId: detail.container.id }));
         els.stageContent.querySelectorAll("[data-quantity-delta]").forEach((button) => {
           button.addEventListener("click", async (event) => {
             event.preventDefault();
@@ -1824,15 +2233,16 @@ export function renderApp(initialContainerId) {
             await adjustItemQuantity(button.dataset.itemId, delta);
           });
         });
-        els.stageContent.querySelectorAll("[data-item-id]").forEach((button) => {
-          const item = detail.items.find((entry) => entry.id === button.dataset.itemId);
+        els.stageContent.querySelectorAll("[data-open-item]").forEach((button) => {
+          const item = detail.items.find((entry) => entry.id === button.dataset.openItem);
           if (!item) {
             return;
           }
+          button.addEventListener("click", () => openItem(button.dataset.openItem));
           button.addEventListener("keydown", (event) => {
             if ((event.key === "Enter" || event.key === " ") && !(event.target instanceof HTMLElement && event.target.closest("[data-quantity-delta]"))) {
               event.preventDefault();
-              openItemActionSheet(item);
+              openItem(button.dataset.openItem);
             }
           });
           attachPressAndHoldAction(button, () => {
@@ -1841,30 +2251,303 @@ export function renderApp(initialContainerId) {
             cancelSelector: "[data-quantity-delta]"
           });
         });
-        if (state.revealedItemId) {
-          const revealedRow = els.stageContent.querySelector('[data-item-id="' + state.revealedItemId + '"]');
-          if (revealedRow) {
-            requestAnimationFrame(() => {
-              revealedRow.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
-            });
-          }
-        }
       }
 
       async function openItem(itemId) {
-        await revealItemInContainer(itemId, { pushUrl: false });
+        const detail = await api("/api/items/" + itemId);
+        state.stage = "item";
+        state.activeItemId = itemId;
+        state.activeItemDetail = detail;
+        renderStage();
       }
 
       function renderItemStage() {
-        if (state.activeItemDetail?.item?.id) {
-          revealItemInContainer(state.activeItemDetail.item.id, {
-            containerId: state.activeItemDetail.item.container_id,
-            pushUrl: false
-          }).catch((error) => showMessage(error.message || "Could not find that item.", true));
+        if (!state.activeItemDetail) {
+          state.stage = state.activeContainerDetail ? "container" : "locations";
+          renderStage();
           return;
         }
-        state.stage = state.activeContainerDetail ? "container" : "locations";
+        const detail = state.activeItemDetail;
+        const view = adaptItemSubjectView(detail);
+        const heroTone = toneClassForId(heroTones, detail.item.id);
+        const detailTone = toneClassForId(detailTones, detail.item.id);
+        renderTopbarNav();
+        renderStageLevels("items");
+        els.stageTitle.textContent = detail.item.name;
+        els.stageMeta.textContent = view.location
+          ? "In " + detail.item.container_name + ", " + view.location.name + "."
+          : "In " + detail.item.container_name + ".";
+        setBreadcrumbs([]);
+        els.stageActions.innerHTML = "";
+
+        const imagePhotos = view.imagePhotos;
+        const primaryPhoto = imagePhotos[0] || null;
+        const thumbHtml = primaryPhoto
+          ? '<div class="item-thumb"><img src="/uploads/' + primaryPhoto.stored_name + '" alt="' + escapeHtml(primaryPhoto.file_name) + '"></div>'
+          : "";
+        const photoStrip = imagePhotos.length > 1
+          ? '<div class="item-photo-strip">' + imagePhotos.slice(1).map((photo) => (
+              '<div class="item-photo-chip"><img src="/uploads/' + photo.stored_name + '" alt="' + escapeHtml(photo.file_name) + '"></div>'
+            )).join("") + '</div>'
+          : "";
+        const nonImagePhotoCount = detail.photos.length - imagePhotos.length;
+        const attachmentNote = nonImagePhotoCount > 0
+          ? '<div class="mini-note">' + escapeHtml(nonImagePhotoCount === 1 ? "One attached file is not an image preview." : String(nonImagePhotoCount) + " attached files are not image previews.") + '</div>'
+          : "";
+        const notesHtml = view.summary ? '<div class="hero-notes item-notes">' + escapeHtml(view.summary) + '</div>' : "";
+        const tagCardHtml = renderTagCard(view.tag, {
+          title: "Scan Tag",
+          buttonId: "create-item-tag-button",
+          toneClassName: detailTone
+        });
+        const copyHtml =
+          '<div class="item-hero-copy">' +
+            '<div class="item-title-line">' +
+              '<h3>' + escapeHtml(detail.item.name) + '</h3>' +
+              '<div class="item-detail-quantity-row">' +
+                '<button class="item-quantity-button minus" type="button" data-item-detail-quantity-delta="-1" data-item-id="' + detail.item.id + '" aria-label="Decrease quantity for ' + escapeAttr(detail.item.name) + '">' + minusIconMarkup + '</button>' +
+                '<div class="hero-count item-quantity-display">' + detail.item.quantity + '</div>' +
+                '<button class="item-quantity-button plus" type="button" data-item-detail-quantity-delta="1" data-item-id="' + detail.item.id + '" aria-label="Increase quantity for ' + escapeAttr(detail.item.name) + '">' + plusIconMarkup + '</button>' +
+              '</div>' +
+            '</div>' +
+            notesHtml +
+            attachmentNote +
+            photoStrip +
+          '</div>';
+
+        els.stageContent.innerHTML =
+          '<div class="subject-shell">' +
+            '<div class="hero item-hero ' + heroTone + '">' +
+              '<div class="hero-top"><div class="action-cluster">' +
+                '<button id="item-history-button" class="secondary icon-button" type="button" aria-label="View item history" title="View item history">' + historyIconMarkup + '</button>' +
+                '<button id="edit-item-button" class="secondary icon-button" type="button" aria-label="Edit item" title="Edit item">' + editIconMarkup + '</button>' +
+              '</div></div>' +
+              '<div class="item-hero-layout' + (primaryPhoto ? "" : " no-photo") + '">' +
+                thumbHtml +
+                copyHtml +
+              '</div>' +
+            '</div>' +
+            '<div class="subject-support-grid">' +
+              '<div class="section ' + detailTone + '">' +
+                '<div class="section-head"><h3>Overview</h3></div>' +
+                renderSubjectMetaGrid(view.metaCards) +
+              '</div>' +
+              tagCardHtml +
+            '</div>' +
+          '</div>';
+        document.getElementById("item-history-button").addEventListener("click", () => openItemHistoryModal(detail));
+        els.stageContent.querySelectorAll("[data-item-detail-quantity-delta]").forEach((button) => {
+          button.addEventListener("click", async (event) => {
+            event.preventDefault();
+            const delta = Number.parseInt(button.dataset.itemDetailQuantityDelta, 10) || 0;
+            await adjustItemQuantity(button.dataset.itemId, delta);
+          });
+        });
+        document.getElementById("edit-item-button").addEventListener("click", () => openItemModal({ itemId: detail.item.id, containerId: detail.item.container_id }));
+        const createTagButton = document.getElementById("create-item-tag-button");
+        if (createTagButton) {
+          createTagButton.addEventListener("click", async () => {
+            await handleCreateTagFromSubjectView("item", detail.item.id, async () => {
+              state.activeItemDetail = await api("/api/items/" + detail.item.id);
+            });
+          });
+        }
+      }
+
+      function renderRouteSearchStage() {
+        els.stageLevels.innerHTML = "";
+        els.stageTitle.textContent = "Search";
+        const pendingQuery = els.searchInput.value.trim();
+        els.stageMeta.textContent = pendingQuery ? 'Results for "' + pendingQuery + '"' : "Search";
+        setBreadcrumbs([
+          { label: "Home", onClick: () => goHome(true) },
+          { label: "Search" }
+        ]);
+        els.stageActions.innerHTML = '<button id="clear-search-route" class="secondary" type="button">Clear Search</button>';
+
+        if (!state.searchResults) {
+          els.stageContent.innerHTML = '<div class="empty-state"><h3>Finding matches</h3><div class="mini-note">Please wait a moment.</div></div>';
+          document.getElementById("clear-search-route").addEventListener("click", () => clearSearchRoute(true));
+          return;
+        }
+
+        const query = state.searchResults.query || pendingQuery;
+        const resultEntries = buildRouteSearchResultEntries(state.searchResults)
+          .filter((entry) => state.searchFilter === "all" || entry.kind === state.searchFilter);
+        const chipsHtml = searchFilterOptions.map((option) => (
+          '<button class="search-filter-chip' + (state.searchFilter === option.key ? ' active' : '') + '" type="button" data-search-filter="' + option.key + '">' + escapeHtml(option.label) + '</button>'
+        )).join("");
+        const cardsHtml = resultEntries.length
+          ? '<div class="search-results-list">' + resultEntries.map((entry) => {
+              const thumbHtml = entry.imageStoredName
+                ? '<div class="search-result-thumb"><img src="' + getDisplayImageUrl(entry.imageStoredName, entry.kind === "items" ? "items" : "containers", entry.title) + '" alt="' + escapeAttr(entry.title) + '"></div>'
+                : '<div class="search-result-thumb placeholder" aria-hidden="true">' + escapeHtml(entry.typeLabel.slice(0, 1)) + '</div>';
+              return (
+                '<button class="search-result-card" type="button" data-search-kind="' + entry.kind + '" data-search-id="' + entry.id + '"' + (entry.containerId ? ' data-search-container-id="' + entry.containerId + '"' : '') + '>' +
+                  thumbHtml +
+                  '<div class="search-result-body">' +
+                    '<div class="search-result-type">' + escapeHtml(entry.typeLabel) + '</div>' +
+                    '<div class="search-result-title">' + escapeHtml(entry.title) + '</div>' +
+                    '<div class="search-result-context">' + escapeHtml(entry.context) + '</div>' +
+                    '<div class="search-result-state">' + escapeHtml(entry.stateText) + '</div>' +
+                  '</div>' +
+                  '<div class="search-result-open">Open</div>' +
+                '</button>'
+              );
+            }).join("") + '</div>'
+          : '<div class="empty-state"><h3>No matches</h3><div class="mini-note">Try a different search term or filter.</div></div>';
+
+        els.stageContent.innerHTML =
+          '<div class="search-results-shell">' +
+            '<div class="search-results-toolbar">' +
+              '<div class="search-results-summary">' +
+                '<div class="search-results-count">' + resultEntries.length + ' result' + (resultEntries.length === 1 ? '' : 's') + ' for <strong>' + escapeHtml(query) + '</strong></div>' +
+                '<div class="mini-note">Sorted by best match.</div>' +
+              '</div>' +
+              '<div class="search-filter-row">' + chipsHtml + '</div>' +
+            '</div>' +
+            cardsHtml +
+          '</div>';
+
+        document.getElementById("clear-search-route").addEventListener("click", () => clearSearchRoute(true));
+        els.stageContent.querySelectorAll("[data-search-filter]").forEach((button) => {
+          button.addEventListener("click", () => {
+            updateSearchFilter(button.dataset.searchFilter);
+          });
+        });
+        els.stageContent.querySelectorAll("[data-search-kind]").forEach((button) => {
+          button.addEventListener("click", async () => {
+            resetSearchState();
+            if (button.dataset.searchKind === "locations") {
+              openLocation(button.dataset.searchId, true);
+              return;
+            }
+            if (button.dataset.searchKind === "containers") {
+              await openContainer(button.dataset.searchId, true);
+              return;
+            }
+            if (button.dataset.searchKind === "items") {
+              const containerId = button.dataset.searchContainerId || "";
+              if (containerId) {
+                await openContainer(containerId, true);
+              }
+              await openItem(button.dataset.searchId);
+            }
+          });
+        });
+      }
+
+      function buildRouteSearchResultEntries(searchResults) {
+        const query = String(searchResults?.query || "").trim().toLowerCase();
+        const itemEntries = (searchResults.items || []).map((item) => {
+          const record = state.bootstrap.items.find((entry) => entry.id === item.id) || null;
+          const contextBits = [item.container_name, item.location_name].filter(Boolean);
+          return {
+            kind: "items",
+            typeLabel: "Thing",
+            id: item.id,
+            title: item.name,
+            context: contextBits.join(" • ") || item.description || "Personal thing",
+            stateText: "Qty " + item.quantity,
+            imageStoredName: record?.thumbnail_stored_name || "",
+            containerId: item.container_id || "",
+            score: scoreRouteSearchResult({
+              kind: "items",
+              title: item.name,
+              context: contextBits.join(" "),
+              extra: [item.description, item.notes].filter(Boolean).join(" "),
+              query
+            })
+          };
+        });
+        const containerEntries = (searchResults.containers || []).map((container) => {
+          const record = getContainer(container.id);
+          const itemCount = container.item_count ?? 0;
+          return {
+            kind: "containers",
+            typeLabel: "Container",
+            id: container.id,
+            title: container.name,
+            context: container.location_name || container.description || "Container",
+            stateText: itemCount + " thing" + (itemCount === 1 ? "" : "s"),
+            imageStoredName: record?.image_stored_name || "",
+            score: scoreRouteSearchResult({
+              kind: "containers",
+              title: container.name,
+              context: [container.location_name, container.type].filter(Boolean).join(" "),
+              extra: [container.description, container.notes].filter(Boolean).join(" "),
+              query
+            })
+          };
+        });
+        const locationEntries = (searchResults.locations || []).map((location) => {
+          const record = getLocation(location.id);
+          return {
+            kind: "locations",
+            typeLabel: "Place",
+            id: location.id,
+            title: location.name,
+            context: location.description || location.notes || "Place",
+            stateText: "Open place",
+            imageStoredName: record?.image_stored_name || "",
+            score: scoreRouteSearchResult({
+              kind: "locations",
+              title: location.name,
+              context: location.description || "",
+              extra: location.notes || "",
+              query
+            })
+          };
+        });
+        return [...itemEntries, ...containerEntries, ...locationEntries]
+          .sort((left, right) => (right.score - left.score) || left.title.localeCompare(right.title));
+      }
+
+      function scoreRouteSearchResult({ kind, title, context, extra, query }) {
+        const baseWeight = kind === "items" ? 80 : kind === "containers" ? 45 : 20;
+        return baseWeight
+          + scoreRouteSearchTextMatch(title, query, 420, 260, 180)
+          + scoreRouteSearchTextMatch(context, query, 150, 95, 60)
+          + scoreRouteSearchTextMatch(extra, query, 70, 40, 22);
+      }
+
+      function scoreRouteSearchTextMatch(value, query, exactScore, prefixScore, includesScore) {
+        const text = String(value || "").trim().toLowerCase();
+        if (!text || !query) {
+          return 0;
+        }
+        if (text === query) {
+          return exactScore;
+        }
+        if (text.startsWith(query)) {
+          return prefixScore;
+        }
+        if (text.includes(query)) {
+          return includesScore;
+        }
+        return 0;
+      }
+
+      function clearSearchRoute(pushHome = true) {
+        resetSearchState();
+        if (pushHome) {
+          goHome(true);
+          return;
+        }
         renderStage();
+      }
+
+      async function onSearchSubmit(event) {
+        event.preventDefault();
+        if (!state.bootstrap.authenticated) {
+          return;
+        }
+        const query = els.searchInput.value.trim();
+        if (!query) {
+          clearSearchRoute(true);
+          return;
+        }
+        await openSearchResults(query, true, "all");
       }
 
       function renderSearchStage() {

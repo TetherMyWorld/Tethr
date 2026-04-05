@@ -41,12 +41,14 @@ import {
   moveItem,
   saveContainerPhoto,
   saveItemPhoto,
+  saveLocationPhoto,
   searchRecords,
   searchTethrRecords,
   updateContainer,
   updateItem,
   updateLocation
 } from "./db.js";
+import { inferMimeTypeFromFileName, resolvePhotoUploadPayload } from "./photo-upload.js";
 import { renderApp, renderAuraApp, renderAuraHome, renderPrintLabelPage, renderPrivacyPage, renderTethrHome } from "./ui.js";
 
 loadLocalEnvFile();
@@ -243,7 +245,15 @@ export async function handleRequest(req, res) {
         return sendHtml(res, renderApp(null));
       }
 
-      if (req.method === "GET" && (url.pathname === "/arca" || url.pathname === "/simulate-scan" || url.pathname.startsWith("/containers/") || url.pathname.startsWith("/scan/"))) {
+      if (req.method === "GET" && (
+        url.pathname === "/arca" ||
+        url.pathname === "/search" ||
+        url.pathname === "/places" ||
+        url.pathname.startsWith("/places/") ||
+        url.pathname === "/simulate-scan" ||
+        url.pathname.startsWith("/containers/") ||
+        url.pathname.startsWith("/scan/")
+      )) {
         const selectedContainer = session && url.pathname.startsWith("/containers/")
           ? getContainerFromRoute(url.pathname.split("/").pop())
           : null;
@@ -396,6 +406,26 @@ export async function handleRequest(req, res) {
         return sendJson(res, 201, {
           ...location,
           supabaseSync: syncStatus
+        });
+      }
+
+      if (req.method === "POST" && url.pathname.startsWith("/api/locations/") && url.pathname.endsWith("/photo")) {
+        if (hostedRuntime) {
+          const error = new Error("Location photo upload is not supported in hosted mode yet.");
+          error.statusCode = 501;
+          throw error;
+        }
+        const id = url.pathname.split("/")[3];
+        const upload = await readUploadPayload(req);
+        const saved = saveLocationPhoto(id, upload);
+        return sendJson(res, 201, {
+          ...saved,
+          supabaseSync: {
+            synced: false,
+            reason: session
+              ? "Location photo sync is not implemented for Supabase yet."
+              : "No signed-in session."
+          }
         });
       }
 
@@ -619,6 +649,8 @@ export async function handleRequest(req, res) {
     } catch (error) {
       const status = Number.isInteger(error?.statusCode)
         ? error.statusCode
+        : Number.isInteger(error?.status)
+          ? error.status
         : error.message === "Unexpected end of JSON input"
           ? 400
           : error.message === "Please sign in."
@@ -1960,12 +1992,15 @@ function escapeHtmlForPage(value) {
 }
 
 function serveUpload(pathname, res) {
-  const target = getPhotoFile(pathname.replace("/uploads/", ""));
+  const storedName = pathname.replace("/uploads/", "");
+  const target = getPhotoFile(storedName);
   if (!target) {
     sendJson(res, 404, { error: "Photo not found" });
     return;
   }
 
+  const mimeType = inferMimeTypeFromFileName(storedName) || "application/octet-stream";
+  res.writeHead(200, { "content-type": mimeType, "cache-control": "no-store" });
   fs.createReadStream(target).pipe(res);
 }
 
@@ -1973,13 +2008,15 @@ async function serveHybridImage(pathname, session, res) {
   const parts = String(pathname || "").split("/").filter(Boolean);
   const category = parts[1] || "";
   const storedName = decodeURIComponent(parts[2] || "");
-  if (!["items", "containers"].includes(category) || !storedName) {
+  if (!["items", "containers", "locations"].includes(category) || !storedName) {
     sendJson(res, 404, { error: "Photo not found" });
     return;
   }
 
   const localTarget = getPhotoFile(storedName);
   if (localTarget && fs.existsSync(localTarget)) {
+    const mimeType = inferMimeTypeFromFileName(storedName) || "application/octet-stream";
+    res.writeHead(200, { "content-type": mimeType, "cache-control": "no-store" });
     fs.createReadStream(localTarget).pipe(res);
     return;
   }
@@ -2060,17 +2097,7 @@ async function readUploadPayload(req) {
       throw new Error("file_path is only supported in local development");
     }
 
-    const base64 = String(body.base64 || "").trim();
-    if (!base64) {
-      throw new Error("Photo upload requires image data");
-    }
-
-    return {
-      fileName: String(body.fileName || "upload.jpg"),
-      mimeType: String(body.mimeType || "image/jpeg"),
-      buffer: Buffer.from(base64, "base64"),
-      caption: String(body.caption || "")
-    };
+    return resolvePhotoUploadPayload(body);
   }
 
   // ✅ This is the correct production path (multipart upload)

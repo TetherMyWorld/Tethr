@@ -66,6 +66,10 @@ db.exec(`
     name TEXT NOT NULL,
     description TEXT NOT NULL DEFAULT '',
     notes TEXT NOT NULL DEFAULT '',
+    image_file_name TEXT NOT NULL DEFAULT '',
+    image_stored_name TEXT NOT NULL DEFAULT '',
+    image_mime_type TEXT NOT NULL DEFAULT '',
+    image_size_bytes INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
@@ -268,6 +272,10 @@ db.exec(`
 
 ensureWorkspace();
 ensureColumn("workspaces", "owner_user_id", "TEXT");
+ensureColumn("locations", "image_file_name", "TEXT NOT NULL DEFAULT ''");
+ensureColumn("locations", "image_stored_name", "TEXT NOT NULL DEFAULT ''");
+ensureColumn("locations", "image_mime_type", "TEXT NOT NULL DEFAULT ''");
+ensureColumn("locations", "image_size_bytes", "INTEGER NOT NULL DEFAULT 0");
 ensureColumn("containers", "location_id", "TEXT");
 ensureColumn("containers", "image_file_name", "TEXT NOT NULL DEFAULT ''");
 ensureColumn("containers", "image_stored_name", "TEXT NOT NULL DEFAULT ''");
@@ -1847,7 +1855,9 @@ export function importAuraWhiskies(rows = [], options = {}) {
 
 function allLocations() {
   return db.prepare(
-    `SELECT l.id, l.workspace_id, l.name, l.description, l.notes, l.created_at, l.updated_at,
+    `SELECT l.id, l.workspace_id, l.name, l.description, l.notes,
+            l.image_file_name, l.image_stored_name, l.image_mime_type, l.image_size_bytes,
+            l.created_at, l.updated_at,
             (
               SELECT t.token
               FROM tags t
@@ -1920,7 +1930,9 @@ function allItems() {
 
 function getLocation(id) {
   return db.prepare(
-    `SELECT l.id, l.workspace_id, l.name, l.description, l.notes, l.created_at, l.updated_at,
+    `SELECT l.id, l.workspace_id, l.name, l.description, l.notes,
+            l.image_file_name, l.image_stored_name, l.image_mime_type, l.image_size_bytes,
+            l.created_at, l.updated_at,
             (
               SELECT t.token
               FROM tags t
@@ -2329,6 +2341,17 @@ function deleteContainerImage(container) {
   }
 }
 
+function deleteLocationImage(location) {
+  const storedName = String(location?.image_stored_name || "").trim();
+  if (!storedName) {
+    return;
+  }
+  const target = path.join(uploadsDir, storedName);
+  if (fs.existsSync(target)) {
+    fs.unlinkSync(target);
+  }
+}
+
 export function getBootstrap(selectedContainerId = null) {
   const session = currentSession();
   if (!session) {
@@ -2478,6 +2501,7 @@ export function deleteLocation(id) {
     throw new Error(`Cannot delete "${location.name}" because ${containerCount} container${containerCount === 1 ? "" : "s"} still use it.`);
   }
 
+  deleteLocationImage(location);
   deleteTagsForEntity("location", id);
   db.prepare("DELETE FROM locations WHERE workspace_id = ? AND id = ?").run(workspaceId(), id);
   return { id };
@@ -3005,6 +3029,36 @@ export function saveContainerPhoto(containerId, file) {
   return getContainer(containerId);
 }
 
+export function saveLocationPhoto(locationId, file) {
+  const location = getLocation(locationId);
+  if (!location) {
+    throw new Error("Location not found");
+  }
+
+  deleteLocationImage(location);
+
+  const extension = path.extname(file.fileName || "").toLowerCase() || ".bin";
+  const storedName = `${randomUUID()}${extension}`;
+  const target = path.join(uploadsDir, storedName);
+  fs.writeFileSync(target, file.buffer);
+
+  db.prepare(
+    `UPDATE locations
+     SET image_file_name = ?, image_stored_name = ?, image_mime_type = ?, image_size_bytes = ?, updated_at = ?
+     WHERE workspace_id = ? AND id = ?`
+  ).run(
+    file.fileName,
+    storedName,
+    file.mimeType,
+    file.buffer.byteLength,
+    now(),
+    workspaceId(),
+    locationId
+  );
+
+  return getLocation(locationId);
+}
+
 export function getPhotoFile(storedName) {
   const cleanName = String(storedName || "").trim();
   if (!cleanName) {
@@ -3022,7 +3076,13 @@ export function getPhotoFile(storedName) {
      WHERE workspace_id = ? AND image_stored_name = ?
      LIMIT 1`
   ).get(workspaceId(), cleanName);
-  if (!photoExists && !containerImageExists) {
+  const locationImageExists = db.prepare(
+    `SELECT image_stored_name
+     FROM locations
+     WHERE workspace_id = ? AND image_stored_name = ?
+     LIMIT 1`
+  ).get(workspaceId(), cleanName);
+  if (!photoExists && !containerImageExists && !locationImageExists) {
     return null;
   }
   const target = path.join(uploadsDir, cleanName);

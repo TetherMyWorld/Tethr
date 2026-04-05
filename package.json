@@ -3,10 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "node src/server.js",
     "import:aura-whiskies": "node scripts/import-aura-whiskies.js",
     "replace:aura-whiskies": "node scripts/import-aura-whiskies.js --replace",
-    "test": "node --test"
+    "test": "node --test",
+    "test:browser": "node --test test/focused-arca.browser.test.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.59.1"
   }
 }
