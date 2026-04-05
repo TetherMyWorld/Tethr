@@ -67,6 +67,7 @@ const supabaseConfigured = Boolean(
   process.env.SUPABASE_URL &&
   process.env.SUPABASE_SECRET_KEY
 );
+const supabaseSyncEnabled = supabaseConfigured && envFlagEnabled("SUPABASE_DATABASE_ENABLED", true);
 const hostedRuntime = Boolean(process.env.VERCEL && supabaseConfigured);
 const gptActionsApiKey = String(process.env.GPT_ACTIONS_API_KEY || "").trim();
 const gptActionsWorkspaceId = String(process.env.GPT_ACTIONS_WORKSPACE_ID || "").trim();
@@ -264,7 +265,7 @@ export async function handleRequest(req, res) {
         return sendJson(res, 200, {
           ...getBootstrap(url.searchParams.get("selectedContainerId") || null),
           storage: {
-            provider: supabaseConfigured ? "supabase" : "local",
+            provider: (hostedRuntime || supabaseSyncEnabled) ? "supabase" : "local",
             supabaseUrl: process.env.SUPABASE_URL || "",
             bucket: supabaseStorageBucket
           }
@@ -410,22 +411,19 @@ export async function handleRequest(req, res) {
       }
 
       if (req.method === "POST" && url.pathname.startsWith("/api/locations/") && url.pathname.endsWith("/photo")) {
-        if (hostedRuntime) {
-          const error = new Error("Location photo upload is not supported in hosted mode yet.");
-          error.statusCode = 501;
-          throw error;
-        }
         const id = url.pathname.split("/")[3];
         const upload = await readUploadPayload(req);
-        const saved = saveLocationPhoto(id, upload);
+        const before = hostedRuntime ? null : getLocationForSync(id);
+        const saved = hostedRuntime
+          ? await saveHostedLocationPhoto(session, id, upload)
+          : saveLocationPhoto(id, upload);
         return sendJson(res, 201, {
           ...saved,
-          supabaseSync: {
-            synced: false,
-            reason: session
-              ? "Location photo sync is not implemented for Supabase yet."
-              : "No signed-in session."
-          }
+          supabaseSync: hostedRuntime
+            ? { synced: true }
+            : session
+              ? await syncLocationPhotoToSupabase(session.workspace.id, upload, saved, before)
+              : { synced: false, reason: "No signed-in session." }
         });
       }
 
@@ -443,10 +441,14 @@ export async function handleRequest(req, res) {
 
       if (req.method === "DELETE" && url.pathname.startsWith("/api/locations/")) {
         const id = url.pathname.split("/")[3];
+        const detail = getLocationForSync(id);
         const deleted = deleteLocation(id);
         const syncStatus = session
           ? await deleteSupabaseRecord("locations", session.workspace.id, id)
           : { synced: false, reason: "No signed-in session." };
+        if (session && detail?.image_stored_name) {
+          await deleteSupabaseObject(session.workspace.id, "locations", detail.image_stored_name);
+        }
         return sendJson(res, 200, {
           ...deleted,
           supabaseSync: syncStatus
@@ -685,7 +687,18 @@ function redirect(res, location) {
   res.end();
 }
 
+function envFlagEnabled(name, defaultValue = false) {
+  const rawValue = String(process.env[name] || "").trim().toLowerCase();
+  if (!rawValue) {
+    return defaultValue;
+  }
+  return !["0", "false", "no", "off"].includes(rawValue);
+}
+
 function loadLocalEnvFile() {
+  if (envFlagEnabled("TETHR_SKIP_ENV_FILE", false)) {
+    return;
+  }
   const envFile = path.join(process.cwd(), ".env.local");
   if (!fs.existsSync(envFile)) {
     return;
@@ -1101,6 +1114,14 @@ async function getSupabaseStatus() {
       error: "Supabase is not configured yet."
     };
   }
+  if (!supabaseSyncEnabled) {
+    return {
+      configured: true,
+      connected: false,
+      enabled: false,
+      error: "Supabase sync is disabled for this runtime."
+    };
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
@@ -1178,7 +1199,7 @@ async function upsertSupabaseRows(tableName, rows, conflictTarget = "id") {
 }
 
 async function deleteSupabaseRecord(tableName, workspaceId, id) {
-  if (!supabaseConfigured) {
+  if (!supabaseSyncEnabled) {
     return { synced: false, reason: "Supabase is not configured." };
   }
 
@@ -1206,7 +1227,7 @@ async function deleteSupabaseRecord(tableName, workspaceId, id) {
 }
 
 async function deleteSupabaseRecordsByField(tableName, fieldName, fieldValue, workspaceId) {
-  if (!supabaseConfigured) {
+  if (!supabaseSyncEnabled) {
     return { synced: false, reason: "Supabase is not configured." };
   }
 
@@ -1318,52 +1339,13 @@ async function deleteSupabaseObject(workspaceId, category, storedName) {
 }
 
 async function syncLocationToSupabase(session, location) {
-  if (!supabaseConfigured) {
+  if (!supabaseSyncEnabled) {
     return { synced: false, reason: "Supabase is not configured." };
   }
 
-  const timestamp = new Date().toISOString();
-  const locationRow = {
-    id: location.id,
-    workspace_id: location.workspaceId || location.workspace_id || session.workspace.id,
-    name: location.name,
-    description: location.description || "",
-    notes: location.notes || "",
-    created_at: location.createdAt || location.created_at || timestamp,
-    updated_at: location.updatedAt || location.updated_at || timestamp
-  };
-
   try {
-    await upsertSupabaseRow("users", {
-      id: session.user.id,
-      google_id: session.user.googleId || "",
-      email: session.user.email,
-      name: session.user.name,
-      avatar: session.user.avatar || "",
-      created_at: session.user.createdAt || timestamp,
-      updated_at: session.user.updatedAt || timestamp
-    }, "id");
-
-    await upsertSupabaseRow("workspaces", {
-      id: session.workspace.id,
-      name: session.workspace.name,
-      owner_user_id: session.workspace.ownerUserId || session.user.id,
-      created_at: session.workspace.createdAt || timestamp,
-      updated_at: session.workspace.updatedAt || timestamp
-    }, "id");
-
-    await upsertSupabaseRow("workspace_members", {
-      id: `${session.workspace.id}:${session.user.id}`,
-      workspace_id: session.workspace.id,
-      user_id: session.user.id,
-      role: session.workspace.role || "owner",
-      created_at: timestamp
-    }, "workspace_id,user_id");
-
-    await upsertSupabaseRow("locations", {
-      ...locationRow
-    }, "id");
-
+    await syncSessionCoreToSupabase(session);
+    await syncLocationRowToSupabase(session, location);
     return { synced: true };
   } catch (error) {
     console.error("Supabase location sync failed:", error);
@@ -1412,6 +1394,10 @@ async function syncLocationRowToSupabase(session, location) {
     name: location.name,
     description: location.description || "",
     notes: location.notes || "",
+    image_file_name: location.imageFileName || location.image_file_name || "",
+    image_stored_name: location.imageStoredName || location.image_stored_name || "",
+    image_mime_type: location.imageMimeType || location.image_mime_type || "",
+    image_size_bytes: location.imageSizeBytes || location.image_size_bytes || 0,
     created_at: location.createdAt || location.created_at || timestamp,
     updated_at: location.updatedAt || location.updated_at || timestamp
   }, "id");
@@ -1449,7 +1435,7 @@ async function syncContainerRowToSupabase(session, container) {
 }
 
 async function syncContainerToSupabase(session, container) {
-  if (!supabaseConfigured) {
+  if (!supabaseSyncEnabled) {
     return { synced: false, reason: "Supabase is not configured." };
   }
 
@@ -1467,7 +1453,7 @@ async function syncContainerToSupabase(session, container) {
 }
 
 async function syncTagToSupabase(session, tag) {
-  if (!supabaseConfigured) {
+  if (!supabaseSyncEnabled) {
     return { synced: false, reason: "Supabase is not configured." };
   }
 
@@ -1499,7 +1485,7 @@ async function syncTagToSupabase(session, tag) {
 }
 
 async function syncItemHistoryToSupabase(session, itemId) {
-  if (!supabaseConfigured || !itemId) {
+  if (!supabaseSyncEnabled || !itemId) {
     return { synced: false, reason: "Supabase is not configured." };
   }
 
@@ -1563,7 +1549,7 @@ async function syncItemHistoryToSupabase(session, itemId) {
 }
 
 async function syncContainerHistoryToSupabase(session, containerId) {
-  if (!supabaseConfigured || !containerId) {
+  if (!supabaseSyncEnabled || !containerId) {
     return { synced: false, reason: "Supabase is not configured." };
   }
 
@@ -1629,7 +1615,7 @@ async function syncContainerHistoryToSupabase(session, containerId) {
 }
 
 async function syncItemToSupabase(session, item) {
-  if (!supabaseConfigured) {
+  if (!supabaseSyncEnabled) {
     return { synced: false, reason: "Supabase is not configured." };
   }
 
@@ -1668,7 +1654,7 @@ async function syncItemToSupabase(session, item) {
 }
 
 async function syncAuraWhiskyUserNotesToSupabase(session, whiskyId) {
-  if (!supabaseConfigured) {
+  if (!supabaseSyncEnabled) {
     return { synced: false, reason: "Supabase is not configured." };
   }
 
@@ -1700,7 +1686,7 @@ async function syncAuraWhiskyUserNotesToSupabase(session, whiskyId) {
 }
 
 async function syncAuraWhiskyEntryToSupabase(session, entry) {
-  if (!supabaseConfigured) {
+  if (!supabaseSyncEnabled) {
     return { synced: false, reason: "Supabase is not configured." };
   }
 
@@ -1727,7 +1713,7 @@ async function syncAuraWhiskyEntryToSupabase(session, entry) {
 }
 
 async function syncDreamEntryToSupabase(session, entry) {
-  if (!supabaseConfigured) {
+  if (!supabaseSyncEnabled) {
     return { synced: false, reason: "Supabase is not configured." };
   }
 
@@ -1756,7 +1742,7 @@ async function syncDreamEntryToSupabase(session, entry) {
 }
 
 async function syncItemPhotoToSupabase(workspaceId, itemId, upload, savedPhoto, beforeDetail) {
-  if (!supabaseConfigured) {
+  if (!supabaseSyncEnabled) {
     return { synced: false, reason: "Supabase is not configured." };
   }
 
@@ -1891,8 +1877,77 @@ async function saveHostedContainerPhoto(session, containerId, upload) {
   return updated;
 }
 
+async function saveHostedLocationPhoto(session, locationId, upload) {
+  if (!session?.workspace?.id) {
+    throw new Error("Please sign in.");
+  }
+  const workspaceId = session.workspace.id;
+  const location = (await supabaseSelect(
+    "locations",
+    `?workspace_id=eq.${encodeURIComponent(workspaceId)}&id=eq.${encodeURIComponent(locationId)}&select=*`
+  ))[0];
+  if (!location) {
+    throw new Error("Location not found");
+  }
+
+  const storedName = buildStoredUploadName(upload.fileName);
+  await uploadSupabaseObject(workspaceId, "locations", storedName, upload);
+  if (location.image_stored_name && location.image_stored_name !== storedName) {
+    await deleteSupabaseObject(workspaceId, "locations", location.image_stored_name);
+  }
+
+  const updated = {
+    ...location,
+    image_file_name: upload.fileName,
+    image_stored_name: storedName,
+    image_mime_type: upload.mimeType,
+    image_size_bytes: upload.buffer.byteLength,
+    updated_at: new Date().toISOString()
+  };
+  await upsertSupabaseRow("locations", updated, "id");
+  return updated;
+}
+
+async function syncLocationPhotoToSupabase(workspaceId, upload, savedLocation, beforeLocation) {
+  if (!supabaseSyncEnabled) {
+    return { synced: false, reason: "Supabase is not configured." };
+  }
+
+  try {
+    const previousStoredName = beforeLocation?.image_stored_name || "";
+    const nextStoredName = savedLocation.image_stored_name || "";
+    if (!nextStoredName) {
+      return { synced: false, reason: "Location image name was missing." };
+    }
+    await uploadSupabaseObject(workspaceId, "locations", nextStoredName, upload);
+    await upsertSupabaseRow("locations", {
+      id: savedLocation.id,
+      workspace_id: savedLocation.workspaceId || savedLocation.workspace_id || workspaceId,
+      name: savedLocation.name,
+      description: savedLocation.description || "",
+      notes: savedLocation.notes || "",
+      image_file_name: savedLocation.imageFileName || savedLocation.image_file_name || "",
+      image_stored_name: savedLocation.imageStoredName || savedLocation.image_stored_name || "",
+      image_mime_type: savedLocation.imageMimeType || savedLocation.image_mime_type || "",
+      image_size_bytes: savedLocation.imageSizeBytes || savedLocation.image_size_bytes || 0,
+      created_at: savedLocation.createdAt || savedLocation.created_at || new Date().toISOString(),
+      updated_at: savedLocation.updatedAt || savedLocation.updated_at || new Date().toISOString()
+    }, "id");
+    if (previousStoredName && previousStoredName !== nextStoredName) {
+      await deleteSupabaseObject(workspaceId, "locations", previousStoredName);
+    }
+    return { synced: true };
+  } catch (error) {
+    console.error("Supabase location photo sync failed:", error);
+    return {
+      synced: false,
+      reason: String(error.message || error)
+    };
+  }
+}
+
 async function syncContainerPhotoToSupabase(workspaceId, upload, savedContainer, beforeDetail) {
-  if (!supabaseConfigured) {
+  if (!supabaseSyncEnabled) {
     return { synced: false, reason: "Supabase is not configured." };
   }
 

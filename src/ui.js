@@ -1896,7 +1896,7 @@ export function renderApp(initialContainerId) {
           '<div class="tile tile-card ' + toneClass(locationTones, index) + '">' +
             '<button class="tile-open" type="button" data-open-location="' + location.id + '">' +
               (location.image_stored_name
-                ? '<div class="tile-thumb"><img src="' + getDisplayImageUrl(location.image_stored_name, "containers", location.name) + '" alt="' + escapeHtml(location.name) + '"></div>'
+                ? '<div class="tile-thumb"><img src="' + getDisplayImageUrl(location.image_stored_name, "locations", location.name) + '" alt="' + escapeHtml(location.name) + '"></div>'
                 : '') +
               '<div class="tile-title">' + escapeHtml(location.name) + '</div>' +
               '<div class="tile-subtitle">' + location.container_count + ' container' + (location.container_count === 1 ? '' : 's') + '</div>' +
@@ -1992,7 +1992,7 @@ export function renderApp(initialContainerId) {
         const heroTone = location ? toneClassForId(heroTones, location.id) : "hero-tone-1";
         const detailTone = location ? toneClassForId(detailTones, location.id) : "";
         const heroThumb = view.imageStoredName
-          ? '<div class="container-thumb"><img src="' + getDisplayImageUrl(view.imageStoredName, "containers", view.title) + '" alt="' + escapeHtml(view.title) + '"></div>'
+          ? '<div class="container-thumb"><img src="' + getDisplayImageUrl(view.imageStoredName, "locations", view.title) + '" alt="' + escapeHtml(view.title) + '"></div>'
           : "";
         const tagCardHtml = location
           ? renderTagCard(view.tag, {
@@ -2380,7 +2380,7 @@ export function renderApp(initialContainerId) {
         const cardsHtml = resultEntries.length
           ? '<div class="search-results-list">' + resultEntries.map((entry) => {
               const thumbHtml = entry.imageStoredName
-                ? '<div class="search-result-thumb"><img src="' + getDisplayImageUrl(entry.imageStoredName, entry.kind === "items" ? "items" : "containers", entry.title) + '" alt="' + escapeAttr(entry.title) + '"></div>'
+                ? '<div class="search-result-thumb"><img src="' + getDisplayImageUrl(entry.imageStoredName, entry.kind === "items" ? "items" : entry.kind === "locations" ? "locations" : "containers", entry.title) + '" alt="' + escapeAttr(entry.title) + '"></div>'
                 : '<div class="search-result-thumb placeholder" aria-hidden="true">' + escapeHtml(entry.typeLabel.slice(0, 1)) + '</div>';
               return (
                 '<button class="search-result-card" type="button" data-search-kind="' + entry.kind + '" data-search-id="' + entry.id + '"' + (entry.containerId ? ' data-search-container-id="' + entry.containerId + '"' : '') + '>' +

@@ -16,7 +16,7 @@ const tempDataRoots = [
   path.join(os.tmpdir(), "tethrarca-data")
 ];
 
-delete process.env.SUPABASE_DATABASE_ENABLED;
+process.env.SUPABASE_DATABASE_ENABLED = "0";
 delete process.env.SUPABASE_URL;
 delete process.env.SUPABASE_SECRET_KEY;
 delete process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -25,6 +25,7 @@ delete process.env.SUPABASE_STORAGE_PREFIX;
 delete process.env.SUPABASE_STATE_PATH;
 delete process.env.BLOB_READ_WRITE_TOKEN;
 delete process.env.VERCEL;
+process.env.TETHR_SKIP_ENV_FILE = "1";
 
 const { handleRequest } = await import("../src/server.js");
 
