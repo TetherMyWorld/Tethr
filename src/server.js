@@ -73,6 +73,11 @@ const gptActionsApiKey = String(process.env.GPT_ACTIONS_API_KEY || "").trim();
 const gptActionsWorkspaceId = String(process.env.GPT_ACTIONS_WORKSPACE_ID || "").trim();
 const gptActionsUserId = String(process.env.GPT_ACTIONS_USER_ID || "").trim();
 let supabaseBucketEnsured = false;
+const supabaseCompatibility = {
+  photoTableName: "photos",
+  workspaceOwnerUserIdMissing: false,
+  locationImageColumnsMissing: false
+};
 
 export async function handleRequest(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -839,17 +844,81 @@ function mapSupabaseWorkspace(row, role = "owner") {
   };
 }
 
-async function supabaseSelect(tableName, query = "") {
-  const response = await supabaseRequest(`/rest/v1/${tableName}${query}`, {
-    method: "GET",
-    headers: {
-      Prefer: "return=representation"
-    }
-  });
-  if (!response.ok) {
-    throw new Error(await response.text());
+function getSupabaseTableName(tableName) {
+  return tableName === "photos"
+    ? supabaseCompatibility.photoTableName
+    : tableName;
+}
+
+function stripUnsupportedSupabaseColumns(tableName, row) {
+  if (!row || typeof row !== "object" || Array.isArray(row)) {
+    return row;
   }
-  return response.json();
+  const nextRow = { ...row };
+  if (tableName === "workspaces" && supabaseCompatibility.workspaceOwnerUserIdMissing) {
+    delete nextRow.owner_user_id;
+  }
+  if (tableName === "locations" && supabaseCompatibility.locationImageColumnsMissing) {
+    delete nextRow.image_file_name;
+    delete nextRow.image_stored_name;
+    delete nextRow.image_mime_type;
+    delete nextRow.image_size_bytes;
+  }
+  return nextRow;
+}
+
+function applySupabaseCompatibilityFromError(tableName, errorText) {
+  const message = String(errorText || "");
+  if (
+    tableName === "workspaces"
+    && message.includes("'owner_user_id'")
+    && message.includes("'workspaces'")
+  ) {
+    supabaseCompatibility.workspaceOwnerUserIdMissing = true;
+    return true;
+  }
+  if (
+    tableName === "photos"
+    && message.includes("public.photos")
+    && message.includes("item_photos")
+  ) {
+    supabaseCompatibility.photoTableName = "item_photos";
+    return true;
+  }
+  if (
+    tableName === "locations"
+    && ["image_file_name", "image_stored_name", "image_mime_type", "image_size_bytes"]
+      .some((columnName) => message.includes(`'${columnName}'`) && message.includes("'locations'"))
+  ) {
+    supabaseCompatibility.locationImageColumnsMissing = true;
+    return true;
+  }
+  return false;
+}
+
+function createHostedLocationPhotoSchemaError() {
+  const error = new Error("Hosted location photos require Supabase location image columns. Apply the latest Supabase migration first.");
+  error.statusCode = 501;
+  return error;
+}
+
+async function supabaseSelect(tableName, query = "") {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const response = await supabaseRequest(`/rest/v1/${getSupabaseTableName(tableName)}${query}`, {
+      method: "GET",
+      headers: {
+        Prefer: "return=representation"
+      }
+    });
+    if (response.ok) {
+      return response.json();
+    }
+    const errorText = await response.text();
+    if (attempt === 0 && applySupabaseCompatibilityFromError(tableName, errorText)) {
+      continue;
+    }
+    throw new Error(errorText);
+  }
 }
 
 async function signInWithEmailHosted(input = {}) {
@@ -1179,16 +1248,23 @@ async function supabaseRequest(pathname, options = {}) {
 }
 
 async function upsertSupabaseRow(tableName, row, conflictTarget) {
-  const query = conflictTarget ? `?on_conflict=${encodeURIComponent(conflictTarget)}` : "";
-  const response = await supabaseRequest(`/rest/v1/${tableName}${query}`, {
-    method: "POST",
-    headers: {
-      Prefer: "resolution=merge-duplicates,return=minimal"
-    },
-    body: JSON.stringify(row)
-  });
-  if (!response.ok) {
-    throw new Error(await response.text());
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const query = conflictTarget ? `?on_conflict=${encodeURIComponent(conflictTarget)}` : "";
+    const response = await supabaseRequest(`/rest/v1/${getSupabaseTableName(tableName)}${query}`, {
+      method: "POST",
+      headers: {
+        Prefer: "resolution=merge-duplicates,return=minimal"
+      },
+      body: JSON.stringify(stripUnsupportedSupabaseColumns(tableName, row))
+    });
+    if (response.ok) {
+      return;
+    }
+    const errorText = await response.text();
+    if (attempt === 0 && applySupabaseCompatibilityFromError(tableName, errorText)) {
+      continue;
+    }
+    throw new Error(errorText);
   }
 }
 
@@ -1204,19 +1280,25 @@ async function deleteSupabaseRecord(tableName, workspaceId, id) {
   }
 
   try {
-    const response = await supabaseRequest(
-      `/rest/v1/${tableName}?workspace_id=eq.${encodeURIComponent(workspaceId)}&id=eq.${encodeURIComponent(id)}`,
-      {
-        method: "DELETE",
-        headers: {
-          Prefer: "return=minimal"
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const response = await supabaseRequest(
+        `/rest/v1/${getSupabaseTableName(tableName)}?workspace_id=eq.${encodeURIComponent(workspaceId)}&id=eq.${encodeURIComponent(id)}`,
+        {
+          method: "DELETE",
+          headers: {
+            Prefer: "return=minimal"
+          }
         }
+      );
+      if (response.ok) {
+        return { synced: true };
       }
-    );
-    if (!response.ok) {
-      throw new Error(await response.text());
+      const errorText = await response.text();
+      if (attempt === 0 && applySupabaseCompatibilityFromError(tableName, errorText)) {
+        continue;
+      }
+      throw new Error(errorText);
     }
-    return { synced: true };
   } catch (error) {
     console.error(`Supabase ${tableName} delete sync failed:`, error);
     return {
@@ -1232,19 +1314,25 @@ async function deleteSupabaseRecordsByField(tableName, fieldName, fieldValue, wo
   }
 
   try {
-    const response = await supabaseRequest(
-      `/rest/v1/${tableName}?workspace_id=eq.${encodeURIComponent(workspaceId)}&${encodeURIComponent(fieldName)}=eq.${encodeURIComponent(fieldValue)}`,
-      {
-        method: "DELETE",
-        headers: {
-          Prefer: "return=minimal"
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const response = await supabaseRequest(
+        `/rest/v1/${getSupabaseTableName(tableName)}?workspace_id=eq.${encodeURIComponent(workspaceId)}&${encodeURIComponent(fieldName)}=eq.${encodeURIComponent(fieldValue)}`,
+        {
+          method: "DELETE",
+          headers: {
+            Prefer: "return=minimal"
+          }
         }
+      );
+      if (response.ok) {
+        return { synced: true };
       }
-    );
-    if (!response.ok) {
-      throw new Error(await response.text());
+      const errorText = await response.text();
+      if (attempt === 0 && applySupabaseCompatibilityFromError(tableName, errorText)) {
+        continue;
+      }
+      throw new Error(errorText);
     }
-    return { synced: true };
   } catch (error) {
     console.error(`Supabase ${tableName} delete-by-field sync failed:`, error);
     return {
@@ -1881,6 +1969,9 @@ async function saveHostedLocationPhoto(session, locationId, upload) {
   if (!session?.workspace?.id) {
     throw new Error("Please sign in.");
   }
+  if (supabaseCompatibility.locationImageColumnsMissing) {
+    throw createHostedLocationPhotoSchemaError();
+  }
   const workspaceId = session.workspace.id;
   const location = (await supabaseSelect(
     "locations",
@@ -1892,25 +1983,40 @@ async function saveHostedLocationPhoto(session, locationId, upload) {
 
   const storedName = buildStoredUploadName(upload.fileName);
   await uploadSupabaseObject(workspaceId, "locations", storedName, upload);
-  if (location.image_stored_name && location.image_stored_name !== storedName) {
-    await deleteSupabaseObject(workspaceId, "locations", location.image_stored_name);
-  }
+  try {
+    if (location.image_stored_name && location.image_stored_name !== storedName) {
+      await deleteSupabaseObject(workspaceId, "locations", location.image_stored_name);
+    }
 
-  const updated = {
-    ...location,
-    image_file_name: upload.fileName,
-    image_stored_name: storedName,
-    image_mime_type: upload.mimeType,
-    image_size_bytes: upload.buffer.byteLength,
-    updated_at: new Date().toISOString()
-  };
-  await upsertSupabaseRow("locations", updated, "id");
-  return updated;
+    const updated = {
+      ...location,
+      image_file_name: upload.fileName,
+      image_stored_name: storedName,
+      image_mime_type: upload.mimeType,
+      image_size_bytes: upload.buffer.byteLength,
+      updated_at: new Date().toISOString()
+    };
+    await upsertSupabaseRow("locations", updated, "id");
+    if (supabaseCompatibility.locationImageColumnsMissing) {
+      await deleteSupabaseObject(workspaceId, "locations", storedName);
+      throw createHostedLocationPhotoSchemaError();
+    }
+    return updated;
+  } catch (error) {
+    await deleteSupabaseObject(workspaceId, "locations", storedName);
+    throw error;
+  }
 }
 
 async function syncLocationPhotoToSupabase(workspaceId, upload, savedLocation, beforeLocation) {
   if (!supabaseSyncEnabled) {
     return { synced: false, reason: "Supabase is not configured." };
+  }
+  if (supabaseCompatibility.locationImageColumnsMissing) {
+    return {
+      synced: false,
+      reason: "Supabase location image columns are not available yet."
+    };
   }
 
   try {
@@ -1933,6 +2039,13 @@ async function syncLocationPhotoToSupabase(workspaceId, upload, savedLocation, b
       created_at: savedLocation.createdAt || savedLocation.created_at || new Date().toISOString(),
       updated_at: savedLocation.updatedAt || savedLocation.updated_at || new Date().toISOString()
     }, "id");
+    if (supabaseCompatibility.locationImageColumnsMissing) {
+      await deleteSupabaseObject(workspaceId, "locations", nextStoredName);
+      return {
+        synced: false,
+        reason: "Supabase location image columns are not available yet."
+      };
+    }
     if (previousStoredName && previousStoredName !== nextStoredName) {
       await deleteSupabaseObject(workspaceId, "locations", previousStoredName);
     }
